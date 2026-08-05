@@ -29,8 +29,8 @@ function generateShortToken(chatId, type, extra = {}) {
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const tmo = process.env.is; 
-const botToken = '8380316975:AAEjcllXjRKFlJkCL9XoD-pe9yVOx-NKQZQ'; 
-const botUsername = 'Almunharif2bot'; // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
+const botToken = process.env.mn; 
+const botUsername = process.env.bott;
 
 const bot = new TelegramBot(botToken, {
   polling: {
