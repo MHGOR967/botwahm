@@ -3714,3 +3714,8 @@ process.on('exit', handleExit);
 process.on('SIGINT', handleExit);
 process.on('SIGTERM', handleExit);
 process.on('SIGHUP', handleExit);
+
+// خط دفاع أخير في نهاية الملف لمنع ظهور Not Found
+app.use((req, res) => {
+    res.status(404).send('عذراً، الصفحة غير موجودة أو أن الرمز (Token) منتهي الصلاحية.');
+});
