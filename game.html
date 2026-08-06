@@ -21,28 +21,26 @@
 </head>
 <body class="text-white min-h-screen flex flex-col items-center justify-between p-4 relative overflow-x-hidden">
 
-    <!-- خلفية تشبه سيرفر البيانات والشبكات -->
     <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px]"></div>
 
     <div class="w-full max-w-md my-auto server-gradient border border-slate-800/80 rounded-3xl p-6 glow-effect space-y-5 relative z-10">
         
-        <!-- رأس السيرفر الشكلي -->
         <div class="flex justify-between items-center border-b border-slate-800 pb-3 text-[11px] text-slate-400 font-mono">
             <span class="flex items-center space-x-1.5 space-x-reverse text-emerald-400">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                <span>SERVER_ACTIVE</span>
+                <span>WORMGPT_CONNECTED</span>
             </span>
-            <span>المطور وهم </span>
+            <span>FOKHM_CORE_V3</span>
         </div>
 
         <!-- شاشة اختيار الأقسام -->
         <div id="categoryScreen" class="space-y-4">
             <div class="text-center space-y-2">
                 <div class="w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center mx-auto text-xl text-indigo-400 shadow-lg">
-                    <i class="fa-solid fa-server"></i>
+                    <i class="fa-solid fa-terminal"></i>
                 </div>
                 <h1 class="text-xl font-black text-white">لعبة الأذكياء</h1>
-                <p class="text-xs text-slate-400">اختر مسار التحدي (10 أسئلة حاسمة لاجتياز السيرفر)</p>
+                <p class="text-xs text-slate-400">اختر مسار التحدي (10 أسئلة حاسمة عبر WormGPT API)</p>
             </div>
 
             <div class="grid grid-cols-2 gap-2.5 pt-2">
@@ -65,10 +63,10 @@
             </div>
         </div>
 
-        <!-- شاشة التحميل والاتصال بالسيرفر -->
+        <!-- شاشة التحميل وجلب البيانات من WormGPT API -->
         <div id="loadingScreen" class="hidden text-center py-12 space-y-4">
             <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p class="text-xs text-slate-400 font-mono">جاري معالجة وجلب حزمة البيانات (سؤال <span id="currentLoadNum">1</span>/10)...</p>
+            <p class="text-xs text-slate-400 font-mono">جاري استدعاء البيانات من WormGPT (سؤال <span id="currentLoadNum">1</span>/10)...</p>
         </div>
 
         <!-- شاشة اللعب والأسئلة -->
@@ -118,7 +116,8 @@
     </div>
 
     <script>
-        const apiKey = "";
+        const wormToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjFiN2QxYTJiZTU3ZmZhM2VhZWE0YjI1ZSIsImlhdCI6MTc4NTg0OTExMiwicm5kIjoiY2ExZTMwMGRhOTI1MzRhOGY1ZGM4Yzc4OTQzMGVlZjNjOTU1ODdiMzBhMzA3YmU5MGQxMmJhNGZhZWU0YWZhYSJ9.y7bBPZDDDA6I-MVhzmq4L91jNHDKcV2bwI0-1NlJBz0";
+        
         let selectedCategory = '';
         let currentStep = 0;
         let correctAnswers = 0;
@@ -140,7 +139,6 @@
                     osc.start();
                     osc.stop(ctx.currentTime + 0.25);
                 } else if (type === 'win') {
-                    // نغمة احتفالية عند الفوز
                     osc.frequency.setValueAtTime(440, ctx.currentTime);
                     setTimeout(() => osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1), 100);
                     setTimeout(() => osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2), 200);
@@ -169,43 +167,64 @@
             document.getElementById('loadingScreen').classList.remove('hidden');
             document.getElementById('currentLoadNum').innerText = currentStep;
 
-            fetchQuestion();
+            fetchQuestionFromWormGPT();
         }
 
-        async function fetchQuestion(retries = 5, delay = 1000) {
-            const promptText = `أنشئ سؤال مسابقات ذكي وممتع في تصنيف "${selectedCategory}" (السؤال رقم ${currentStep} من أصل 10). أجب بصيغة JSON حصراً بالشكل التالي:
+        async function fetchQuestionFromWormGPT(retries = 3) {
+            const promptText = `أنشئ سؤال مسابقات ذكي وممتع جديد كلياً في تصنيف "${selectedCategory}" (السؤال رقم ${currentStep} من أصل 10). أجب بصيغة JSON حصراً بدون أي ماركداون إضافي، بالشكل التالي:
 {
   "q": "نص السؤال هنا",
   "options": ["خيار 1", "خيار 2", "خيار 3", "خيار 4"],
   "answer": رقم فهرس الإجابة الصحيحة من 0 إلى 3
 }`;
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: promptText }] }],
-                generationConfig: { responseMimeType: "application/json" }
-            };
-
             try {
-                const response = await fetch(url, {
+                const response = await fetch('https://dark.ps/v1/wormgpt-400b', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    headers: {
+                        'Authorization': `Bearer ${wormToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: promptText })
                 });
 
-                if (!response.ok) throw new Error('API Error');
+                if (!response.ok) throw new Error('WormGPT Error');
 
-                const result = await response.json();
-                const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!rawText) throw new Error('Empty');
+                // استقبال رد الـ SSE وتجميع الـ tokens
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = '';
 
-                const qData = JSON.parse(rawText);
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    // معالجة كل سطر SSE
+                    const lines = chunk.split('\n');
+                    for (const line of lines) {
+                        if (line.trim().startsWith('{')) {
+                            try {
+                                const parsed = JSON.parse(line);
+                                if (parsed.token) fullText += parsed.token;
+                            } catch (e) {}
+                        }
+                    }
+                }
+
+                let cleanJson = fullText.trim();
+                if (cleanJson.includes('```json')) {
+                    cleanJson = cleanJson.split('```json')[1].split('```')[0].trim();
+                } else if (cleanJson.includes('```')) {
+                    cleanJson = cleanJson.split('```')[1].split('```')[0].trim();
+                }
+
+                const qData = JSON.parse(cleanJson);
                 renderQuestion(qData);
             } catch (error) {
                 if (retries > 0) {
-                    setTimeout(() => fetchQuestion(retries - 1, delay * 2), delay);
+                    setTimeout(() => fetchQuestionFromWormGPT(retries - 1), 1000);
                 } else {
-                    alert('حدث خطأ في الاتصال بالسيرفر. يرجى المحاولة لاحقاً.');
+                    alert('تعذر الاتصال بسيرفر WormGPT API. تحقق من صلاحية التوكن.');
                     backToCategories();
                 }
             }
@@ -252,14 +271,14 @@
             currentStep++;
 
             if (currentStep > totalQuestions) {
-                setTimeout(showFinalResult, 1000);
+                setTimeout(showFinalResult, 900);
             } else {
                 setTimeout(() => {
                     document.getElementById('quizContainer').classList.add('hidden');
                     document.getElementById('loadingScreen').classList.remove('hidden');
                     document.getElementById('currentLoadNum').innerText = currentStep;
-                    fetchQuestion();
-                }, 900);
+                    fetchQuestionFromWormGPT();
+                }, 800);
             }
         }
 
@@ -271,7 +290,6 @@
             const titleBox = document.getElementById('resultTitle');
             const descBox = document.getElementById('finalScoreText');
 
-            // شرط الفوز: إذا كانت الإجابات الصحيحة أكثر من الخطأ أو النصف فأعلى (5 من 10 فأكثر)
             const isWinner = correctAnswers > wrongAnswers;
 
             if (isWinner) {
@@ -280,14 +298,14 @@
                 iconBox.innerHTML = '<i class="fa-solid fa-trophy"></i>';
                 titleBox.className = "text-lg font-black tracking-wide text-emerald-400";
                 titleBox.innerText = "تهانينا! لقد اجتزت السيرفر بنجاح 🏆";
-                descBox.innerText = `أداء استثنائي يا فخم! أجبت على ${correctAnswers} أسئلة صحيحة من أصل ${totalQuestions}. تم تأكيد تفوقك الذهني بنجاح.`;
+                descBox.innerText = `أداء استثنائي يا فخم! أجبت على ${correctAnswers} أسئلة صحيحة من أصل ${totalQuestions} عبر WormGPT.`;
             } else {
                 playSound('wrong');
                 iconBox.className = "w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center mx-auto text-2xl shadow-lg";
                 iconBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
                 titleBox.className = "text-lg font-black tracking-wide text-rose-400";
                 titleBox.innerText = "فشل اجتياز السيرفر ⚠️";
-                descBox.innerText = `للأسف يا فخم، أجبت على ${correctAnswers} صحيحة و ${wrongAnswers} خاطئة. حاول مرة أخرى لتثبت جدارتك!`;
+                descBox.innerText = `للأسف يا فخم، أجبت على ${correctAnswers} صحيحة و ${wrongAnswers} خاطئة. حاول مرة أخرى!`;
             }
         }
 
