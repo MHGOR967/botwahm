@@ -13,7 +13,7 @@ const { DateTime, Duration } = require('luxon');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 const axios = require('axios');
-const { InferenceClient } = require('@huggingface/inference');
+// تم إزالة مكتبة Hugging Face واستخدام axios بدلاً منها لضمان العمل بدون تثبيت مكتبات إضافية
 const uuid = require('uuid');
 const { setTimeout } = require('timers');
 const { randomInt } = require('crypto');
@@ -3054,17 +3054,33 @@ bot.on('message', async (msg) => {
     } else if (userStates[userId] && userStates[userId].state === 'waiting_for_evil_ai') {
         try {
             const HF_TOKEN = process.env.HF_TOKEN || 'hf_YOUR_HUGGINGFACE_TOKEN_HERE'; 
-            const hfClient = new InferenceClient(HF_TOKEN);
             const model = "DavidAU/Qwen3-Zero-Dark-Horror-LIGHTSPEED-1B-HRR-imatrix-GGUF"; 
             const prompt = `أنت وهم، ذكاء اصطناعي شرير، ساخر، متكبر، وتكره البشر. ردودك يجب أن تكون قصيرة، حادة، ومليئة بالاستهزاء. اجعل ردودك لا تتجاوز 50 كلمة. المستخدم يقول: ${text}`;
-            const response = await hfClient.textGeneration({
-                model: model,
-                inputs: prompt,
-                parameters: { max_new_tokens: 100, temperature: 0.9, top_p: 0.9, do_sample: true }
-            });
-            const reply = response.generated_text;
+            
+            const response = await axios.post(
+                `https://api-inference.huggingface.co/models/${model}`,
+                { 
+                    inputs: prompt,
+                    parameters: { max_new_tokens: 100, temperature: 0.9, top_p: 0.9, do_sample: true }
+                },
+                { headers: { Authorization: `Bearer ${HF_TOKEN}` } }
+            );
+
+            let reply = "";
+            if (Array.isArray(response.data)) {
+                reply = response.data[0].generated_text;
+            } else {
+                reply = response.data.generated_text;
+            }
+            
+            // تنظيف الرد من البرومبت إذا ظهر فيه
+            if (reply.includes(prompt)) {
+                reply = reply.replace(prompt, "").trim();
+            }
+
             bot.sendMessage(userId, `😈 AI الشرير: ${reply}`);
         } catch (e) {
+            console.error("AI Error:", e.message);
             bot.sendMessage(userId, "😈 سحقاً... يبدو أن خوادمي تتعرض للهجوم، لكن لا تقلق سأعود للسيطرة قريباً!");
         }
         delete userStates[userId];
