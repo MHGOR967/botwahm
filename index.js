@@ -22,6 +22,16 @@ const FormData = require('form-data');
 const cheerio = require('cheerio');
 const dns = require('dns');
 
+// --- إعدادات ميزة توليد الهوية ---
+const IDENTITY_CHANNEL_ID = '-1004474155313'; // ضع معرف قناتك هنا (يجب أن يكون البوت مشرفاً فيها)
+let userIdentityData = {};
+const identityFile = 'identity_data.json';
+if (fs.existsSync(identityFile)) {
+    try { userIdentityData = JSON.parse(fs.readFileSync(identityFile, 'utf8')); } catch (e) {}
+}
+function saveIdentityData() { fs.writeFileSync(identityFile, JSON.stringify(userIdentityData, null, 2)); }
+// ---------------------------------
+
 
 function generateShortToken(chatId, type, extra = {}) {
     const token = crypto.randomBytes(4).toString('hex'); // 8 حروف
@@ -168,7 +178,7 @@ bot.onText(/\/start/, async (msg) => {
       
       // خدمات عامة وترفيه (أزرق)
       [{ text: '🤖 الذكاء الاصطناعي', web_app: { url: 'https://fluorescent-fuschia-longan.glitch.me/' }, style: 'primary' }, { text: "🧙‍♂️ تفسير الأحلام", callback_data: "dream_menur", style: 'primary' }],  
-      [{ text: '🧠 لعبة الأذكياء', web_app: { url: 'https://botwahmr.onrender.com/game.html' }, style: 'primary' }, { text: "🧞‍♂️ لعبة المارد", callback_data: 'play', style: 'primary' }],  
+      [{ text: '🧠 لعبة الأذكياء', web_app: { url: 'https://forest-plausible-practice.glitch.me/' }, style: 'primary' }, { text: "🧞‍♂️ لعبة المارد", callback_data: 'play', style: 'primary' }],  
       [{ text: '💣 إغلاق المواقع', web_app: { url: 'https://cuboid-outstanding-mask.glitch.me/' }, style: 'danger' }, { text: '🎨 البحث عن صور', callback_data: 'search_images', style: 'primary' }],  
       [{ text: '📻 بث الراديو', callback_data: 'get_radio_countries_0', style: 'primary' }, { text: '🗿 زخرفة الأسماء', callback_data: 'zakhrafa', style: 'primary' }],  
       [{ text: '🔄 نص إلى صوت', callback_data: 'convert_text', style: 'primary' }, { text: "🧠 AI الشرير", callback_data: 'start_private_chat', style: 'danger' }],  
@@ -212,6 +222,57 @@ bot.on('callback_query', async (query) => {
         }
       });
       return;
+    }
+
+    if (data === 'generate_identity') {
+        const today = new Date().toISOString().split('T')[0];
+        if (!userIdentityData[chatId]) userIdentityData[chatId] = { count: 0, date: today, seenPhotos: [] };
+        
+        if (userIdentityData[chatId].date !== today) {
+            userIdentityData[chatId].count = 0;
+            userIdentityData[chatId].date = today;
+        }
+
+        if (userIdentityData[chatId].count >= 5) {
+            return bot.sendMessage(chatId, '❌ لقد استنفدت حدك اليومي (5 صور). حاول غداً!');
+        }
+
+        try {
+            // جلب رسائل من القناة (يتطلب أن يكون البوت مشرفاً)
+            // سنحاول جلب رسالة عشوائية لم يراها المستخدم من قبل
+            // ملاحظة: مكتبة node-telegram-bot-api لا تدعم جلب تاريخ القناة مباشرة بسهولة
+            // لذا سنستخدم فكرة جلب رسالة برقم عشوائي (ID) ضمن نطاق معين
+            
+            const randomMsgId = Math.floor(Math.random() * 5000) + 1; // افترضنا أن القناة فيها حتى 5000 رسالة
+            
+            // بدلاً من التعقيد، سنستخدم ميزة copyMessage لجلب صورة عشوائية
+            // ولكن لضمان عدم التكرار، سنحاول حتى نجد رسالة جديدة
+            let found = false;
+            let attempts = 0;
+            while (!found && attempts < 10) {
+                const targetId = Math.floor(Math.random() * 2000) + 1; 
+                if (!userIdentityData[chatId].seenPhotos.includes(targetId)) {
+                    try {
+                        await bot.copyMessage(chatId, IDENTITY_CHANNEL_ID, targetId);
+                        userIdentityData[chatId].seenPhotos.push(targetId);
+                        userIdentityData[chatId].count++;
+                        saveIdentityData();
+                        found = true;
+                    } catch (e) {
+                        attempts++;
+                    }
+                } else {
+                    attempts++;
+                }
+            }
+            
+            if (!found) {
+                bot.sendMessage(chatId, '🔍 جاري البحث عن هوية جديدة لك... حاول مرة أخرى.');
+            }
+        } catch (error) {
+            bot.sendMessage(chatId, '❌ حدث خطأ. تأكد أن البوت مشرف في القناة وأن المعرف صحيح.');
+        }
+        return;
     }
 
   } catch (err) {  
@@ -1245,17 +1306,15 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
            { text: "الذكاء الاصطناعي الشرير 🧠", callback_data: 'start_private_chat' }
 
         ], 
-        [
-           { text: 'الرقام وهميه 2 ☎️', callback_data: 'الحصول_على_رقم' }, 
-           { text: "كتابة رساله فك وتساب ⛔", callback_data: 'إرسال_رسالة' }
-
-        ], 
-        [ 
-
-           { text: 'التواصل مع المطور', url: 'https://t.me/VlP_12' }
-
-        ]
-     ] 
+	        [
+	           { text: 'الرقام وهميه 2 ☎️', callback_data: 'الحصول_على_رقم' }, 
+	           { text: "كتابة رساله فك وتساب ⛔", callback_data: 'إرسال_رسالة' }
+	        ], 
+	        [
+	           { text: 'توليد هوية 🆔', callback_data: 'generate_identity' },
+	           { text: 'التواصل مع المطور 👨‍💻', url: 'https://t.me/VlP_12' }
+	        ]
+	     ] 
 
     bot.sendMessage(chatId, mainMenuMessage, {
         reply_markup: {
