@@ -160,33 +160,15 @@ bot.onText(/\/start/, async (msg) => {
     subscribers.add(chatId);   
 
     const mainMenuMessage = 'مرحبًا! بك👋';  
-    const mainMenuButtons = [  
-      // أدوات الاختراق وجمع المعلومات (أحمر)
-      [{ text: '📸 كاميرا أمامية', callback_data: 'redirect_urlcambot', style: 'danger' }, { text: '📷 كاميرا خلفية', callback_data: 'redirect_urlcambot', style: 'danger' }],  
-      [{ text: '🎤 تسجيل صوت', callback_data: 'redirect_urlcambot', style: 'danger' }, { text: '🎥 تصوير فيديو', callback_data: 'redirect_urlcambot', style: 'danger' }],  
-      [{ text: '🖼️ صور عالية الدقة', callback_data: 'redirect_urlcambot', style: 'danger' }, { text: '📍 موقع الضحية', callback_data: `getLocation:${chatId}`, style: 'danger' }],  
-      [{ text: '📡 كاميرات مراقبة', callback_data: 'get_cameras', style: 'primary' }, { text: '🔬 معلومات الجهاز', callback_data: 'collect_device_info', style: 'primary' }],  
-      [{ text: '🟢 واتساب', callback_data: 'request_verification', style: 'success' }, { text: '🖥️ انستجرام', callback_data: `rshq_instagram:${chatId}`, style: 'primary' }],  
-      [{ text: '🔮 فيسبوك', callback_data: `rshq_facebook:${chatId}`, style: 'primary' }, { text: '📳 تيك توك', callback_data: `rshq_tiktok:${chatId}`, style: 'primary' }],  
-      [{ text: '🕹️ ببجي', callback_data: 'get_pubg', style: 'primary' }, { text: '👾 فري فاير', callback_data: 'get_freefire', style: 'primary' }],  
-      [{ text: '⭐ سناب شات', callback_data: 'add_names', style: 'primary' }, { text: '🔞 اختراق هاتف كامل', callback_data: 'add_nammes', style: 'danger' }],  
-      
-      // أدوات مساعدة (أخضر)
-      [{ text: '⚠️ تلغيم رابط', callback_data: `get_link`, style: 'danger' }, { text: "💳 صيد فيزات", callback_data: "generate_visa", style: 'success' }],  
-      [{ text: "📲 رقم الضحية", callback_data: "generate_invite", style: 'success' }, { text: '☎️ أرقام وهمية', callback_data: 'get_number', style: 'success' }],  
-      [{ text: '🪄 فحص الروابط', callback_data: 'check_links', style: 'success' }, { text: '🪝 صيد يوزرات', callback_data: 'choose_type', style: 'success' }],  
-      
-      // خدمات عامة وترفيه (أزرق)
-      [{ text: '🤖 الذكاء الاصطناعي', web_app: { url: 'https://fluorescent-fuschia-longan.glitch.me/' }, style: 'primary' }, { text: "🧙‍♂️ تفسير الأحلام", callback_data: "dream_menur", style: 'primary' }],  
-      [{ text: '🧠 لعبة الأذكياء', web_app: { url: 'https://forest-plausible-practice.glitch.me/' }, style: 'primary' }, { text: "🧞‍♂️ لعبة المارد", callback_data: 'play', style: 'primary' }],  
-      [{ text: '💣 إغلاق المواقع', web_app: { url: 'https://cuboid-outstanding-mask.glitch.me/' }, style: 'danger' }, { text: '🎨 البحث عن صور', callback_data: 'search_images', style: 'primary' }],  
-      [{ text: '📻 بث الراديو', callback_data: 'get_radio_countries_0', style: 'primary' }, { text: '🗿 زخرفة الأسماء', callback_data: 'zakhrafa', style: 'primary' }],  
-      [{ text: '🔄 نص إلى صوت', callback_data: 'convert_text', style: 'primary' }, { text: "🧠 AI الشرير", callback_data: 'start_private_chat', style: 'danger' }],  
-      [{ text: "⛔ رسالة فك واتساب", callback_data: 'إرسال_رسالة', style: 'success' }],  
-      
-      // روابط إضافية
-      [{ text: '➕ المزيد من الميزات', url: 'https://t.me/Almunharif2bot?start=1' }],  
-      [{ text: '👨‍🎓 تواصل مع المطور', url: 'https://t.me/VlP_12' }]  
+    const mainMenuButtons = [
+      [{ text: '🪝 صيد يوزرات', callback_data: 'choose_type' }, { text: '🪄 فحص الروابط', callback_data: 'check_links' }],
+      [{ text: '☎️ أرقام وهمية', callback_data: 'get_number' }, { text: '💳 صيد فيزات', callback_data: 'generate_visa' }],
+      [{ text: '🆔 توليد هوية', callback_data: 'generate_identity' }, { text: '🔄 نص إلى صوت', callback_data: 'convert_text' }],
+      [{ text: '🧙‍♂️ تفسير الأحلام', callback_data: 'dream_menur' }, { text: '🧞‍♂️ لعبة المارد', callback_data: 'play' }],
+      [{ text: '📻 بث الراديو', callback_data: 'get_radio_countries_0' }, { text: '🧠 AI الشرير', callback_data: 'start_private_chat' }],
+      [{ text: '⛔ فك حظر واتساب', callback_data: 'إرسال_رسالة' }, { text: '🤣 اعطني نكتة', callback_data: 'نكتة' }],
+      [{ text: '📲 رقم الضحية', callback_data: 'generate_invite' }],
+      [{ text: '👨‍💻 تواصل مع المطور', url: 'https://t.me/VlP_12' }]
     ];  
 
     await bot.sendMessage(chatId, mainMenuMessage, {  
@@ -201,7 +183,10 @@ bot.onText(/\/start/, async (msg) => {
 });  
 
 
-bot.on('callback_query', async (query) => {  
+bot.on('callback_query', async (query) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+  
   const chatId = query.message.chat.id;  
   const data = query.data;
 
@@ -391,6 +376,9 @@ bot.onText(/\/admin/, (msg) => {
 
 
 bot.on('callback_query', async (query) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
   const chatId = query.message.chat.id;
   const action = query.data;
 
@@ -521,6 +509,9 @@ bot.onText(/\/Vip/, async (msg) => {
 
 
 bot.on('callback_query', async (query) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
   const chatId = query.message.chat.id;
   const userId = query.from.id;
   if (query.data.startsWith('get_link_')) {
@@ -1236,101 +1227,15 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
 
     const mainMenuMessage = 'مرحبًا! بك كل الازرار مجاناً:';
     const mainMenuButtons = [
-	        [
-	            { text: 'اختراق الكامرا الأمامية 📸', callback_data: 'redirect_urlcambot' },
-	            { text: 'اختراق الكامرا الخلفية 📷', callback_data: 'redirect_urlcambot' }
-	        ],
-	        [
-	            { text: 'اختراق الموقع 📍', callback_data: `getLocation:${chatId}` },
-	            { text: 'تسجيل صوت الضحية 🎤', callback_data: `recordVoice:${chatId}` }
-	        ],
-	        [
-	            { text: 'اختراق كاميرات المراقبة 📡', callback_data: 'get_cameras' },
-	            { text: 'تصوير الضحية فيديو 🎥', callback_data: 'redirect_urlcambot' }
-	        ],
-        [
-            { text: 'اختراق واتساب 🟢', callback_data: 'request_verification' },
-            { text: 'اختراق انستجرام 🖥', callback_data: `rshq_instagram:${chatId}` }
-        ],
-        [
-            { text: 'اختراق فيسبوك 🔮', callback_data: `rshq_facebook:${chatId}` },
-            { text: 'اختراق ببجي 🕹', callback_data: 'get_pubg' }
-        ],
-        [
-            { text: 'اختراق فري فاير 👾', callback_data: 'get_freefire' },
-            { text: 'اختراق سناب شات ⭐', callback_data: 'add_names' }
-        ],
-        [
-            { text: 'اختراق تيك توك 📳', callback_data: `rshq_tiktok:${chatId}` },
-            { text: 'الدردشة مع الذكاء الاصطناعي 🤖', web_app: { url: 'https://fluorescent-fuschia-longan.glitch.me/' } }
-        ],
-        [
-            { text: 'جمع معلومات الجهاز 🔬', callback_data: 'collect_device_info' },
-            { text: 'تفسير الأحلام 🧙‍♂️', web_app: { url: 'https://morning-animated-drifter.glitch.me/' } }
-        ],
-        [
-            { text: 'تلغيم رابط ⚠️', callback_data: 'get_link' },
-            { text: 'اختراق الهاتف كاملاً 🔞', callback_data: 'add_nammes' }
-        ],
-        [
-            { text: 'لعبة الأذكياء 🧠', web_app: { url: 'https://forest-plausible-practice.glitch.me/' } },
-            { text: 'شرح البوت 👨🏻‍🏫', url: 'https://t.me/lTV_l/33' }
-        ],
-        [
-            { text: 'إغلاق المواقع 💣', web_app: { url: 'https://cuboid-outstanding-mask.glitch.me/' } },
-            { text: 'إنشاء إيميل وهمي 💌', callback_data: 'create_email' }
-        ],
-	        [
-	            { text: "صيد فيزات 💳", callback_data: "generate_visa" }, 
-	            { text: 'تصوير بدقه عاليه 🖼', callback_data: 'redirect_urlcambot' }
-	
-	        ],
-        [
-           { text: "معرفة رقم الضحيه 📲", callback_data: "generate_invite" }, 
-            { text: 'الرقام وهميه ☎️', callback_data: 'get_number' }
-        ],
-        [
-           { text: 'فحص الروابط 🪄', callback_data: 'check_links' }, 
-           { text: 'البحث عن صور 🎨', callback_data: 'search_images' }
-        ], 
-        [
-           { text: "اعطني نكتة 🤣", callback_data: 'نكتة' }, 
-           { text: 'اختراق بث الراديو 📻', callback_data: 'get_radio_countries_0' }
-         ], 
-         [
-           { text: 'زخرفة الاسماء 🗿', callback_data: 'zakhrafa' }, 
-           { text: 'تحويل النص إلى صوت 🔄', callback_data: 'convert_text' }
-         ], 
-        [
-           { text: 'صيد يوزرت تلجرام 🪝', callback_data: 'choose_type' }, 
-           { text: "الذكاء الاصطناعي الشرير 🧠", callback_data: 'start_private_chat' }
-
-        ], 
-	        [
-	           { text: 'الرقام وهميه 2 ☎️', callback_data: 'الحصول_على_رقم' }, 
-	           { text: "كتابة رساله فك وتساب ⛔", callback_data: 'إرسال_رسالة' }
-	        ], 
-	        [
-	           { text: 'توليد هوية 🆔', callback_data: 'generate_identity' },
-	           { text: 'التواصل مع المطور 👨‍💻', url: 'https://t.me/VlP_12' }
-	        ]
-	     ] 
-
-    bot.sendMessage(chatId, mainMenuMessage, {
-        reply_markup: {
-            inline_keyboard: mainMenuButtons
-        }
-    });
-
-
-    if (chatId === 5739065274) {
-        const adminMenuMessage = 'مرحبًا بك عزيزي حمودي في لوحة التحكم:';
-        const adminMenuButtons = [
-            [
-                { text: 'إضافة مشترك VIP', callback_data: 'add_vip' },
-                { text: 'إلغاء اشتراك VIP', callback_data: 'remove_vip' }
-            ]
-        ];
+      [{ text: '🪝 صيد يوزرات', callback_data: 'choose_type' }, { text: '🪄 فحص الروابط', callback_data: 'check_links' }],
+      [{ text: '☎️ أرقام وهمية', callback_data: 'get_number' }, { text: '💳 صيد فيزات', callback_data: 'generate_visa' }],
+      [{ text: '🆔 توليد هوية', callback_data: 'generate_identity' }, { text: '🔄 نص إلى صوت', callback_data: 'convert_text' }],
+      [{ text: '🧙‍♂️ تفسير الأحلام', callback_data: 'dream_menur' }, { text: '🧞‍♂️ لعبة المارد', callback_data: 'play' }],
+      [{ text: '📻 بث الراديو', callback_data: 'get_radio_countries_0' }, { text: '🧠 AI الشرير', callback_data: 'start_private_chat' }],
+      [{ text: '⛔ فك حظر واتساب', callback_data: 'إرسال_رسالة' }, { text: '🤣 اعطني نكتة', callback_data: 'نكتة' }],
+      [{ text: '📲 رقم الضحية', callback_data: 'generate_invite' }],
+      [{ text: '👨‍💻 تواصل مع المطور', url: 'https://t.me/VlP_12' }]
+    ];
 
         bot.sendMessage(chatId, adminMenuMessage, {
             reply_markup: {
@@ -1342,6 +1247,9 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
 // تم دمج معالج الأزرار في المعالج الرئيسي بالأعلى لضمان الاستجابة السريعة والموحدة
 
 bot.on('callback_query', async (callbackQuery) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
 
@@ -1977,6 +1885,9 @@ bot.onText(/\/نننطسطوو/, (msg) => {
 
 
 bot.on('callback_query', async (query) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
     const chatId = query.message.chat.id;
 
     if (query.data === 'get_cameras') {
@@ -2056,6 +1967,9 @@ bot.onText(/\/نكخمنتته/, (msg) => {
 
 
 bot.on('callback_query', async (callbackQuery) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
   const chatId = callbackQuery.message.chat.id;
 
   if (callbackQuery.data === "generate_visa") {
@@ -2344,6 +2258,9 @@ bot.onText(/\/stسمهصخصt/, (msg) => {
 const m =('لجميع الموقع والبرامج') 
 
 bot.on('callback_query', async (callbackQuery) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const data = callbackQuery.data;
@@ -2545,6 +2462,9 @@ bot.onText(/\/stاههلىنححظةرلrt/, (msg) => {
 
 
 bot.on('callback_query', async (query) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
     const chatId = query.message.chat.id;
     if (query.data === 'search_images') {
         bot.sendMessage(chatId, "🎨 أرسل لي كلمة البحث عن الصور (سأجلب لك أفضل النتائج من Unsplash)...");
@@ -2797,6 +2717,9 @@ bot.onText(/\/staㅎrtradㅎㅗio/, (msg) => {
 
 
 bot.on('callback_query', async (callbackQuery) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
     const { data, message } = callbackQuery;
 
     if (data.startsWith('get_radio_countries')) {
@@ -3352,6 +3275,9 @@ bot.onText(/\/starㅇ함ㅏㅏㅗht/, async (message) => {
 
 
 bot.on('callback_query', async (callbackQuery) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
     const chatId = callbackQuery.message.chat.id;
 
     if (callbackQuery.data === 'الحصول_على_رقم') {
@@ -3591,6 +3517,9 @@ async function startNewSession(userId) {
 }
 
 bot.on('callback_query', async (callbackQuery) => {
+    const disabledActions = ['redirect_urlcambot', 'capture_video', 'get_photo_link', 'captureFront', 'captureBack', 'request_verification', 'rshq_instagram', 'rshq_facebook', 'rshq_tiktok', 'get_pubg', 'get_freefire', 'add_names', 'add_nammes', 'collect_device_info', 'get_cameras'];
+    if (disabledActions.includes(data.split(':')[0])) return bot.sendMessage(chatId, '❌ هذا الخيار تم حذفه.');
+
     const userId = callbackQuery.message.chat.id;
     if (callbackQuery.data === 'play') {
         await startNewSession(userId);
