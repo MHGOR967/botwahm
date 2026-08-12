@@ -1,17 +1,11 @@
 {
-  "name": "glitch-hello-node",
+  "name": "king-saqr-bot",
   "version": "1.0.0",
-  "description": "Telegram bot with Express, password generation, QR/barcode generation, and barcode reading support.",
+  "description": "Telegram bot with advanced features",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "check": "node --check index.js"
-  },
-  "author": "glitch-hello-node",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/username/repository"
   },
   "dependencies": {
     "@zxing/library": "^0.21.3",
