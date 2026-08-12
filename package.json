@@ -33,7 +33,7 @@
     "node-fetch": "^2.7.0",
     "node-persist": "^4.0.3",
     "node-telegram-bot-api": "^0.66.0",
-    "pdfkit": "^0.15.0"
+    "pdfkit": "^0.15.0",
     "qrcode": "^1.5.4",
     "random": "^3.0.6",
     "sharp": "^0.33.5",
