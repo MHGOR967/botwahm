@@ -2210,6 +2210,7 @@ function extractIpFromUrl(url) {
                 if (err) reject(null);
                 else resolve(address);
             });
+        });
     } catch (err) {
         return null;
     }
@@ -3583,4 +3584,3 @@ bot.on('callback_query', async (query) => {
     if (simpleActions[data]) {
         await bot.sendMessage(chatId, simpleActions[data]);
     }
-});
