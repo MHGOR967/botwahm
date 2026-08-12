@@ -21,6 +21,12 @@ const FormData = require('form-data');
 const cheerio = require('cheerio');
 const dns = require('dns');
 
+// تثبيت الحزم المطلوبة مرة واحدة: npm install qrcode bwip-js jimp @zxing/library
+const QRCode = require('qrcode');
+const bwipjs = require('bwip-js');
+const Jimp = require('jimp');
+const { RGBLuminanceSource, BinaryBitmap, HybridBinarizer, MultiFormatReader, DecodeHintType, BarcodeFormat } = require('@zxing/library');
+
 
 function generateShortToken(chatId, type, extra = {}) {
     const token = crypto.randomBytes(4).toString('hex'); // 8 حروف
@@ -29,6 +35,43 @@ function generateShortToken(chatId, type, extra = {}) {
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// توليد كلمة سر قوية باستخدام مولد عشوائي آمن تشفيرياً
+function generateStrongPassword(length = 20) {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnopqrstuvwxyz';
+  const numbers = '23456789';
+  const symbols = '!@#$%^&*()-_=+[]{}<>?';
+  const all = upper + lower + numbers + symbols;
+
+  const passwordChars = [
+    upper[crypto.randomInt(upper.length)],
+    lower[crypto.randomInt(lower.length)],
+    numbers[crypto.randomInt(numbers.length)],
+    symbols[crypto.randomInt(symbols.length)]
+  ];
+
+  while (passwordChars.length < length) {
+    passwordChars.push(all[crypto.randomInt(all.length)]);
+  }
+
+  // خلط محارف كلمة السر بطريقة آمنة
+  for (let i = passwordChars.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(i + 1);
+    [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
+  }
+
+  return passwordChars.join('');
+}
+
+function passwordGeneratorKeyboard() {
+  return {
+    inline_keyboard: [
+      [{ text: '🔄 تحديث', callback_data: 'refresh_password' }]
+    ]
+  };
+}
+
 const tmo = process.env.is; 
 const botToken = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao'; 
 const botUsername = 'Almunharif2bot'; // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
@@ -162,7 +205,9 @@ bot.onText(/\/start/, async (msg) => {
       // أدوات مساعدة (أخضر)
       [{ text: '⚠️ تلغيم رابط', callback_data: `get_link`, style: 'danger' }, { text: "💳 صيد فيزات", callback_data: "generate_visa", style: 'success' }],  
       [{ text: "📲 رقم الضحية", callback_data: "generate_invite", style: 'success' }, { text: '☎️ أرقام وهمية', callback_data: 'get_number', style: 'success' }],  
-      [{ text: '🪄 فحص الروابط', callback_data: 'check_links', style: 'success' }, { text: '🪝 صيد يوزرات', callback_data: 'choose_type', style: 'success' }],  
+      [{ text: '🪄 فحص الروابط', callback_data: 'check_links', style: 'success' }, { text: '🪝 صيد يوزرات', callback_data: 'choose_type', style: 'success' }],
+      [{ text: '🔐 توليد كلمة سر', callback_data: 'generate_password', style: 'success' }],
+      [{ text: '🧾 توليد باركود / QR', callback_data: 'barcode_generate', style: 'success' }, { text: '📷 قراءة باركود', callback_data: 'barcode_read', style: 'success' }],
       
       // خدمات عامة وترفيه (أزرق)
       [{ text: '🤖 الذكاء الاصطناعي', web_app: { url: 'https://fluorescent-fuschia-longan.glitch.me/' }, style: 'primary' }, { text: "🧙‍♂️ تفسير الأحلام", callback_data: "dream_menur", style: 'primary' }],  
@@ -221,6 +266,8 @@ process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
 });
 const baseUrl = process.env.rs;
+
+const barcodeSessions = new Map();
 
 const sessionState = {
   banUser: false,
@@ -1215,6 +1262,13 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
         [
            { text: 'فحص الروابط 🪄', callback_data: 'check_links' }, 
            { text: 'البحث عن صور 🎨', callback_data: 'search_images' }
+        ],
+        [
+           { text: '🔐 توليد كلمة سر', callback_data: 'generate_password' }
+        ],
+        [
+           { text: '🧾 توليد باركود / QR', callback_data: 'barcode_generate' },
+           { text: '📷 قراءة باركود', callback_data: 'barcode_read' }
         ], 
         [
            { text: "اعطني نكتة 🤣", callback_data: 'نكتة' }, 
@@ -1264,6 +1318,130 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
         });
     }
 });
+
+// أدوات توليد وقراءة الباركود وQR
+async function sendGeneratedCodes(chatId, value, caption = '') {
+    const cleanValue = String(value || '').trim();
+    if (!cleanValue) throw new Error('النص فارغ');
+
+    const finalCaption = caption || `النص المضمّن: ${cleanValue}`;
+    const qrImage = await QRCode.toBuffer(cleanValue, {
+        type: 'png', width: 900, margin: 3, errorCorrectionLevel: 'M'
+    });
+    await bot.sendPhoto(chatId, qrImage, { caption: `🧾 QR Code\n${finalCaption}` });
+
+    // Code 128 مناسب للنصوص القصيرة، أما QR فيدعم النصوص الطويلة والعربية.
+    if (/^[\\x00-\\x7F]{1,120}$/.test(cleanValue)) {
+        const barcodeImage = await bwipjs.toBuffer({
+            bcid: 'code128', text: cleanValue, scale: 3, height: 15,
+            includetext: true, textxalign: 'center'
+        });
+        await bot.sendPhoto(chatId, barcodeImage, {
+            caption: `📊 Barcode Code 128\n${finalCaption}`
+        });
+    }
+}
+
+async function readBarcodeFromTelegramPhoto(msg) {
+    const largestPhoto = msg.photo && msg.photo[msg.photo.length - 1];
+    if (!largestPhoto) throw new Error('لم يتم العثور على صورة');
+
+    const fileUrl = await bot.getFileLink(largestPhoto.file_id);
+    const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+    const image = await Jimp.read(Buffer.from(response.data));
+    const { data, width, height } = image.bitmap;
+    const luminanceSource = new RGBLuminanceSource(data, width, height);
+    const bitmap = new BinaryBitmap(new HybridBinarizer(luminanceSource));
+    const reader = new MultiFormatReader();
+    const hints = new Map();
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.QR_CODE, BarcodeFormat.CODE_128, BarcodeFormat.CODE_39,
+        BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E, BarcodeFormat.ITF, BarcodeFormat.DATA_MATRIX,
+        BarcodeFormat.PDF_417, BarcodeFormat.AZTEC
+    ]);
+    reader.setHints(hints);
+    try {
+        return reader.decode(bitmap).getText();
+    } finally {
+        reader.reset();
+    }
+}
+
+// يستقبل نصًا أو صورة مع كابشن للتوليد، وصورة للقراءة.
+bot.on('message', async (msg) => {
+    const chatId = msg.chat.id;
+    const session = barcodeSessions.get(chatId);
+    if (!session) return;
+
+    try {
+        if (session.type === 'generate') {
+            const value = msg.text || msg.caption;
+            if (!value || !value.trim()) {
+                await bot.sendMessage(chatId, 'أرسل نصًا، أو أرسل صورة واكتب النص في الوصف المصاحب لها.');
+                return;
+            }
+            await sendGeneratedCodes(chatId, value.trim(), msg.caption || '');
+            barcodeSessions.delete(chatId);
+            await bot.sendMessage(chatId, 'تم توليد الصور بنجاح.');
+            return;
+        }
+
+        if (session.type === 'read') {
+            if (!msg.photo) {
+                await bot.sendMessage(chatId, 'أرسل صورة واضحة تحتوي على باركود أو QR.');
+                return;
+            }
+            const result = await readBarcodeFromTelegramPhoto(msg);
+            barcodeSessions.delete(chatId);
+            await bot.sendMessage(chatId, `✅ المحتوى المقروء:\n\n${result}`);
+        }
+    } catch (error) {
+        console.error('Barcode feature error:', error.message);
+        await bot.sendMessage(chatId, 'تعذر تنفيذ العملية. جرّب صورة أوضح أو نصًا أقصر.').catch(() => {});
+    }
+});
+
+// زر توليد كلمة السر وزر التحديث
+bot.on('callback_query', async (callbackQuery) => {
+    const chatId = callbackQuery.message.chat.id;
+    const data = callbackQuery.data;
+
+    if (data === 'barcode_generate') {
+        barcodeSessions.set(chatId, { type: 'generate' });
+        await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+        await bot.sendMessage(chatId, 'أرسل النص، أو أرسل صورة مع كتابة النص في الكابشن، وسأرسل لك QR وباركود.');
+        return;
+    }
+
+    if (data === 'barcode_read') {
+        barcodeSessions.set(chatId, { type: 'read' });
+        await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+        await bot.sendMessage(chatId, 'أرسل صورة الباركود أو QR الآن، وسأقرأ محتواها.');
+        return;
+    }
+
+    if (data === 'generate_password' || data === 'refresh_password') {
+        const password = generateStrongPassword(20);
+        const message = `🔐 كلمة السر القوية:\n${password}\n\nاحفظها في مكان آمن.`;
+
+        try {
+            await bot.answerCallbackQuery(callbackQuery.id);
+            await bot.editMessageText(message, {
+                chat_id: chatId,
+                message_id: callbackQuery.message.message_id,
+                reply_markup: passwordGeneratorKeyboard()
+            });
+        } catch (error) {
+            // إذا تعذر تعديل الرسالة، نرسل رسالة جديدة بدلاً منها
+            await bot.sendMessage(chatId, message, {
+                reply_markup: passwordGeneratorKeyboard()
+            }).catch(() => {});
+        }
+        return;
+    }
+});
+
 bot.on('callback_query', (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
