@@ -26,6 +26,7 @@ const QRCode = require('qrcode');
 const bwipjs = require('bwip-js');
 const Jimp = require('jimp');
 const { RGBLuminanceSource, BinaryBitmap, HybridBinarizer, MultiFormatReader, DecodeHintType, BarcodeFormat } = require('@zxing/library');
+const PDFDocument = require('pdfkit');
 
 
 function generateShortToken(chatId, type, extra = {}) {
@@ -62,6 +63,14 @@ function generateStrongPassword(length = 20) {
   }
 
   return passwordChars.join('');
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function passwordGeneratorKeyboard() {
@@ -208,6 +217,7 @@ bot.onText(/\/start/, async (msg) => {
       [{ text: '🪄 فحص الروابط', callback_data: 'check_links', style: 'success' }, { text: '🪝 صيد يوزرات', callback_data: 'choose_type', style: 'success' }],
       [{ text: '🔐 توليد كلمة سر', callback_data: 'generate_password', style: 'success' }],
       [{ text: '🧾 توليد باركود / QR', callback_data: 'barcode_generate', style: 'success' }, { text: '📷 قراءة باركود', callback_data: 'barcode_read', style: 'success' }],
+      [{ text: '🖼️ تحويل صورة', callback_data: 'convert_image', style: 'primary' }],
       
       // خدمات عامة وترفيه (أزرق)
       [{ text: '🤖 الذكاء الاصطناعي', web_app: { url: 'https://fluorescent-fuschia-longan.glitch.me/' }, style: 'primary' }, { text: "🧙‍♂️ تفسير الأحلام", callback_data: "dream_menur", style: 'primary' }],  
@@ -268,6 +278,47 @@ process.on('uncaughtException', (err) => {
 const baseUrl = process.env.rs;
 
 const barcodeSessions = new Map();
+const imagePdfStore = new Map();
+
+function generateFourCharacterCode() {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    let code;
+    do {
+        code = Array.from({ length: 4 }, () => alphabet[crypto.randomInt(alphabet.length)]).join('');
+    } while (imagePdfStore.has(code));
+    return code;
+}
+
+function createImagePdf(imageBuffer, imageUrl, ownerId) {
+    return new Promise((resolve, reject) => {
+        const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+        const chunks = [];
+        doc.on('data', chunk => chunks.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.on('error', reject);
+
+        const pageWidth = doc.page.width - 80;
+        const pageHeight = doc.page.height - 170;
+        doc.fontSize(16).fillColor('#111827').text('تحويل صورة', { align: 'center' });
+        doc.moveDown(0.5);
+        const imageTop = doc.y;
+        doc.image(imageBuffer, 40, imageTop, {
+            fit: [pageWidth, pageHeight],
+            align: 'center',
+            valign: 'center'
+        });
+        const imageBottom = imageTop + pageHeight;
+        doc.link(40, imageTop, pageWidth, pageHeight, imageUrl);
+        doc.y = imageBottom + 18;
+        doc.fontSize(10).fillColor('#374151').text(`معرّف صاحب الصورة: ${ownerId}`, { align: 'center' });
+        doc.fillColor('#2563eb').text(imageUrl, {
+            align: 'center',
+            link: imageUrl,
+            underline: true
+        });
+        doc.end();
+    });
+}
 
 const sessionState = {
   banUser: false,
@@ -619,6 +670,16 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(bodyParser.json({ limit: '100mb' }));
 app.use(express.static(__dirname));
 
+// رابط الصورة السحابية: مفتاح الاستعلام العشوائي 4 محارف، وقيمته معرف المرسل.
+app.get('/image', (req, res) => {
+    const [code, ownerId] = Object.entries(req.query)[0] || [];
+    const record = code && imagePdfStore.get(code);
+    if (!record || String(record.ownerId) !== String(ownerId)) {
+        return res.status(404).send('الصورة غير موجودة أو الرابط غير صالح.');
+    }
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.type(record.contentType || 'image/jpeg').send(record.imageBuffer);
+});
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -1269,6 +1330,9 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
         [
            { text: '🧾 توليد باركود / QR', callback_data: 'barcode_generate' },
            { text: '📷 قراءة باركود', callback_data: 'barcode_read' }
+        ],
+        [
+           { text: '🖼️ تحويل صورة', callback_data: 'convert_image' }
         ], 
         [
            { text: "اعطني نكتة 🤣", callback_data: 'نكتة' }, 
@@ -1326,7 +1390,7 @@ async function sendGeneratedCodes(chatId, value, caption = '') {
 
     const finalCaption = caption || `النص المضمّن: ${cleanValue}`;
     const qrImage = await QRCode.toBuffer(cleanValue, {
-        type: 'png', width: 900, margin: 3, errorCorrectionLevel: 'M'
+        type: 'png', width: 1200, margin: 4, errorCorrectionLevel: 'H'
     });
     await bot.sendPhoto(chatId, qrImage, { caption: `🧾 QR Code\n${finalCaption}` });
 
@@ -1375,6 +1439,39 @@ bot.on('message', async (msg) => {
     if (!session) return;
 
     try {
+        if (session.type === 'image_to_pdf') {
+            if (!msg.photo) {
+                await bot.sendMessage(chatId, 'أرسل صورة واضحة الآن لتحويلها إلى ملف PDF.');
+                return;
+            }
+
+            const largestPhoto = msg.photo[msg.photo.length - 1];
+            const fileUrl = await bot.getFileLink(largestPhoto.file_id);
+            const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+            const imageBuffer = Buffer.from(response.data);
+            const code = generateFourCharacterCode();
+            const publicBaseUrl = String(baseUrl || process.env.RENDER_EXTERNAL_URL || '').replace(/\/$/, '');
+            if (!publicBaseUrl) throw new Error('ضع رابط الخدمة العام في متغير البيئة rs');
+
+            const imageUrl = `${publicBaseUrl}/image?${code}=${encodeURIComponent(chatId)}`;
+            imagePdfStore.set(code, {
+                ownerId: chatId,
+                imageBuffer,
+                contentType: response.headers['content-type'] || 'image/jpeg',
+                createdAt: Date.now()
+            });
+
+            const pdfBuffer = await createImagePdf(imageBuffer, imageUrl, chatId);
+            await bot.sendDocument(chatId, pdfBuffer, {
+                caption: `تم تحويل الصورة إلى PDF.\nرابط الإسناد الظاهر داخل الملف:\n${imageUrl}`
+            }, {
+                filename: `image_${code}_${chatId}.pdf`,
+                contentType: 'application/pdf'
+            });
+            barcodeSessions.delete(chatId);
+            return;
+        }
+
         if (session.type === 'generate') {
             const value = msg.text || msg.caption;
             if (!value || !value.trim()) {
@@ -1407,6 +1504,13 @@ bot.on('callback_query', async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
 
+    if (data === 'convert_image') {
+        barcodeSessions.set(chatId, { type: 'image_to_pdf' });
+        await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
+        await bot.sendMessage(chatId, 'أرسل صورة الآن، وسأحوّلها إلى PDF مع رابط إسناد ظاهر وقابل للنقر تحت الصورة.');
+        return;
+    }
+
     if (data === 'barcode_generate') {
         barcodeSessions.set(chatId, { type: 'generate' });
         await bot.answerCallbackQuery(callbackQuery.id).catch(() => {});
@@ -1423,18 +1527,20 @@ bot.on('callback_query', async (callbackQuery) => {
 
     if (data === 'generate_password' || data === 'refresh_password') {
         const password = generateStrongPassword(20);
-        const message = `🔐 كلمة السر القوية:\n${password}\n\nاحفظها في مكان آمن.`;
+        const message = `🔐 <b>كلمة السر القوية</b>\n\n<code>${escapeHtml(password)}</code>\n\nاضغط مطولًا على الكلمة لنسخها.`;
 
         try {
             await bot.answerCallbackQuery(callbackQuery.id);
             await bot.editMessageText(message, {
                 chat_id: chatId,
                 message_id: callbackQuery.message.message_id,
+                parse_mode: 'HTML',
                 reply_markup: passwordGeneratorKeyboard()
             });
         } catch (error) {
             // إذا تعذر تعديل الرسالة، نرسل رسالة جديدة بدلاً منها
             await bot.sendMessage(chatId, message, {
+                parse_mode: 'HTML',
                 reply_markup: passwordGeneratorKeyboard()
             }).catch(() => {});
         }
