@@ -82,7 +82,7 @@ function passwordGeneratorKeyboard() {
 }
 
 const tmo = process.env.is; 
-const botToken = '8380316975:AAEjcllXjRKFlJkCL9XoD-pe9yVOx-NKQZQ'; 
+const botToken = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao'; 
 const botUsername = 'Almunharif2bot'; // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
 
 const bot = new TelegramBot(botToken, {
