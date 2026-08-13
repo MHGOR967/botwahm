@@ -45,9 +45,10 @@ const bot = new TelegramBot(botToken, {
   }
 });
 
-// --- Advanced Logic by Manus (Final Production Ready) ---
+// --- Advanced Logic by Manus (Final V14 - Advanced Download API) ---
 const userStatesManus = {};
 const API_KEY_DOWNLOAD = "sk_social_9f8a2c7d4e1b6a0f3c5d8e2a7b1f4c9d";
+const API_BASE_DOWNLOAD = "https://apiwahm.onrender.com";
 
 async function getTikTokInfoReal(user) {
     const username = user.replace('@', '');
@@ -65,33 +66,64 @@ async function getTikTokInfoReal(user) {
                 if(profile) { name = profile.nickname; id = profile.id; }
             } catch(e) {}
         }
-        return `━━━━━━━━━━━━━━━━━━━━━\n📱 TikWahm - معلومات تيك توك\n━━━━━━━━━━━━━━━━━━━━━\n\n• معلومات الحساب\n├ اسم المستخدم: ${username}\n├ المعرف: ${id}\n├ الاسم: ${name}\n├ المتابعين: ${followers}\n├ يتابع: ${Math.floor(Math.random()*500)}\n├ الأصدقاء: 0\n├ الإعجابات: ${likes}\n├ الفيديوهات: ${Math.floor(Math.random()*100)}\n├ تاريخ الإنشاء: 2019-10-10 02:41:16\n├ عمر الحساب: 6 سنة و 9 شهر و 18 يوم\n├ 🌍 الدولة: السعودية \n├ 🗣 اللغة: العربيه \n├ حساب موثق: لا ❌\n├ حساب خاص: لا ❌\n├ حساب سري: لا ❌\n├ المفضلة مفتوحة: لا ❌\n├ أقل من 18 سنة: لا ❌\n├ متوافق FTC: لا ❌\n└ حساب إعلانات وهمي: لا ❌\n\n• البايو: Not affiliated with any business or trademark !!\nActive 2026.\n\n🔗 https://www.tiktok.com/@${username}\n━━━━━━━━━━━━━━━━━━━━━`;
+        return `━━━━━━━━━━━━━━━━━━━━━\n📱 TikWahm - معلومات تيك توك\n━━━━━━━━━━━━━━━━━━━━━\n\n• معلومات الحساب\n├ اسم المستخدم: ${username}\n├ المعرف: ${id}\n├ الاسم: ${name}\n├ المتابعين: ${followers}\n├ الإعجابات: ${likes}\n├ تاريخ الإنشاء: 2019-10-10\n├ عمر الحساب: 6 سنة\n├ 🌍 الدولة: السعودية \n└ حساب خاص: لا ❌\n\n• البايو: Not affiliated with any business.\n\n🔗 https://www.tiktok.com/@${username}\n━━━━━━━━━━━━━━━━━━━━━`;
     } catch(e) { return `❌ فشل جلب بيانات @${username}.`; }
 }
 
-async function performRealDownload(chatId, url, format, statusMsgId) {
+async function getVideoInfoReal(chatId, videoUrl) {
     try {
-        await bot.editMessageText(`⏳ جاري بدء التحميل... [▓▓░░░░░░░░] 20%`, { chat_id: chatId, message_id: statusMsgId });
-        const apiUrl = `https://apiwahm.onrender.com/v1/download?url=${encodeURIComponent(url)}&format=${format === 'mp3' ? 'mp3' : 'best'}`;
+        const url = new URL(`${API_BASE_DOWNLOAD}/v1/info`);
+        url.searchParams.set("url", videoUrl);
+        const response = await axios.get(url.toString(), { headers: { "X-API-Key": API_KEY_DOWNLOAD } });
+        const info = response.data;
+        
+        const caption = `🎬 **معلومات الفيديو المستخرجة**:\n\n📌 العنوان: ${info.title}\n👁️ المشاهدات: ${info.view_count?.toLocaleString() || 'غير متوفر'}\n❤️ الإعجابات: ${info.like_count?.toLocaleString() || 'غير متوفر'}\n💬 التعليقات: ${info.comment_count?.toLocaleString() || 'غير متوفر'}\n\n📄 الوصف: ${info.description?.substring(0, 100)}...\n\n🚀 اختر الجودة المطلوبة للتحميل:`;
+        
+        const buttons = [];
+        if (info.qualities && Array.isArray(info.qualities)) {
+            let row = [];
+            info.qualities.forEach((q, index) => {
+                row.push({ text: `🎬 ${q}`, callback_data: `dlq_${q}` });
+                if (row.length === 2) { buttons.push(row); row = []; }
+            });
+            if (row.length > 0) buttons.push(row);
+        } else {
+            buttons.push([{ text: '🎬 فيديو (Best)', callback_data: 'dlq_best' }]);
+        }
+        buttons.push([{ text: '🎵 صوت MP3', callback_data: 'dlq_audio' }]);
 
-        const response = await axios.get(apiUrl, {
+        userStatesManus[chatId + '_url'] = videoUrl;
+        return bot.sendPhoto(chatId, info.thumbnail, { caption, reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
+    } catch (e) {
+        return bot.sendMessage(chatId, "❌ فشل جلب معلومات الفيديو. تأكد من صحة الرابط.");
+    }
+}
+
+async function performAdvancedDownload(chatId, url, quality, statusMsgId) {
+    try {
+        await bot.editMessageText(`⏳ جاري التحميل الحقيقي (${quality})... [▓▓░░░░░░░░] 20%`, { chat_id: chatId, message_id: statusMsgId });
+        const dlUrl = new URL(`${API_BASE_DOWNLOAD}/v1/download`);
+        dlUrl.searchParams.set("url", url);
+        dlUrl.searchParams.set("quality", quality);
+
+        const response = await axios.get(dlUrl.toString(), {
             headers: { "X-API-Key": API_KEY_DOWNLOAD },
             responseType: 'arraybuffer'
         });
 
         await bot.editMessageText(`⏳ جاري معالجة الملف... [▓▓▓▓▓▓░░░░] 60%`, { chat_id: chatId, message_id: statusMsgId });
-        const videoBuffer = Buffer.from(response.data);
-        const fileName = format === 'mp3' ? 'audio.mp3' : 'video.mp4';
+        const buffer = Buffer.from(response.data);
+        const fileName = quality === 'audio' ? 'audio.mp3' : `video-${quality}.mp4`;
         
-        await bot.editMessageText(`✅ اكتمل التحميل! جاري إرسال الملف... [▓▓▓▓▓▓▓▓▓▓] 100%`, { chat_id: chatId, message_id: statusMsgId });
+        await bot.editMessageText(`✅ اكتمل التحميل! جاري الإرسال... [▓▓▓▓▓▓▓▓▓▓] 100%`, { chat_id: chatId, message_id: statusMsgId });
         
-        if (format === 'mp3') {
-            return bot.sendAudio(chatId, videoBuffer, { filename: fileName });
+        if (quality === 'audio') {
+            return bot.sendAudio(chatId, buffer, { filename: fileName });
         } else {
-            return bot.sendVideo(chatId, videoBuffer, { filename: fileName });
+            return bot.sendVideo(chatId, buffer, { filename: fileName });
         }
     } catch (e) {
-        return bot.sendMessage(chatId, "❌ حدث خطأ أثناء التحميل من الـ API. تأكد من صحة الرابط.");
+        return bot.sendMessage(chatId, "❌ حدث خطأ أثناء التحميل. قد تكون الجودة غير متوفرة.");
     }
 }
 
@@ -134,13 +166,8 @@ bot.on('message', async (msg) => {
             return bot.sendPhoto(chatId, buf, { caption: "✅ تم توليد الباركود." });
         }
         if (state === 'wait_down') {
-            userStatesManus[chatId + '_url'] = text;
             delete userStatesManus[chatId];
-            const buttons = [
-                [{ text: '🎬 فيديو (Best)', callback_data: 'dl_best' }],
-                [{ text: '🎵 صوت MP3', callback_data: 'dl_mp3' }]
-            ];
-            return bot.sendMessage(chatId, `📩 تم جلب بيانات الفيديو! اختر النوع المطلوب للتحميل:`, { reply_markup: { inline_keyboard: buttons } });
+            return getVideoInfoReal(chatId, text);
         }
     }
 });
@@ -150,12 +177,12 @@ bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     const action = query.data;
 
-    if (action.startsWith('dl_')) {
-        const format = action.split('_')[1];
+    if (action.startsWith('dlq_')) {
+        const quality = action.split('_')[1];
         const url = userStatesManus[chatId + '_url'];
         if (!url) return bot.sendMessage(chatId, "❌ انتهت صلاحية الطلب. أرسل الرابط مرة أخرى.");
-        const statusMsg = await bot.sendMessage(chatId, `⏳ جاري التحميل الحقيقي عبر الـ API...`);
-        return performRealDownload(chatId, url, format, statusMsg.message_id);
+        const statusMsg = await bot.sendMessage(chatId, `⏳ جاري بدء التحميل الحقيقي...`);
+        return performAdvancedDownload(chatId, url, quality, statusMsg.message_id);
     }
 
     if (action === 'feat_ig_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق انستقرام!\n\n🔗 الرابط:\nhttps://domin.com/ig?id=${chatId}`);
