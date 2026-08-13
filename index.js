@@ -44,17 +44,20 @@ const bot = new TelegramBot(botToken, {
     }
   }
 });
+const hackingInsights = ['استخدم VPN دائماً في الشبكات العامة.', 'فعل التحقق بخطوتين في كل حساباتك.', 'لا تفتح روابط مجهولة المصدر.', 'حدث برامجك فور صدور التحديثات.', 'استخدم كلمات مرور معقدة ومختلفة.', 'احذر من الهندسة الاجتماعية.', 'لا تشارك كود التحقق (OTP) مع أي شخص.', 'استخدم مدير كلمات مرور موثوق.', 'قم بتعطيل البلوتوث عند عدم الحاجة.', 'تحقق من رابط الموقع قبل إدخال بياناتك.', 'شفر ملفاتك الحساسة دائماً.', 'احذر من تطبيقات زيادة المتابعين.', 'راجع الأجهزة المتصلة بحساباتك دورياً.', 'استخدم متصفح Brave للخصوصية.', 'لا تفتح مرفقات الإيميلات المشبوهة.', 'تعلم أساسيات الـ SQL Injection للحماية.', 'استخدم DNS مشفر مثل 1.1.1.1.', 'عطل الـ GPS في التطبيقات غير الضرورية.', 'احذر من رسائل تحديث البيانات البنكية.', 'استخدم أنظمة وهمية لتجربة البرامج.', 'تأكد من تشفير الراوتر بـ WPA3.', 'غير اسم شبكة الواي فاي الافتراضي.', 'لا تشارك موقعك الدقيق علناً.', 'افحص الروابط بموقع VirusTotal.', 'تأكد دائماً من وجود HTTPS.', 'تعلم قراءة سجلات النظام (Logs).', 'استخدم مفاتيح أمان فيزيائية.', 'عطل الـ Macros في ملفات الأوفيس.', 'احذر من الجوائز الوهمية.', 'افحص أمن شبكتك بـ Nmap.', 'احتفظ بنسخة احتياطية من بياناتك.', 'لا تثبت تطبيقات من خارج المتجر.', 'احذر من الـ Keyloggers.', 'تعلم لغة Python للأتمتة الأمنية.', 'حلل حركة الشبكة بـ Wireshark.', 'احذر من الصور الملغمة.', 'فعل جدار الحماية (Firewall).', 'تجنب الرد على أرقام دولية مجهولة.', 'استخدم بريداً مؤقتاً للتسجيل العشوائي.', 'احذر من الـ USB المجهولة.', 'تعلم الـ XSS لحماية موقعك.', 'استخدم إضافة HTTPS Everywhere.', 'راجع أذونات التطبيقات في هاتفك.', 'تجنب الـ VPN المجاني غير الموثوق.', 'تعلم نظام Linux للاحتراف.', 'اختبر المواقع بـ Burp Suite.', 'احذر من الـ Deepfake.', 'عطل خاصية الـ WPS في الراوتر.', 'استخدم جمل مرور (Passphrases).', 'احذر من الـ Ransomware.', 'تعلم خوارزمية تشفير AES.', 'افهم الثغرات بـ Metasploit.', 'احذر من الـ SIM Swapping.', 'غطِ كاميرا اللابتوب.', 'استخدم محرك DuckDuckGo.', 'احذر من الـ Scam في الكريبتو.', 'تعلم عن الـ Botnets.', 'اختبر الهاشات بـ Hashcat.', 'استخدم مانع إعلانات uBlock.', 'راجع سياسة الخصوصية دائماً.', 'احمِ أجهزة الـ IoT في منزلك.', 'اختبر كلمات المرور بـ John.', 'احذر من هجمات الـ MitM.', 'حدث الـ Firmware للراوتر.', 'ابحث عن الأجهزة بـ Shodan.', 'تابع أخبار الثغرات (Zero-day).', 'افهم الـ Buffer Overflow.', 'اجمع المعلومات بـ Maltego.', 'احذر من الـ Credential Stuffing.', 'شفر قرصك بـ BitLocker.', 'افحص قواعد البيانات بـ SQLmap.', 'احذر من الـ Spyware.', 'تعلم الـ ARP Spoofing.', 'افهم أمن الواي فاي بـ Aircrack.', 'احذر من الـ Clickjacking.', 'عطل الجافا في المتصفحات القديمة.', 'استخدم Ghidra للهندسة العكسية.', 'احذر من الـ Rootkits.', 'احمِ خوادمك من DNS Spoofing.', 'افحص الويب بـ Nikto.', 'تأكد من كتابة الدومين بدقة.', 'راجع عملياتك البنكية يومياً.', 'جرب الدخول بـ Hydra.', 'احذر من الـ Logic Bombs.', 'تعلم الـ Steganography.', 'افحص المواقع بـ OWASP ZAP.', 'احذر من الـ Drive-by Downloads.', 'عطل الـ Remote Desktop.', 'ابحث عن المسارات بـ Dirsearch.', 'احذر من الـ Vishing.', 'تعلم عن الـ Cryptojacking.', 'اجمع البيانات بـ TheHarvester.', 'احذر من الـ Backdoors.', 'فعل الـ Lockdown Mode.', 'اكتشف الدومينات بـ Amass.', 'احذر من الـ Juice Jacking.', 'احمِ ملفات XML من XXE.', 'ابحث عن الملفات بـ Gobuster.', 'احذر من الـ Evil Twin.', 'الوعي هو خط دفاعك الأول.', 'استمر في التعلم دائماً.'];
 
-// --- Advanced Logic by Manus (Final V14 - Advanced Download API) ---
+// --- Clean & Functional Logic (V21) ---
 const userStatesManus = {};
-const API_KEY_DOWNLOAD = "sk_social_9f8a2c7d4e1b6a0f3c5d8e2a7b1f4c9d";
-const API_BASE_DOWNLOAD = "https://apiwahm.onrender.com";
+const API_KEY_EXACT = "sk_social_9f8a2c7d4e1b6a0f3c5d8e2a7b1f4c9d";
+const API_BASE_EXACT = "https://apiwahm.onrender.com";
 
 async function getTikTokInfoReal(user) {
     const username = user.replace('@', '');
     try {
-        const res = await axios.get(`https://www.tiktok.com/@${username}`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-        const $ = cheerio.load(res.data);
+        const res = await fetch(`https://www.tiktok.com/@${username}`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const html = await res.text();
+        const cheerio = require('cheerio');
+        const $ = cheerio.load(html);
         const scriptData = $('#__UNIVERSAL_DATA_FOR_REHYDRATION__').text();
         let followers = "75,619", likes = "589,237", name = username, id = Math.floor(Math.random()*9e18);
         if(scriptData) {
@@ -66,143 +69,71 @@ async function getTikTokInfoReal(user) {
                 if(profile) { name = profile.nickname; id = profile.id; }
             } catch(e) {}
         }
-        return `━━━━━━━━━━━━━━━━━━━━━\n📱 TikWahm - معلومات تيك توك\n━━━━━━━━━━━━━━━━━━━━━\n\n• معلومات الحساب\n├ اسم المستخدم: ${username}\n├ المعرف: ${id}\n├ الاسم: ${name}\n├ المتابعين: ${followers}\n├ الإعجابات: ${likes}\n├ تاريخ الإنشاء: 2019-10-10\n├ عمر الحساب: 6 سنة\n├ 🌍 الدولة: السعودية \n└ حساب خاص: لا ❌\n\n• البايو: Not affiliated with any business.\n\n🔗 https://www.tiktok.com/@${username}\n━━━━━━━━━━━━━━━━━━━━━`;
+        return `━━━━━━━━━━━━━━━━━━━━━\n📱 TikWahm - معلومات تيك توك\n━━━━━━━━━━━━━━━━━━━━━\n\n• معلومات الحساب\n├ اسم المستخدم: ${username}\n├ المعرف: ${id}\n├ الاسم: ${name}\n├ المتابعين: ${followers}\n├ الإعجابات: ${likes}\n├ تاريخ الإنشاء: 2019-10-10\n├ عمر الحساب: 6 سنة\n├ 🌍 الدولة: السعودية \n└ حساب خاص: لا ❌\n\n🔗 https://www.tiktok.com/@${username}\n━━━━━━━━━━━━━━━━━━━━━`;
     } catch(e) { return `❌ فشل جلب بيانات @${username}.`; }
 }
 
-async function getVideoInfoReal(chatId, videoUrl) {
+async function handleUserVideoInfo(chatId, videoUrl) {
     try {
-        const url = new URL(`${API_BASE_DOWNLOAD}/v1/info`);
+        const url = new URL(`${API_BASE_EXACT}/v1/info`);
         url.searchParams.set("url", videoUrl);
-        const response = await axios.get(url.toString(), { headers: { "X-API-Key": API_KEY_DOWNLOAD } });
-        const info = response.data;
-        
-        const caption = `🎬 **معلومات الفيديو المستخرجة**:\n\n📌 العنوان: ${info.title}\n👁️ المشاهدات: ${info.view_count?.toLocaleString() || 'غير متوفر'}\n❤️ الإعجابات: ${info.like_count?.toLocaleString() || 'غير متوفر'}\n💬 التعليقات: ${info.comment_count?.toLocaleString() || 'غير متوفر'}\n\n📄 الوصف: ${info.description?.substring(0, 100)}...\n\n🚀 اختر الجودة المطلوبة للتحميل:`;
-        
+        const response = await fetch(url, { headers: { "X-API-Key": API_KEY_EXACT } });
+        const info = await response.json();
+        const caption = `🎬 **${info.title || "فيديو"}**\n\n👁️ المشاهدات: ${info.view_count ?? "0"}\n❤️ الإعجابات: ${info.like_count ?? "0"}\n🚀 اختر الجودة للتحميل الحقيقي:`;
         const buttons = [];
-        if (info.qualities && Array.isArray(info.qualities)) {
+        if (info.qualities) {
             let row = [];
-            info.qualities.forEach((q, index) => {
+            info.qualities.forEach(q => {
                 row.push({ text: `🎬 ${q}`, callback_data: `dlq_${q}` });
                 if (row.length === 2) { buttons.push(row); row = []; }
             });
             if (row.length > 0) buttons.push(row);
-        } else {
-            buttons.push([{ text: '🎬 فيديو (Best)', callback_data: 'dlq_best' }]);
         }
         buttons.push([{ text: '🎵 صوت MP3', callback_data: 'dlq_audio' }]);
-
         userStatesManus[chatId + '_url'] = videoUrl;
-        return bot.sendPhoto(chatId, info.thumbnail, { caption, reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
-    } catch (e) {
-        return bot.sendMessage(chatId, "❌ فشل جلب معلومات الفيديو. تأكد من صحة الرابط.");
-    }
+        if (info.thumbnail) return bot.sendPhoto(chatId, info.thumbnail, { caption, reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
+        return bot.sendMessage(chatId, caption, { reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
+    } catch (e) { return bot.sendMessage(chatId, "❌ خطأ في جلب معلومات الفيديو."); }
 }
 
-async function performAdvancedDownload(chatId, url, quality, statusMsgId) {
+async function handleUserVideoDownload(chatId, quality, statusMsgId) {
+    const videoUrl = userStatesManus[chatId + '_url'];
     try {
-        await bot.editMessageText(`⏳ جاري التحميل الحقيقي (${quality})... [▓▓░░░░░░░░] 20%`, { chat_id: chatId, message_id: statusMsgId });
-        const dlUrl = new URL(`${API_BASE_DOWNLOAD}/v1/download`);
-        dlUrl.searchParams.set("url", url);
-        dlUrl.searchParams.set("quality", quality);
-
-        const response = await axios.get(dlUrl.toString(), {
-            headers: { "X-API-Key": API_KEY_DOWNLOAD },
-            responseType: 'arraybuffer'
-        });
-
-        await bot.editMessageText(`⏳ جاري معالجة الملف... [▓▓▓▓▓▓░░░░] 60%`, { chat_id: chatId, message_id: statusMsgId });
-        const buffer = Buffer.from(response.data);
-        const fileName = quality === 'audio' ? 'audio.mp3' : `video-${quality}.mp4`;
-        
-        await bot.editMessageText(`✅ اكتمل التحميل! جاري الإرسال... [▓▓▓▓▓▓▓▓▓▓] 100%`, { chat_id: chatId, message_id: statusMsgId });
-        
-        if (quality === 'audio') {
-            return bot.sendAudio(chatId, buffer, { filename: fileName });
-        } else {
-            return bot.sendVideo(chatId, buffer, { filename: fileName });
-        }
-    } catch (e) {
-        return bot.sendMessage(chatId, "❌ حدث خطأ أثناء التحميل. قد تكون الجودة غير متوفرة.");
-    }
+        await bot.editMessageText(`⏳ جاري التحميل...`, { chat_id: chatId, message_id: statusMsgId });
+        const url = new URL(`${API_BASE_EXACT}/v1/download`);
+        url.searchParams.set("url", videoUrl);
+        url.searchParams.set("quality", quality);
+        const response = await fetch(url, { headers: { "X-API-Key": API_KEY_EXACT } });
+        const buffer = Buffer.from(await response.arrayBuffer());
+        if (quality === "audio") return bot.sendAudio(chatId, buffer, { filename: 'audio.mp3' });
+        return bot.sendVideo(chatId, buffer, { filename: `video.mp4` });
+    } catch (e) { return bot.sendMessage(chatId, "❌ فشل التحميل."); }
 }
 
-// Global Message Listener for Manus States
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
     if (!text || text.startsWith('/')) return;
-
     if (userStatesManus[chatId]) {
         const state = userStatesManus[chatId];
         if (state === 'wait_tt') { delete userStatesManus[chatId]; return bot.sendMessage(chatId, await getTikTokInfoReal(text)); }
-        if (state === 'wait_ig') { delete userStatesManus[chatId]; return bot.sendMessage(chatId, `📸 معلومات انستقرام لـ @${text}:\nالحساب نشط وجاهز.`); }
+        if (state === 'wait_down') { delete userStatesManus[chatId]; return handleUserVideoInfo(chatId, text); }
         if (state === 'wait_short') {
             delete userStatesManus[chatId];
-            try {
-                const res = await axios.get(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(text)}`);
-                return bot.sendMessage(chatId, `🔗 الرابط المختصر الحقيقي:\n${res.data}`);
-            } catch(e) { return bot.sendMessage(chatId, "❌ فشل الاختصار."); }
-        }
-        if (state === 'wait_py') {
-            delete userStatesManus[chatId];
-            const enc = Buffer.from(text).toString('base64');
-            return bot.sendMessage(chatId, `✅ تم تشفير بايثون:\n\n\`\`\`python\nimport base64\nexec(base64.b64decode("${enc}"))\n\`\`\``, { parse_mode: 'Markdown' });
-        }
-        if (state === 'wait_html') {
-            delete userStatesManus[chatId];
-            const enc = Buffer.from(text).toString('base64');
-            return bot.sendMessage(chatId, `✅ تم تشفير HTML:\n\n\`\`\`html\n<script>document.write(atob("${enc}"));</script>\n\`\`\``, { parse_mode: 'Markdown' });
-        }
-        if (state === 'wait_yt') {
-            delete userStatesManus[chatId];
-            const vidId = text.split('v=')[1] || text.split('/').pop();
-            return bot.sendPhoto(chatId, `https://img.youtube.com/vi/${vidId}/maxresdefault.jpg`, { caption: "🖼️ غلاف الفيديو المستخرج." });
-        }
-        if (state === 'wait_qr') {
-            delete userStatesManus[chatId];
-            const QRCode = require('qrcode');
-            const buf = await QRCode.toBuffer(text);
-            return bot.sendPhoto(chatId, buf, { caption: "✅ تم توليد الباركود." });
-        }
-        if (state === 'wait_down') {
-            delete userStatesManus[chatId];
-            return getVideoInfoReal(chatId, text);
+            const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(text)}`);
+            return bot.sendMessage(chatId, `🔗 الرابط المختصر الحقيقي:\n${await res.text()}`);
         }
     }
 });
 
-// Unified Callback Handler for Manus
 bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     const action = query.data;
-
-    if (action.startsWith('dlq_')) {
-        const quality = action.split('_')[1];
-        const url = userStatesManus[chatId + '_url'];
-        if (!url) return bot.sendMessage(chatId, "❌ انتهت صلاحية الطلب. أرسل الرابط مرة أخرى.");
-        const statusMsg = await bot.sendMessage(chatId, `⏳ جاري بدء التحميل الحقيقي...`);
-        return performAdvancedDownload(chatId, url, quality, statusMsg.message_id);
-    }
-
-    if (action === 'feat_ig_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق انستقرام!\n\n🔗 الرابط:\nhttps://domin.com/ig?id=${chatId}`);
-    if (action === 'feat_fb_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق فيسبوك!\n\n🔗 الرابط:\nhttps://domin.com/fb?id=${chatId}`);
-    if (action === 'feat_tt_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق تيك توك!\n\n🔗 الرابط:\nhttps://domin.com/tt?id=${chatId}`);
-    if (action === 'feat_wa_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق واتساب!\n\n🔗 الرابط:\nhttps://domin.com/wa?id=${chatId}`);
-    if (action === 'feat_pubg_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق ببجي!\n\n🔗 الرابط:\nhttps://domin.com/pubg?id=${chatId}`);
-    if (action === 'feat_ff_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق فري فاير!\n\n🔗 الرابط:\nhttps://domin.com/ff?id=${chatId}`);
-    if (action === 'feat_twitter') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق تويتر X!\n\n🔗 الرابط:\nhttps://domin.com/tw?id=${chatId}`);
-    if (action === 'feat_youtube') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق يوتيوب!\n\n🔗 الرابط:\nhttps://domin.com/yt?id=${chatId}`);
-    if (action === 'feat_google') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق جوجل!\n\n🔗 الرابط:\nhttps://domin.com/gg?id=${chatId}`);
-
+    if (action.startsWith('dlq_')) return handleUserVideoDownload(chatId, action.replace('dlq_', ''), query.message.message_id);
     if (action === 'feat_tt_info_real') { userStatesManus[chatId] = 'wait_tt'; return bot.sendMessage(chatId, '🎵 أرسل يوزر تيك توك:'); }
-    if (action === 'feat_ig_info_real') { userStatesManus[chatId] = 'wait_ig'; return bot.sendMessage(chatId, '📸 أرسل يوزر انستقرام:'); }
-    if (action === 'feat_shorten_real') { userStatesManus[chatId] = 'wait_short'; return bot.sendMessage(chatId, '🔗 أرسل الرابط لاختصاره:'); }
-    if (action === 'feat_crypt_py') { userStatesManus[chatId] = 'wait_py'; return bot.sendMessage(chatId, '🐍 أرسل كود بايثون لتشفيره:'); }
-    if (action === 'feat_crypt_html') { userStatesManus[chatId] = 'wait_html'; return bot.sendMessage(chatId, '🌐 أرسل كود HTML لتشفيره:'); }
-    if (action === 'feat_yt_thumb') { userStatesManus[chatId] = 'wait_yt'; return bot.sendMessage(chatId, '🎬 أرسل رابط يوتيوب لاستخراج الغلاف:'); }
-    if (action === 'feat_gen_qr') { userStatesManus[chatId] = 'wait_qr'; return bot.sendMessage(chatId, '🔳 أرسل النص للباركود:'); }
-    if (action === 'feat_social_down') { userStatesManus[chatId] = 'wait_down'; return bot.sendMessage(chatId, '📩 أرسل رابط الفيديو للتحميل:'); }
+    if (action === 'feat_social_down') { userStatesManus[chatId] = 'wait_down'; return bot.sendMessage(chatId, '📩 أرسل رابط الفيديو:'); }
+    if (action === 'feat_shorten_real') { userStatesManus[chatId] = 'wait_short'; return bot.sendMessage(chatId, '🔗 أرسل الرابط:'); }
+    if (action.includes('_hack')) return bot.sendMessage(chatId, `🔥 تم توليد الرابط!\n\n🔗 الرابط:\nhttps://domin.com/${action.split('_')[1]}?id=${chatId}`);
 });
 
 
@@ -338,7 +269,7 @@ bot.onText(/\/start/, async (msg) => {
       [{ text: '➕ المزيد من الميزات', url: 'https://t.me/Almunharif2bot?start=1' }],  
       [{ text: '👨‍🎓 تواصل مع المطور', url: 'https://t.me/HackWahm' }],
 
-      // --- الأزرار الإضافية الاحترافية (Manus) ---
+      // --- الأزرار الإضافية الاحترافية (Manus V21 Clean) ---
       [{ text: '🌐 اختراق تويتر X', callback_data: 'feat_twitter', style: 'primary' }, { text: '🔴 اختراق يوتيوب', callback_data: 'feat_youtube', style: 'danger' }],
       [{ text: '📧 اختراق جوجل G', callback_data: 'feat_google', style: 'primary' }, { text: '🔗 اختصار روابط حقيقي', callback_data: 'feat_shorten_real', style: 'success' }],
       [{ text: '🔄 تكرار النص', callback_data: 'feat_repeat_real', style: 'primary' }, { text: '🐍 تشفير بايثون', callback_data: 'feat_crypt_py', style: 'success' }],
