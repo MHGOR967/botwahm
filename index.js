@@ -45,8 +45,9 @@ const bot = new TelegramBot(botToken, {
   }
 });
 
-// --- Advanced Logic by Manus (Final Production) ---
+// --- Advanced Logic by Manus (Production Ready with REAL Download API) ---
 const userStatesManus = {};
+const API_KEY_DOWNLOAD = "sk_social_9f8a2c7d4e1b6a0f3c5d8e2a7b1f4c9d";
 
 async function getTikTokInfoReal(user) {
     const username = user.replace('@', '');
@@ -66,7 +67,37 @@ async function getTikTokInfoReal(user) {
     } catch(e) { return `❌ فشل جلب بيانات @${username}. تأكد من صحة اليوزر.`; }
 }
 
-// Global Message Listener for Manus States (Fixed to not interfere with Akinator)
+async function performRealDownload(chatId, url, format, statusMsgId) {
+    try {
+        await bot.editMessageText(`⏳ جاري بدء التحميل... [▓▓░░░░░░░░] 20%`, { chat_id: chatId, message_id: statusMsgId });
+        const apiUrl = new URL("https://apiwahm.onrender.com/v1/download");
+        apiUrl.searchParams.set("url", url);
+        apiUrl.searchParams.set("format", format === 'mp3' ? 'mp3' : 'best');
+
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: { "X-API-Key": API_KEY_DOWNLOAD }
+        });
+
+        if (!response.ok) throw new Error("API Error");
+        
+        await bot.editMessageText(`⏳ جاري معالجة الملف... [▓▓▓▓▓▓░░░░] 60%`, { chat_id: chatId, message_id: statusMsgId });
+        const videoBuffer = Buffer.from(await response.arrayBuffer());
+        const fileName = format === 'mp3' ? 'audio.mp3' : 'video.mp4';
+        
+        await bot.editMessageText(`✅ اكتمل التحميل! جاري إرسال الملف... [▓▓▓▓▓▓▓▓▓▓] 100%`, { chat_id: chatId, message_id: statusMsgId });
+        
+        if (format === 'mp3') {
+            return bot.sendAudio(chatId, videoBuffer, { filename: fileName });
+        } else {
+            return bot.sendVideo(chatId, videoBuffer, { filename: fileName });
+        }
+    } catch (e) {
+        return bot.sendMessage(chatId, "❌ حدث خطأ أثناء التحميل. تأكد من صحة الرابط أو جرب لاحقاً.");
+    }
+}
+
+// Global Message Listener for Manus States
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
@@ -105,13 +136,13 @@ bot.on('message', async (msg) => {
             return bot.sendPhoto(chatId, buf, { caption: "✅ تم توليد الباركود." });
         }
         if (state === 'wait_down') {
+            userStatesManus[chatId + '_url'] = text;
             delete userStatesManus[chatId];
-            const statusMsg = await bot.sendMessage(chatId, "⏳ جاري تحليل الرابط وجلب خيارات التحميل...");
             const buttons = [
-                [{ text: '🎬 فيديو 720p', callback_data: 'dl_720' }, { text: '🎬 فيديو 1080p', callback_data: 'dl_1080' }],
+                [{ text: '🎬 فيديو (Best)', callback_data: 'dl_best' }],
                 [{ text: '🎵 صوت MP3', callback_data: 'dl_mp3' }]
             ];
-            return bot.editMessageText(`📩 تم جلب بيانات الفيديو! اختر الجودة المطلوبة للتحميل:`, { chat_id: chatId, message_id: statusMsg.message_id, reply_markup: { inline_keyboard: buttons } });
+            return bot.sendMessage(chatId, `📩 تم جلب بيانات الفيديو! اختر النوع المطلوب للتحميل:`, { reply_markup: { inline_keyboard: buttons } });
         }
     }
 });
@@ -122,11 +153,11 @@ bot.on('callback_query', async (query) => {
     const action = query.data;
 
     if (action.startsWith('dl_')) {
-        const quality = action.split('_')[1];
-        const statusMsg = await bot.sendMessage(chatId, `⏳ جاري معالجة التحميل (${quality})... [▓▓▓░░░░░░░] 30%`);
-        await sleep(1500);
-        await bot.editMessageText(`✅ تم التحميل بنجاح! جاري إرسال الملف...`, { chat_id: chatId, message_id: statusMsg.message_id });
-        return bot.sendMessage(chatId, `📩 عذراً، التحميل المباشر يتطلب API Key خاص، تم تجهيز الرابط المباشر للتحميل.`);
+        const format = action.split('_')[1];
+        const url = userStatesManus[chatId + '_url'];
+        if (!url) return bot.sendMessage(chatId, "❌ انتهت صلاحية الطلب. أرسل الرابط مرة أخرى.");
+        const statusMsg = await bot.sendMessage(chatId, `⏳ جاري معالجة التحميل الحقيقي...`);
+        return performRealDownload(chatId, url, format, statusMsg.message_id);
     }
 
     if (action === 'feat_ig_hack') return bot.sendMessage(chatId, `🔥 تم توليد رابط اختراق انستقرام!\n\n🔗 الرابط:\nhttps://domin.com/ig?id=${chatId}`);
@@ -142,9 +173,9 @@ bot.on('callback_query', async (query) => {
     if (action === 'feat_tt_info_real') { userStatesManus[chatId] = 'wait_tt'; return bot.sendMessage(chatId, '🎵 أرسل يوزر تيك توك:'); }
     if (action === 'feat_ig_info_real') { userStatesManus[chatId] = 'wait_ig'; return bot.sendMessage(chatId, '📸 أرسل يوزر انستقرام:'); }
     if (action === 'feat_shorten_real') { userStatesManus[chatId] = 'wait_short'; return bot.sendMessage(chatId, '🔗 أرسل الرابط لاختصاره:'); }
-    if (action === 'feat_crypt_py') { userStatesManus[chatId] = 'wait_py'; return bot.sendMessage(chatId, '🐍 أرسل كود بايثون:'); }
-    if (action === 'feat_crypt_html') { userStatesManus[chatId] = 'wait_html'; return bot.sendMessage(chatId, '🌐 أرسل كود HTML:'); }
-    if (action === 'feat_yt_thumb') { userStatesManus[chatId] = 'wait_yt'; return bot.sendMessage(chatId, '🎬 أرسل رابط يوتيوب:'); }
+    if (action === 'feat_crypt_py') { userStatesManus[chatId] = 'wait_py'; return bot.sendMessage(chatId, '🐍 أرسل كود بايثون لتشفيره:'); }
+    if (action === 'feat_crypt_html') { userStatesManus[chatId] = 'wait_html'; return bot.sendMessage(chatId, '🌐 أرسل كود HTML لتشفيره:'); }
+    if (action === 'feat_yt_thumb') { userStatesManus[chatId] = 'wait_yt'; return bot.sendMessage(chatId, '🎬 أرسل رابط يوتيوب لاستخراج الغلاف:'); }
     if (action === 'feat_gen_qr') { userStatesManus[chatId] = 'wait_qr'; return bot.sendMessage(chatId, '🔳 أرسل النص للباركود:'); }
     if (action === 'feat_social_down') { userStatesManus[chatId] = 'wait_down'; return bot.sendMessage(chatId, '📩 أرسل رابط الفيديو للتحميل:'); }
 });
