@@ -20,7 +20,7 @@ const FormData = require('form-data');
 const cheerio = require('cheerio');
 const dns = require('dns');
 const developerId = 5739065274;
-const botTokenMain = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao';
+const botTokenMain = '8051920740:AAH-ijAqc7z0kTFrsbm2L7hnW875lHichao';
 const domain = "https://botwahm-erfu.onrender.com";
 
 global.app = express();
